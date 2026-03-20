@@ -1,166 +1,421 @@
-# Plataforma de Seguridad en Montaña - Backend
+# 🏔️ Plataforma de Seguridad en Montaña - Backend
 
-Este proyecto backend proporciona una REST API completa para una plataforma de seguridad en montaña con gestión de zonas, datos meteorológicos, reportes comunitarios y orientación asistida por IA.
+API REST completa para una plataforma de seguridad en montaña con gestión de zonas, datos meteorológicos, reportes comunitarios y orientación asistida por IA.
 
-## Estructura del Proyecto
+## 🏗️ Arquitectura MVC + MongoDB Native
+
+Este proyecto implementa una **arquitectura en capas (MVC)** con patrones nativos de MongoDB para máxima eficiencia.
+
+### Estructura del Proyecto
 
 ```
 src/
-├── index.js                 # Punto de entrada de la aplicación
+├── index.js                      # Punto de entrada
 ├── config/
-│   ├── database.js         # Configuración de conexión a MongoDB
-│   ├── logger.js           # Configuración de logger Winston
-│   └── swagger.js          # Especificación Swagger/OpenAPI
-├── models/                 # Esquemas de Mongoose
-│   ├── User.js            # Esquema de usuario con roles y reputación
-│   ├── Zone.js            # Zonas de montaña con GeoJSON
-│   ├── Report.js          # Reportes comunitarios con validación
-│   ├── Comment.js         # Comentarios y discusiones en foro
-│   ├── ReportCategory.js  # Tipos/categorías de reportes
-│   ├── SystemMetric.js    # Métricas de rendimiento del sistema
-│   └── FavoriteZone.js    # Zonas favoritas del usuario
-├── routes/                # Implementación de endpoints
-│   ├── auth.js            # Autenticación (registro, login)
-│   ├── users.js           # Gestión de usuarios (perfil, favoritos)
-│   ├── zones.js           # Gestión de zonas (listar, clima, dashboard)
-│   ├── reports.js         # Operaciones CRUD de reportes y validación
-│   ├── comments.js        # Comentarios y endpoints del foro
-│   ├── chat.js            # Integración del chatbot IA
-│   └── admin.js           # Panel de administración (métricas, usuarios)
+│   ├── database.js              # Conexión MongoDB
+│   ├── logger.js                # Winston logger
+│   └── swagger.js               # OpenAPI spec
+├── models/                       # Esquemas Mongoose
+│   ├── User.js                  # Usuarios (preferencias embebidas)
+│   ├── Zone.js                  # Zonas con GeoJSON
+│   ├── Report.js                # Reportes (categoría + comentarios embebidos)
+│   ├── Comment.js               # Comentarios de zona
+│   └── SystemMetric.js          # Métricas del sistema
+├── services/                     # 🆕 Lógica de negocio (pura)
+│   ├── userService.js           # Gestión de usuarios
+│   ├── reportService.js         # Operaciones de reportes
+│   ├── commentService.js        # Gestión de comentarios
+│   └── zoneService.js           # Datos de zonas
+├── controllers/                  # 🆕 Handlers HTTP
+│   ├── userController.js        # Mapeo HTTP → userService
+│   ├── reportController.js      # Mapeo HTTP → reportService
+│   ├── commentController.js     # Mapeo HTTP → commentService
+│   └── zoneController.js        # Mapeo HTTP → zoneService
+├── routes/                       # Validación + delegación
+│   ├── auth.js                  # Autenticación
+│   ├── users.js                 # Usuarios y favoritos
+│   ├── zones.js                 # Gestión de zonas
+│   ├── reports.js               # CRUD de reportes
+│   ├── comments.js              # Comentarios
+│   ├── chat.js                  # ChatBot IA
+│   └── admin.js                 # Administración
 ├── middleware/
-│   ├── errorHandler.js    # Manejo global de errores
-│   └── httpLogger.js      # Registro de solicitudes HTTP
-└── utils/
-│   └── query.js           # Utilidades de consultas de base de datos
+│   ├── errorHandler.js          # Manejo global de errores
+│   └── httpLogger.js            # Logger de HTTP
+├── utils/
+│   └── query.js                 # Utilidades BD
 └── test/
-    └── requests.rest      # Ejemplo de pruebas
+    ├── auth.rest                # 🆕 Autenticación
+    ├── users.rest               # 🆕 Usuarios
+    ├── zones.rest               # 🆕 Zonas
+    ├── reports.rest             # 🆕 Reportes  
+    ├── comments.rest            # 🆕 Comentarios
+    └── admin.rest               # 🆕 Administración
 ```
 
-## Características
+---
+
+## 🎯 Características Principales
 
 ✅ **Autenticación y Autorización**
-- Registro e inicio de sesión de usuarios
-- Control de acceso basado en roles (PUBLIC, USER, ADMIN)
+- Registro e inicio de sesión
+- Roles (PUBLIC, USER, ADMIN)
 
 ✅ **Gestión de Zonas**
-- Zonas geográficas con soporte GeoJSON
-- Almacenamiento en caché de datos meteorológicos
-- Análisis y dashboards
+- Zonas geográficas con GeoJSON
+- Datos meteorológicos en caché
+- Dashboards con estadísticas
 
-✅ **Reportes Comunitarios**
-- Envío de reportes con geolocalización
-- Sistema de validación basado en reputación
-- Auto-eliminación basada en TTL (48 horas)
+✅ **Reportes Comunitarios (MongoDB Native)**
+- Categoría embebida (sin referencias)
+- Comentarios embebidos en reportes
+- Validación basada en reputación
+- Auto-eliminación después de 48h (TTL)
 
-✅ **Características Sociales**
-- Perfiles de usuario con puntuaciones de reputación
+✅ **Preferencias de Usuario (MongoDB Native)**
+- Array de favoritos con config embebida
+- Configuración de alertas por zona
+- Métodos de notificación personalizados
+
+✅ **Sistema Social**
 - Comentarios en foro por zona
-- Zonas favoritas con alertas personalizadas
+- Comentarios embebidos en reportes
+- Reputación y medallas de usuario
 
 ✅ **Monitoreo del Sistema**
-- Seguimiento de métricas en tiempo real
-- Análisis de uso de la API
-- Estado de salud del sistema
+- Métricas en tiempo real
+- Análisis de uso de API
+- Estado de salud
 
-✅ **Panel de Administración**
-- Gestión y bloqueo de usuarios
-- Gestión de categorías de reportes
-- Análisis y métricas del sistema
+---
 
-## Instalación
+## 🚀 Instalación y Configuración
+
+### Requisitos
+- Node.js >= 14
+- MongoDB >= 4.4
+
+### Instalación
 
 ```bash
+# Clonar repositorio
+git clone <repo>
+cd mongo-meteo-api
+
 # Instalar dependencias
 npm install
 
-# Modo desarrollo (con recarga automática)
-npm run dev
+# Crear archivo .env
+cp .env.example .env
 
-# Modo producción
-npm start
+# Iniciar servidor
+npm run dev        # Desarrollo (con nodemon)
+npm start          # Producción
 ```
 
-## Configuración
-
-Crear un archivo `.env` en la raíz del proyecto:
+### Variables de Entorno (.env)
 
 ```env
 # Servidor
 PORT=3000
+NODE_ENV=development
 
 # Base de datos
-MONGODB_URI=mongodb://localhost:27017/
-MONGODB_COLLECTION_USERS=users
-MONGODB_COLLECTION_ZONES=zones
-MONGODB_COLLECTION_REPORTS=reports
-MONGODB_COLLECTION_CATEGORIES=report_categories
-MONGODB_COLLECTION_COMMENTS=comments
-MONGODB_COLLECTION_METRICS=system_metrics
-MONGODB_COLLECTION_FAVORITES=favorite_zones
+MONGODB_URI=mongodb://localhost:27017/mongo-meteo-api
 
 # Logging
 LOG_LEVEL=info
 ```
 
-## Documentación de la API
+---
 
-Una vez que el servidor esté en ejecución, visite:
-- **Swagger UI:** http://localhost:3000/docs
-- **JSON OpenAPI:** http://localhost:3000/docs.json
-- **Verificación de salud:** http://localhost:3000/health
+## 📚 Documentación de API
 
-La referencia detallada de endpoints está disponible en [API_ENDPOINTS.md](./API_ENDPOINTS.md)
+### Swagger/OpenAPI
+```
+http://localhost:3000/docs
+```
 
-## Endpoints Principales
+### Health Check
+```bash
+curl http://localhost:3000/health
+```
 
-### Autenticación
-- `POST /api/auth/register` - Registrar nuevo usuario
-- `POST /api/auth/login` - Iniciar sesión
+---
 
-### Gestión de Usuarios
-- `GET /api/user/profile/:userId` - Obtener perfil de usuario
-- `PUT /api/user/favorites` - Gestionar zonas favoritas
+## 📋 Endpoints Principales
 
-### Zonas
-- `GET /api/zones` - Listar todas las zonas
-- `GET /api/zones/:id/weather` - Obtener datos meteorológicos
-- `GET /api/zones/:id/dashboard` - Obtener análisis
+### Autenticación (`test/auth.rest`)
+```
+POST   /api/auth/register         # Registrar usuario
+POST   /api/auth/login            # Iniciar sesión
+```
 
-### Reportes
-- `GET /api/reports` - Listar reportes
-- `POST /api/reports` - Crear reporte
-- `PATCH /api/reports/:id/validate` - Validar reporte
-- `DELETE /api/reports/:id` - Eliminar reporte
+### Usuarios (`test/users.rest`)
+```
+GET    /api/user/profile/:userId                    # Obtener perfil
+PUT    /api/user/favorites                          # Agregar/remover favorito
+PATCH  /api/user/alerts/:userId/:zoneId            # Actualizar alertas
+```
 
-### Comentarios
-- `GET /api/comments/:zoneId` - Obtener comentarios de la zona
-- `POST /api/comments` - Publicar comentario
+### Zonas (`test/zones.rest`)
+```
+GET    /api/zones                  # Listar todas
+GET    /api/zones/:id              # Obtener una zona
+GET    /api/zones/:id/weather      # Datos meteorológicos
+GET    /api/zones/:id/dashboard    # Estadísticas
+```
+
+### Reportes (`test/reports.rest`)
+```
+GET    /api/reports                # Listar reportes
+GET    /api/reports/:id            # Obtener reporte
+POST   /api/reports                # Crear reporte
+PATCH  /api/reports/:id/validate   # Confirmar/desmentir
+DELETE /api/reports/:id            # Eliminar reporte
+```
+
+### Comentarios (`test/comments.rest`)
+```
+GET    /api/comments/:zoneId                        # Comentarios de zona
+GET    /api/comments/report/:reportId/comments      # Comentarios embebidos
+POST   /api/comments                                 # Crear comentario
+DELETE /api/comments/:id                            # Eliminar comentario (zona)
+DELETE /api/comments/report/:reportId/comments/:idx # Eliminar embebido
+```
 
 ### Chat/IA
-- `POST /api/chat/ask` - Hacer preguntas a la IA
+```
+POST   /api/chat/ask               # Preguntar al asistente IA
+```
 
-### Administración
-- `GET /api/admin/metrics` - Métricas del sistema
-- `PATCH /api/admin/users/:id/block` - Bloquear usuario
-- `POST /api/admin/categories` - Crear categoría de reporte
+### Administración (`test/admin.rest`)
+```
+GET    /api/admin/metrics          # Métricas del sistema
+GET    /api/admin/health           # Estado de salud
+```
 
-## Esquema de Base de Datos
+---
 
-La aplicación utiliza 7 colecciones principales:
+## 📊 Esquema de Base de Datos (MongoDB Native)
 
-1. **Usuarios** - Cuentas de usuario con roles y reputación
-2. **Zonas** - Zonas de montaña con coordenadas GeoJSON
-3. **Reportes** - Reportes comunitarios con sistema de validación
-4. **Comentarios** - Comentarios de foro en zonas
-5. **Categorías de Reportes** - Tipos de reportes (Avalanchas, Hielo, Viento, etc.)
-6. **Métricas del Sistema** - Seguimiento de rendimiento y uso
-7. **Zonas Favoritas** - Zonas favoritas de usuario con configuración de alertas
+### Colección: users
+```javascript
+{
+  _id: ObjectId,
+  datos_acceso: {
+    email: String (unique),
+    password_hash: String,
+    rol: "PUBLIC" | "USER" | "ADMIN"
+  },
+  perfil: {
+    nombre: String,
+    avatar_url: String
+  },
+  preferencias: [                    // ⭐ Array embebido
+    {
+      zona_id: ObjectId,
+      configuracion_alertas: {
+        aludes: { activo: Boolean, umbral_nivel: Number },
+        viento: { activo: Boolean, umbral_kmh: Number },
+        reportes_comunidad: { 
+          activo: Boolean, 
+          tipos_suscritos: [String]
+        }
+      },
+      metodo_notificacion: "PUSH" | "EMAIL" | "SMS" | "NINGUNO",
+      fecha_agregada: Date
+    }
+  ],
+  limites_ia: {
+    peticiones_hoy: Number,
+    ultimo_reset: Date
+  },
+  estado: "ACTIVO" | "BLOQUEADO",
+  reputacion: {
+    puntos: Number,
+    medalla: String,
+    strikes_spam: Number
+  },
+  timestamps: true
+}
+```
 
-Para definiciones de esquema detalladas, consulte los archivos de modelo en `src/models/`.
+### Colección: reports
+```javascript
+{
+  _id: ObjectId,
+  usuario_id: ObjectId (ref User),
+  zona_id: ObjectId (ref Zone),
+  categoria: {                       // ⭐ Embebida (sin referencia)
+    nombre: String,
+    icono_marcador: String
+  },
+  geolocalizacion: {
+    type: "Point",
+    coordinates: [Number, Number]  // [Longitud, Latitud]
+  },
+  tipo: String,
+  contenido: {
+    descripcion: String,
+    foto_url: String
+  },
+  validaciones: {
+    confirmaciones: Number,
+    desmentidos: Number
+  },
+  estado: "PENDIENTE" | "ACTIVO" | "OCULTO" | "SPAM",
+  valoracion_global: Number,
+  comentarios: [                     // ⭐ Array embebido
+    {
+      usuario_id: ObjectId,
+      autor_nombre: String,
+      contenido: String,
+      etiqueta: String,
+      estado: "ACTIVO" | "SPAM" | "ELIMINADO",
+      fecha: Date
+    }
+  ],
+  createdAt: Date (TTL index: 172800s / 48h),
+  updatedAt: Date
+}
+```
 
-## Manejo de Errores
+### Colección: comments
+```javascript
+{
+  _id: ObjectId,
+  usuario_id: ObjectId (ref User),
+  zona_id: ObjectId (ref Zone),
+  reporte_id: ObjectId | null (ref Report),
+  contenido: String,
+  etiqueta: String,
+  estado: "ACTIVO" | "SPAM" | "ELIMINADO",
+  timestamps: true
+}
+```
 
-Todos los errores devuelven JSON en este formato:
+### Colección: zones
+```javascript
+{
+  _id: ObjectId,
+  nombre: String,
+  descripcion: String,
+  geolocalizacion: {
+    type: "Point",
+    coordinates: [Number, Number]
+  },
+  cache_meteo: {},
+  estado: "ACTIVA" | "INACTIVA",
+  timestamps: true
+}
+```
+
+---
+
+## 🏛️ Patrón MVC Explicado
+
+### 1. **Models** (src/models/)
+- Esquemas Mongoose
+- Validaciones BD
+- Índices y hooks
+
+### 2. **Services** (src/services/) ⭐ CAPA DE NEGOCIO
+```javascript
+// Lógica PURA (sin conocimiento de HTTP)
+class UserService {
+  async getProfile(userId) {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("Usuario no encontrado");
+    return { id: user._id, email: user.email, ... };
+  }
+}
+```
+
+**Ventajas:**
+- ✅ Testeable sin mocks HTTP
+- ✅ Reutilizable (CLI, Jobs, etc.)
+- ✅ Lógica centralizada
+
+### 3. **Controllers** (src/controllers/) ⭐ CAPA HTTP
+```javascript
+// Thin controller (solo mapeo HTTP)
+class UserController {
+  async getProfile(req, res, next) {
+    try {
+      const profile = await userService.getProfile(req.params.userId);
+      res.json(profile);
+    } catch (err) {
+      next(err);
+    }
+  }
+}
+```
+
+**Ventajas:**
+- ✅ Separación de responsabilidades
+- ✅ Fácil de testear (inyectar service mock)
+- ✅ Código limpio
+
+### 4. **Routes** (src/routes/)
+```javascript
+// Validación + delegación
+router.get(
+  "/profile/:userId",
+  [param("userId").isMongoId()],
+  validate,
+  (req, res, next) => userController.getProfile(req, res, next)
+);
+```
+
+### Flujo de una Request
+```
+Request → Route (validación) → Controller → Service → Database
+                                                          ↓
+Response ← Controller (formato) ← Service (resultado) ← Query
+```
+
+---
+
+## 🧪 Testing - Endpoints Organizados
+
+### Usar con VS Code REST Client
+
+**Extensión:** [humao.rest-client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client)
+
+#### Archivos de Test
+
+| Archivo | Endpoints |
+|---------|-----------|
+| `test/auth.rest` | Register, Login |
+| `test/users.rest` | Profile, Favorites, Alerts |
+| `test/zones.rest` | List, Get, Weather, Dashboard |
+| `test/reports.rest` | CRUD, Validate |
+| `test/comments.rest` | Zone comments, Report comments |
+| `test/admin.rest` | Health, Metrics |
+
+#### Ejemplo: Crear un Reporte
+
+```rest
+POST http://localhost:3000/api/reports
+Content-Type: application/json
+
+{
+  "usuario_id": "652a1b2c3d4e5f6g7h8i9j0k",
+  "zona_id": "652a1b2c3d4e5f6g7h8i9j0k",
+  "nombre_categoria": "Avalancha",
+  "icono_marcador": "⚠️",
+  "tipo": "Avalancha",
+  "descripcion": "Avalancha vista en la cara norte",
+  "coordinates": [-5.0, 43.25]
+}
+```
+
+---
+
+## 🔒 Manejo de Errores
+
+Todas las respuestas de error siguen este formato:
 
 ```json
 {
@@ -168,51 +423,106 @@ Todos los errores devuelven JSON en este formato:
   "errors": [
     {
       "field": "nombreDelCampo",
-      "message": "detalles del error de validación"
+      "message": "detalles del error"
     }
   ]
 }
 ```
 
-## Registro (Logging)
+El middleware `errorHandler.js` captura todos los errores automáticamente.
 
-La aplicación utiliza Winston para logging con diferentes niveles:
-- **error** - Errores críticos
-- **warn** - Advertencias
-- **info** - Información general
-- **debug** - Detalles de depuración
+---
 
-Los registros se escriben en el directorio `logs/`.
+## 📖 MongoDB Native Patterns
 
-## Mejoras Futuras
+### ✅ Lo Bueno (Patrones Nativos)
 
-⏳ TODO - Hashing de contraseñas con bcrypt
-⏳ TODO - Generación y validación de tokens JWT
-⏳ TODO - Integración de servicio IA (OpenAI, Claude)
-⏳ TODO - Integración de API meteorológica (AEMET, Open-Meteo)
-⏳ TODO - Sistema de notificaciones por correo
-⏳ TODO - Notificaciones push
-⏳ TODO - Middleware de autenticación de usuario
-⏳ TODO - Limitador de velocidad (Rate limiting)
+**1. Preferencias Embebidas (Users)**
+```javascript
+// ✅ BIEN: Toda la config dentro del usuario
+user.preferencias = [
+  {
+    zona_id: ObjectId,
+    configuracion_alertas: { ... },
+    metodo_notificacion: "PUSH"
+  }
+]
 
-## Desarrollo
-
-Para desarrollo local:
-
-```bash
-# Iniciar MongoDB
-mongod
-
-# Instalar dependencias
-npm install
-
-# Ejecutar en modo desarrollo
-npm run dev
-
-# Verificar la API
-curl http://localhost:3000/health
+// Query: 1 request, todo junto
+const user = await User.findById(userId);
 ```
 
-## Licencia
+**2. Categoría Embebida (Reports)**
+```javascript
+// ✅ BIEN: Categoría dentro del reporte
+report.categoria = {
+  nombre: "Avalancha",
+  icono_marcador: "⚠️"
+}
+
+// No necesita join/populate
+```
+
+**3. Comentarios Embebidos (Reports)**
+```javascript
+// ✅ BIEN: Comentarios dentro del reporte
+report.comentarios = [
+  { usuario_id, contenido, fecha, ... }
+]
+
+// Acceso O(1) sin queries adicionales
+```
+
+### ❌ Qué se Eliminó
+
+- ❌ `FavoriteZone` colección (← embebida en User)
+- ❌ `ReportCategory` colección (← embebida en Report)
+- ❌ Queries separadas para comentarios de reporte (← embebidos)
+
+### 📊 Beneficio de Performance
+
+| Operación | Antes | Después |
+|-----------|-------|---------|
+| Leer usuario + favoritos + config | 2-3 queries | 1 query |
+| Leer reporte + categoría | 2 queries | 1 query |
+| Leer reporte + comentarios | 2 queries | 1 query |
+| Índices necesarios | Más | Menos |
+
+---
+
+## 🚀 Próximos Pasos
+
+- [ ] Agregar Unit Tests (Jest)
+- [ ] Agregar Integration Tests
+- [ ] Authenticación JWT
+- [ ] Hashing de contraseñas (bcrypt)
+- [ ] Rate limiting
+- [ ] Integración API meteorológica (AEMET/Open-Meteo)
+- [ ] Integración ChatGPT/Claude
+- [ ] Notificaciones por email/SMS
+- [ ] WebSockets para updates en tiempo real
+
+---
+
+## 📚 Documentación Detallada
+
+- **[MIGRATION.md](./MIGRATION.md)** - Migración de estructura anterior
+- **[ARCHITECTURE_MVC.md](./ARCHITECTURE_MVC.md)** - Explicación detallada del patrón MVC
+
+---
+
+## 🔧 Stack Tecnológico
+
+- **Runtime:** Node.js
+- **API Framework:** Express.js
+- **Base de Datos:** MongoDB + Mongoose
+- **Validación:** express-validator
+- **Logging:** Winston
+- **Documentación:** Swagger/OpenAPI
+- **Testing:** REST Client (VS Code)
+
+---
+
+## 📝 Licencia
 
 ISC
