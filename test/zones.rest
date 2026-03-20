@@ -1,0 +1,40 @@
+### ============================================================
+### zones.rest — Zones and geographic data endpoints
+### ============================================================
+
+### ---- Variables (change host/port here to switch environments) ----
+@host = localhost
+@port = 3000
+@baseAPI = http://{{host}}:{{port}}/api
+
+### ---- Test IDs (update after creating resources) ----
+@zoneId = 652a1b2c3d4e5f6g7h8i9j0k
+
+### ============================================================
+### ZONES - GET /api/zones/...
+### ============================================================
+
+###
+### List All Zones
+### @name zonesList
+GET {{baseAPI}}/zones
+
+###
+### List Active Zones Only
+### @name zonesListActive
+GET {{baseAPI}}/zones?estado=ACTIVA
+
+###
+### Get Zone by ID
+### @name zoneGetById
+GET {{baseAPI}}/zones/{{zoneId}}
+
+###
+### Get Zone Weather Data
+### @name zoneGetWeather
+GET {{baseAPI}}/zones/{{zoneId}}/weather
+
+###
+### Get Zone Dashboard & Analytics
+### @name zoneGetDashboard
+GET {{baseAPI}}/zones/{{zoneId}}/dashboard

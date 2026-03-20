@@ -1,0 +1,47 @@
+### ============================================================
+### admin.rest — System and administrative endpoints
+### ============================================================
+
+### ---- Variables (change host/port here to switch environments) ----
+@host = localhost
+@port = 3000
+@userId = 3000
+@baseAPI = http://{{host}}:{{port}}/api
+
+### ============================================================
+### HEALTH & SYSTEM CHECKS
+### ============================================================
+
+###
+### Health Check
+### @name healthCheck
+GET http://{{host}}:{{port}}/health
+
+###
+### API Docs (Swagger UI)
+### Open: http://localhost:3000/docs
+GET http://{{host}}:{{port}}/docs.json
+
+### ============================================================
+### ADMIN - GET/PATCH/POST /api/admin/...
+### ============================================================
+
+###
+### Get System Metrics (últimas 24 horas)
+### @name adminMetrics
+GET {{baseAPI}}/admin/metrics
+
+###
+### Get System Health Status
+### @name adminHealth
+GET {{baseAPI}}/admin/health
+
+###
+### Reset User Password (Admin Only)
+### @name adminResetPassword
+POST {{baseAPI}}/admin/users/{{userId}}/reset-password
+Content-Type: application/json
+
+{
+  "nueva_password": "new_secure_password_123"
+}

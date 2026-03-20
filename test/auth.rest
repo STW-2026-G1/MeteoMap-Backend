@@ -1,0 +1,46 @@
+### ============================================================
+### auth.rest — Authentication endpoints
+### ============================================================
+
+### ---- Variables (change host/port here to switch environments) ----
+@host = localhost
+@port = 3000
+@baseAPI = http://{{host}}:{{port}}/api
+
+### ============================================================
+### AUTHENTICATION - POST /api/auth/...
+### ============================================================
+
+###
+### Register New User
+### @name authRegister
+POST {{baseAPI}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123",
+  "nombre": "Test User"
+}
+
+###
+### Login User
+### @name authLogin
+POST {{baseAPI}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+###
+### Login - Wrong Password (Error 401)
+### @name authLoginError
+POST {{baseAPI}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "wrongpassword"
+}

@@ -1,0 +1,473 @@
+### ============================================================
+### requests.rest — Mountain Safety Platform API
+### VS Code REST Client extension (humao.rest-client)
+### ============================================================
+### Install extension: https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+### Click "Send Request" above any ### to run it
+### ============================================================
+
+### ---- Variables (change host/port here to switch environments) ----
+@host = localhost
+@port = 3000
+@baseAPI = http://{{host}}:{{port}}/api
+
+### ---- Test IDs (update after creating resources) ----
+@userId = 652a1b2c3d4e5f6g7h8i9j0k
+@zoneId = 652a1b2c3d4e5f6g7h8i9j0k
+@reportId = 652a1b2c3d4e5f6g7h8i9j0k
+@categoryId = 652a1b2c3d4e5f6g7h8i9j0k
+
+### ============================================================
+### SYSTEM & HEALTH
+### ============================================================
+
+###
+### Health Check
+### @name healthCheck
+GET http://{{host}}:{{port}}/health
+
+
+###
+### API Docs (Swagger UI)
+### Open: http://localhost:3000/docs
+GET http://{{host}}:{{port}}/docs.json
+
+
+### ============================================================
+### AUTHENTICATION - POST /api/auth/...
+### ============================================================
+
+###
+### Register New User
+### @name authRegister
+POST {{baseAPI}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123",
+  "nombre": "Test User"
+}
+
+
+###
+### Login User
+### @name authLogin
+POST {{baseAPI}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+
+###
+### Login - Wrong Password (Error 401)
+### @name authLoginError
+POST {{baseAPI}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "wrongpassword"
+}
+
+
+### ============================================================
+### USER MANAGEMENT - GET/PUT /api/user/...
+### ============================================================
+
+###
+### Get User Profile
+### @name userGetProfile
+GET {{baseAPI}}/user/profile/{{userId}}
+
+
+###
+### Add Favorite Zone
+### @name userAddFavorite
+PUT {{baseAPI}}/user/favorites
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zonaId": "{{zoneId}}",
+  "accion": "add",
+  "configuracion": {
+    "metodo_notificacion": "PUSH",
+    "configuracion_alertas": {
+      "aludes": {
+        "activo": true,
+        "umbral_nivel": 3
+      },
+      "viento": {
+        "activo": true,
+        "umbral_kmh": 50
+      },
+      "reportes_comunidad": {
+        "activo": true,
+        "tipos_suscritos": ["Avalancha", "Alud"]
+      }
+    }
+  }
+}
+
+
+###
+### Remove Favorite Zone
+### @name userRemoveFavorite
+PUT {{baseAPI}}/user/favorites
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zonaId": "{{zoneId}}",
+  "accion": "remove"
+}
+
+
+### ============================================================
+### ZONES - GET /api/zones/...
+### ============================================================
+
+###
+### List All Zones
+### @name zonesList
+GET {{baseAPI}}/zones
+
+
+###
+### List Active Zones Only
+### @name zonesListActive
+GET {{baseAPI}}/zones?estado=ACTIVA
+
+
+###
+### Get Zone Weather Data
+### @name zoneGetWeather
+GET {{baseAPI}}/zones/{{zoneId}}/weather
+
+
+###
+### Get Zone Dashboard & Analytics
+### @name zoneGetDashboard
+GET {{baseAPI}}/zones/{{zoneId}}/dashboard
+
+
+### ============================================================
+### REPORTS - GET/POST/PATCH/DELETE /api/reports/...
+### ============================================================
+
+###
+### Get All Reports
+### @name reportsList
+GET {{baseAPI}}/reports
+
+
+###
+### Get Reports by Zone
+### @name reportsListByZone
+GET {{baseAPI}}/reports?zonaId={{zoneId}}
+
+
+###
+### Get Active Reports Only
+### @name reportsListActive
+GET {{baseAPI}}/reports?estado=ACTIVO
+
+
+###
+### Create New Report
+### @name reportsCreate
+POST {{baseAPI}}/reports
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "zona_id": "{{zoneId}}",
+  "nombre_categoria": "Avalancha",
+  "icono_marcador": "⚠️",
+  "tipo": "Avalancha",
+  "descripcion": "Avalancha vista en la cara norte a las 14:30 horas",
+  "foto_url": "https://example.com/photo.jpg",
+  "coordinates": [-5.0, 43.25]
+}
+
+
+###
+### Validate Report - Confirm (Sumar confirmación)
+### @name reportsValidateConfirm
+PATCH {{baseAPI}}/reports/{{reportId}}/validate
+Content-Type: application/json
+
+{
+  "accion": "confirmar"
+}
+
+
+###
+### Validate Report - Deny (Sumar desmentida)
+### @name reportsValidateDeny
+PATCH {{baseAPI}}/reports/{{reportId}}/validate
+Content-Type: application/json
+
+{
+  "accion": "desmentir"
+}
+
+
+###
+### Delete Report (Moderación)
+### @name reportsDelete
+DELETE {{baseAPI}}/reports/{{reportId}}
+
+
+###
+### Error: Create Report - Invalid coordinates (400)
+### @name reportsCreateError
+POST {{baseAPI}}/reports
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "zona_id": "{{zoneId}}",
+  "nombre_categoria": "Hielo",
+  "icono_marcador": "❄️",
+  "tipo": "Hielo",
+  "descripcion": "test",
+  "coordinates": "invalid"
+}
+
+
+### ============================================================
+### COMMENTS - GET/POST /api/comments/...
+### ============================================================
+
+###
+### Get Comments by Zone
+### @name commentsList
+GET {{baseAPI}}/comments/{{zoneId}}
+
+
+###
+### Post New Comment
+### @name commentsCreate
+POST {{baseAPI}}/comments
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "zona_id": "{{zoneId}}",
+  "reporte_id": "{{reportId}}",
+  "contenido": "Confirmo que vi la avalancha en esa zona hace 2 horas",
+  "etiqueta": "Observación"
+}
+
+
+###
+### Post Comment - Sin reporte asociado
+### @name commentsCreateSimple
+POST {{baseAPI}}/comments
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "zona_id": "{{zoneId}}",
+  "contenido": "¿Alguien ha estado en la zona este fin de semana?",
+  "etiqueta": "Pregunta"
+}
+
+
+### ============================================================
+### CHAT / IA - POST /api/chat/...
+### ============================================================
+
+###
+### Ask AI Assistant
+### @name chatAsk
+POST {{baseAPI}}/chat/ask
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "pregunta": "¿Cuáles son las condiciones actuales de seguridad en Picos de Europa?",
+  "contexto": "zona_id:{{zoneId}}"
+}
+
+
+###
+### Ask AI - Sin contexto
+### @name chatAskGeneral
+POST {{baseAPI}}/chat/ask
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "pregunta": "¿Qué debo hacer si me encuentro con una avalancha?",
+  "contexto": "general"
+}
+
+
+### ============================================================
+### ADMIN - GET/PATCH/POST /api/admin/...
+### ============================================================
+
+###
+### Get System Metrics (últimas 24 horas)
+### @name adminMetrics
+GET {{baseAPI}}/admin/metrics
+
+
+###
+### Block User (Moderación)
+### @name adminBlockUser
+PATCH {{baseAPI}}/admin/users/{{userId}}/block
+Content-Type: application/json
+
+{
+  "accion": "block"
+}
+
+
+###
+### Unblock User (Moderación)
+### @name adminUnblockUser
+PATCH {{baseAPI}}/admin/users/{{userId}}/block
+Content-Type: application/json
+
+{
+  "accion": "unblock"
+}
+
+
+###
+### Create Report Category
+### @name adminCreateCategory
+POST {{baseAPI}}/admin/categories
+Content-Type: application/json
+
+{
+  "nombre": "Placas de hielo",
+  "descripcion": "Presencia de hielo en superficies de difícil acceso",
+  "icono_marcador": "icon_ice",
+  "creado_por": "{{userId}}"
+}
+
+
+###
+### Create Another Category
+### @name adminCreateCategory2
+POST {{baseAPI}}/admin/categories
+Content-Type: application/json
+
+{
+  "nombre": "Viento fuerte",
+  "descripcion": "Rachas de viento que dificultan el ascenso seguro",
+  "icono_marcador": "icon_wind",
+  "creado_por": "{{userId}}"
+}
+
+
+###
+### Error: Duplicate Category Name (400)
+### @name adminCreateCategoryError
+POST {{baseAPI}}/admin/categories
+Content-Type: application/json
+
+{
+  "nombre": "Placas de hielo",
+  "descripcion": "Intento de crear duplicado",
+  "icono_marcador": "icon_ice",
+  "creado_por": "{{userId}}"
+}
+
+
+### ============================================================
+### COMMON ERROR CASES
+### ============================================================
+
+###
+### 404 - User Not Found
+### @name errorUserNotFound
+GET {{baseAPI}}/user/profile/invalid_id
+
+
+###
+### 400 - Invalid Email Format
+### @name errorInvalidEmail
+POST {{baseAPI}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "not_an_email",
+  "password": "password123",
+  "nombre": "Test"
+}
+
+
+###
+### 400 - Password Too Short
+### @name errorPasswordShort
+POST {{baseAPI}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "valid@example.com",
+  "password": "123",
+  "nombre": "Test"
+}
+
+
+###
+### 404 - Zone Not Found
+### @name errorZoneNotFound
+GET {{baseAPI}}/zones/invalid_zone_id/weather
+
+
+### ============================================================
+### USEFUL CURL COMMANDS (copy & paste in terminal)
+### ============================================================
+
+###
+### Health Check with curl
+###
+### curl http://localhost:3000/health | jq .
+
+
+###
+### Get All Zones with curl
+###
+### curl http://localhost:3000/api/zones | jq .
+
+
+###
+### Register with curl
+###
+### curl -X POST http://localhost:3000/api/auth/register \
+###   -H "Content-Type: application/json" \
+###   -d '{"email":"user@test.com","password":"pass123","nombre":"Test"}'
+
+
+###
+### Login with curl
+###
+### curl -X POST http://localhost:3000/api/auth/login \
+###   -H "Content-Type: application/json" \
+###   -d '{"email":"user@test.com","password":"pass123"}'
+
+
+###
+### Create Report with curl
+###
+### curl -X POST http://localhost:3000/api/reports \
+###   -H "Content-Type: application/json" \
+###   -d '{
+###     "usuario_id":"USER_ID",
+###     "zona_id":"ZONE_ID",
+###     "categoria_id":"CAT_ID",
+###     "tipo":"Avalancha",
+###     "descripcion":"Test",
+###     "coordinates":[-5.0,43.25]
+###   }'
+

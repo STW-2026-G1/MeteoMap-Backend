@@ -1,0 +1,95 @@
+### ============================================================
+### reports.rest — Reports and community data endpoints
+### ============================================================
+
+### ---- Variables (change host/port here to switch environments) ----
+@host = localhost
+@port = 3000
+@baseAPI = http://{{host}}:{{port}}/api
+
+### ---- Test IDs (update after creating resources) ----
+@userId = 652a1b2c3d4e5f6g7h8i9j0k
+@zoneId = 652a1b2c3d4e5f6g7h8i9j0k
+@reportId = 652a1b2c3d4e5f6g7h8i9j0k
+
+### ============================================================
+### REPORTS - GET/POST/PATCH/DELETE /api/reports/...
+### ============================================================
+
+###
+### Get All Reports
+### @name reportsList
+GET {{baseAPI}}/reports
+
+###
+### Get Reports by Zone
+### @name reportsListByZone
+GET {{baseAPI}}/reports?zonaId={{zoneId}}
+
+###
+### Get Active Reports Only
+### @name reportsListActive
+GET {{baseAPI}}/reports?estado=ACTIVO
+
+###
+### Get Report by ID
+### @name reportsGetById
+GET {{baseAPI}}/reports/{{reportId}}
+
+###
+### Create New Report
+### @name reportsCreate
+POST {{baseAPI}}/reports
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "zona_id": "{{zoneId}}",
+  "nombre_categoria": "Avalancha",
+  "icono_marcador": "⚠️",
+  "tipo": "Avalancha",
+  "descripcion": "Avalancha vista en la cara norte a las 14:30 horas",
+  "foto_url": "https://example.com/photo.jpg",
+  "coordinates": [-5.0, 43.25]
+}
+
+###
+### Validate Report - Confirm (Sumar confirmación)
+### @name reportsValidateConfirm
+PATCH {{baseAPI}}/reports/{{reportId}}/validate
+Content-Type: application/json
+
+{
+  "accion": "confirmar"
+}
+
+###
+### Validate Report - Deny (Sumar desmentida)
+### @name reportsValidateDeny
+PATCH {{baseAPI}}/reports/{{reportId}}/validate
+Content-Type: application/json
+
+{
+  "accion": "desmentir"
+}
+
+###
+### Delete Report (Moderación)
+### @name reportsDelete
+DELETE {{baseAPI}}/reports/{{reportId}}
+
+###
+### Error: Create Report - Invalid coordinates (400)
+### @name reportsCreateError
+POST {{baseAPI}}/reports
+Content-Type: application/json
+
+{
+  "usuario_id": "{{userId}}",
+  "zona_id": "{{zoneId}}",
+  "nombre_categoria": "Hielo",
+  "icono_marcador": "❄️",
+  "tipo": "Hielo",
+  "descripcion": "test",
+  "coordinates": "invalid"
+}

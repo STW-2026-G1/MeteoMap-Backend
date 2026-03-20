@@ -1,0 +1,84 @@
+### ============================================================
+### users.rest — User management endpoints
+### ============================================================
+
+### ---- Variables (change host/port here to switch environments) ----
+@host = localhost
+@port = 3000
+@baseAPI = http://{{host}}:{{port}}/api
+
+### ---- Test IDs (update after creating resources) ----
+@userId = 652a1b2c3d4e5f6g7h8i9j0k
+@zoneId = 652a1b2c3d4e5f6g7h8i9j0k
+
+### ============================================================
+### USER MANAGEMENT - GET/PUT /api/user/...
+### ============================================================
+
+###
+### Get User Profile
+### @name userGetProfile
+GET {{baseAPI}}/user/profile/{{userId}}
+
+###
+### Add Favorite Zone
+### @name userAddFavorite
+PUT {{baseAPI}}/user/favorites
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zonaId": "{{zoneId}}",
+  "accion": "add",
+  "configuracion": {
+    "metodo_notificacion": "PUSH",
+    "configuracion_alertas": {
+      "aludes": {
+        "activo": true,
+        "umbral_nivel": 3
+      },
+      "viento": {
+        "activo": true,
+        "umbral_kmh": 50
+      },
+      "reportes_comunidad": {
+        "activo": true,
+        "tipos_suscritos": ["Avalancha", "Alud"]
+      }
+    }
+  }
+}
+
+###
+### Remove Favorite Zone
+### @name userRemoveFavorite
+PUT {{baseAPI}}/user/favorites
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "zonaId": "{{zoneId}}",
+  "accion": "remove"
+}
+
+###
+### Update Alert Configuration
+### @name userUpdateAlerts
+PATCH {{baseAPI}}/user/alerts/{{userId}}/{{zoneId}}
+Content-Type: application/json
+
+{
+  "configuracion_alertas": {
+    "aludes": {
+      "activo": true,
+      "umbral_nivel": 4
+    },
+    "viento": {
+      "activo": false
+    },
+    "reportes_comunidad": {
+      "activo": true,
+      "tipos_suscritos": ["Hielo", "Nieve mojada"]
+    }
+  }
+}

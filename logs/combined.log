@@ -1,0 +1,357 @@
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:37:42","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:37:42"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:37:42"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:37:42"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:37:42"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:43:52","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:43:52"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:43:52"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:43:52"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:43:52"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:43:57","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:43:57"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:43:57"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:43:57"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:43:57"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:05","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:05"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:05"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:05"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:05"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:10","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:10"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:10"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:10"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:10"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:15","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:15"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:15"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:15"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:15"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:28","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:28"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:28"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:28"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:28"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:31","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:31"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:31"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:31"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:31"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:34","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:34"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:34"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:34"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:34"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:44:47","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:44:47"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:44:47"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:44:47"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:44:47"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:45:01","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:45:01"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:45:01"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:45:01"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:45:01"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:45:18","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:45:18"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:45:18"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:45:18"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:45:18"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:45:28","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:45:28"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:45:28"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:45:28"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:45:28"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:45:30","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:45:30"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:45:30"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:45:30"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:45:30"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:46:01","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:46:01"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:46:01"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:46:01"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:46:01"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:46:04","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:46:04"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:46:04"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:46:04"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:46:04"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:46:14","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:46:14"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:46:14"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:46:14"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:46:14"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:46:22","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:46:22"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:46:22"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:46:22"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:46:22"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:46:30","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:46:30"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:46:30"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:46:30"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:46:30"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:47:47","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:47:47"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:47:47"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:47:47"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:47:47"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:48:13","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:48:13"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:48:13"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:48:13"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:48:13"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:48:24","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:48:24"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:48:24"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:48:24"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:48:24"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:48:45","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:48:45"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:48:45"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:48:45"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:48:45"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:48:55","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:48:55"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:48:55"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:48:55"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:48:55"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:49:05","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:49:05"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:49:05"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:49:05"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:49:05"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:49:09","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:49:09"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:49:09"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:49:09"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:49:09"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:49:19","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:49:19"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:49:19"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:49:19"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:49:19"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 07:49:25","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 07:49:25"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 07:49:25"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 07:49:25"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 07:49:25"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:10:27","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:10:27"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:10:27"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:10:27"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:10:27"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:10:40","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:10:40"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:10:40"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:10:40"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:10:40"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:10:49","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:10:49"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:10:49"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:10:49"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:10:49"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:10:54","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:10:54"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:10:54"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:10:54"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:10:54"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:10:57","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:10:57"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:10:57"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:10:57"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:10:57"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:11:04","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:11:04"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:11:04"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:11:04"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:11:04"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:11:10","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:11:10"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:11:10"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:11:10"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:11:10"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:11:12","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:11:12"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:11:12"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:11:12"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:11:12"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:11:15","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:11:15"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:11:15"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:11:15"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:11:15"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:11:37","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:11:37"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:11:37"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:11:37"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:11:37"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:11:53","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:11:53"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:11:53"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:11:53"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:11:53"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:19","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:19"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:19"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:19"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:19"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:30","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:30"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:30"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:30"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:30"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:31","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:31"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:31"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:31"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:31"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:34","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:34"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:34"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:34"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:34"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:41","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:41"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:41"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:41"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:41"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:45","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:45"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:45"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:45"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:45"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:12:58","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:12:58"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:12:58"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:12:58"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:12:58"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:13:06","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:13:06"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:13:06"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:13:06"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:13:06"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:13:08","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:13:08"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:13:08"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:13:08"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:13:08"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:13:09","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:13:09"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:13:09"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:13:09"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:13:09"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:14:49","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:14:49"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:14:49"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:14:49"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:14:49"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:14:59","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:14:59"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:14:59"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:14:59"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:14:59"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:15:01","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:15:01"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:15:01"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:15:01"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:15:01"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:15:03","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:15:03"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:15:03"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:15:03"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:15:03"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:15:18","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:15:18"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:15:18"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:15:18"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:15:18"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:15:39","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:15:39"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:15:39"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:15:39"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:15:39"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:15:42","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 08:15:42"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 08:15:42"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 08:15:42"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 08:15:42"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 08:16:00","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 09:34:25"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 09:34:25"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 09:34:25"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 09:34:25"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 09:34:39","uri":"mongodb://localhost:27017/mountain-safety"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 09:35:27","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 09:35:27"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 09:35:27"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 09:35:27"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 09:35:27"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 09:35:29"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 09:35:32","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 09:35:32"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 09:35:32"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 09:35:32"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 09:35:32"}
+{"level":"error","message":"Unhandled error Invalid namespace specified: mountain-safety/imdb.users","method":"POST","stack":"MongoServerError: Invalid namespace specified: mountain-safety/imdb.users\n    at Connection.sendCommand (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cmap/connection.js:320:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Connection.command (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cmap/connection.js:344:26)\n    at async Server.command (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/sdam/server.js:208:29)\n    at async tryOperation (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/operations/execute_operation.js:215:32)\n    at async executeOperation (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/operations/execute_operation.js:80:16)\n    at async FindCursor._initialize (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/find_cursor.js:62:26)\n    at async FindCursor.cursorInit (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:620:27)\n    at async FindCursor.fetchBatch (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:654:13)\n    at async FindCursor.next (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:326:17)","status":500,"timestamp":"2026-03-17 09:35:59","url":"/api/auth/register"}
+{"level":"error","message":"Unhandled error Invalid namespace specified: mountain-safety/imdb.users","method":"POST","stack":"MongoServerError: Invalid namespace specified: mountain-safety/imdb.users\n    at Connection.sendCommand (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cmap/connection.js:320:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Connection.command (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cmap/connection.js:344:26)\n    at async Server.command (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/sdam/server.js:208:29)\n    at async tryOperation (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/operations/execute_operation.js:215:32)\n    at async executeOperation (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/operations/execute_operation.js:80:16)\n    at async FindCursor._initialize (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/find_cursor.js:62:26)\n    at async FindCursor.cursorInit (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:620:27)\n    at async FindCursor.fetchBatch (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:654:13)\n    at async FindCursor.next (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:326:17)","status":500,"timestamp":"2026-03-17 09:36:14","url":"/api/auth/register"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 09:37:08"}
+{"level":"info","message":"MongoDB disconnected","timestamp":"2026-03-17 09:37:08"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 10:02:18","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 10:02:18"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 10:02:18"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 10:02:18"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 10:02:18"}
+{"level":"error","message":"Unhandled error Invalid namespace specified: mountain-safety/imdb.users","method":"POST","stack":"MongoServerError: Invalid namespace specified: mountain-safety/imdb.users\n    at Connection.sendCommand (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cmap/connection.js:320:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Connection.command (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cmap/connection.js:344:26)\n    at async Server.command (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/sdam/server.js:208:29)\n    at async tryOperation (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/operations/execute_operation.js:215:32)\n    at async executeOperation (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/operations/execute_operation.js:80:16)\n    at async FindCursor._initialize (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/find_cursor.js:62:26)\n    at async FindCursor.cursorInit (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:620:27)\n    at async FindCursor.fetchBatch (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:654:13)\n    at async FindCursor.next (/home/emilliano/Documentos/STW/mongo-meteo-api/node_modules/mongoose/node_modules/mongodb/lib/cursor/abstract_cursor.js:326:17)","status":500,"timestamp":"2026-03-17 10:02:31","url":"/api/auth/register"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:03:11"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 10:04:46","uri":"mongodb://localhost:27017/mountain-safety"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 10:04:46"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 10:04:46"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 10:04:46"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 10:04:46"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:09:41"}
+{"level":"info","message":"MongoDB disconnected","timestamp":"2026-03-17 10:09:41"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 10:09:43","uri":"mongodb://localhost:27017/"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 10:09:43"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 10:09:43"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 10:09:43"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 10:09:43"}
+{"level":"info","message":"Usuario registrado: testuser@example.com","timestamp":"2026-03-17 10:10:37"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:11:04"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 10:11:05","uri":"mongodb://localhost:27017/"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 10:11:05"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 10:11:05"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 10:11:05"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 10:11:05"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:11:13"}
+{"error":"Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","level":"error","message":"Failed to start server","timestamp":"2026-03-17 10:11:53"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:13:03"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:13:03"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:13:03"}
+{"error":"Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","level":"error","message":"Failed to start server","timestamp":"2026-03-17 10:13:04"}
+{"error":"Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","level":"error","message":"Failed to start server","timestamp":"2026-03-17 10:13:36"}
+{"error":"Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","level":"error","message":"Failed to start server","timestamp":"2026-03-17 10:17:29"}
+{"error":"Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","level":"error","message":"Failed to start server","timestamp":"2026-03-17 10:18:50"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 10:20:04","uri":"mongodb://localhost:27017/"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 10:20:04"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 10:20:04"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 10:20:04"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 10:20:04"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 10:20:14"}
+{"level":"info","message":"MongoDB disconnected","timestamp":"2026-03-17 10:20:14"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-17 11:18:07","uri":"mongodb://localhost:27017/"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-17 11:18:07"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-17 11:18:07"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-17 11:18:07"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-17 11:18:07"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-17 11:21:19"}
+{"level":"info","message":"MongoDB disconnected","timestamp":"2026-03-17 11:21:19"}
+{"error":"Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","level":"error","message":"Failed to start server","timestamp":"2026-03-20 17:02:33"}
+{"db":"imdb","level":"info","message":"MongoDB connected via Mongoose","timestamp":"2026-03-20 17:07:39","uri":"mongodb+srv://recuencolopezemilliano_db_user:jcRgTZLGNva9Q3rX@cluster0.7p8zibn.mongodb.net/?appName=Cluster0"}
+{"level":"info","message":"Server running on http://localhost:3000","timestamp":"2026-03-20 17:07:39"}
+{"level":"info","message":"Swagger UI:  http://localhost:3000/docs","timestamp":"2026-03-20 17:07:39"}
+{"level":"info","message":"OpenAPI JSON:http://localhost:3000/docs.json","timestamp":"2026-03-20 17:07:39"}
+{"level":"info","message":"Health:      http://localhost:3000/health","timestamp":"2026-03-20 17:07:39"}
+{"level":"info","message":"SIGINT received — shutting down gracefully","timestamp":"2026-03-20 17:08:17"}
