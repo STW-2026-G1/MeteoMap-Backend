@@ -100,7 +100,7 @@ src/
 ```bash
 # Clonar repositorio
 git clone <repo>
-cd mongo-meteo-api
+cd MeteoMap-Backend
 
 # Instalar dependencias
 npm install
@@ -121,7 +121,7 @@ PORT=3000
 NODE_ENV=development
 
 # Base de datos
-MONGODB_URI=mongodb://localhost:27017/mongo-meteo-api
+MONGODB_URI=mongodb://localhost:27017
 
 # Logging
 LOG_LEVEL=info
@@ -212,7 +212,7 @@ GET    /api/admin/health           # Estado de salud
     nombre: String,
     avatar_url: String
   },
-  preferencias: [                    // ⭐ Array embebido
+  preferencias: [
     {
       zona_id: ObjectId,
       configuracion_alertas: {
@@ -247,7 +247,7 @@ GET    /api/admin/health           # Estado de salud
   _id: ObjectId,
   usuario_id: ObjectId (ref User),
   zona_id: ObjectId (ref Zone),
-  categoria: {                       // ⭐ Embebida (sin referencia)
+  categoria: {
     nombre: String,
     icono_marcador: String
   },
@@ -266,7 +266,7 @@ GET    /api/admin/health           # Estado de salud
   },
   estado: "PENDIENTE" | "ACTIVO" | "OCULTO" | "SPAM",
   valoracion_global: Number,
-  comentarios: [                     // ⭐ Array embebido
+  comentarios: [ 
     {
       usuario_id: ObjectId,
       autor_nombre: String,
@@ -433,63 +433,6 @@ El middleware `errorHandler.js` captura todos los errores automáticamente.
 
 ---
 
-## 📖 MongoDB Native Patterns
-
-### ✅ Lo Bueno (Patrones Nativos)
-
-**1. Preferencias Embebidas (Users)**
-```javascript
-// ✅ BIEN: Toda la config dentro del usuario
-user.preferencias = [
-  {
-    zona_id: ObjectId,
-    configuracion_alertas: { ... },
-    metodo_notificacion: "PUSH"
-  }
-]
-
-// Query: 1 request, todo junto
-const user = await User.findById(userId);
-```
-
-**2. Categoría Embebida (Reports)**
-```javascript
-// ✅ BIEN: Categoría dentro del reporte
-report.categoria = {
-  nombre: "Avalancha",
-  icono_marcador: "⚠️"
-}
-
-// No necesita join/populate
-```
-
-**3. Comentarios Embebidos (Reports)**
-```javascript
-// ✅ BIEN: Comentarios dentro del reporte
-report.comentarios = [
-  { usuario_id, contenido, fecha, ... }
-]
-
-// Acceso O(1) sin queries adicionales
-```
-
-### ❌ Qué se Eliminó
-
-- ❌ `FavoriteZone` colección (← embebida en User)
-- ❌ `ReportCategory` colección (← embebida en Report)
-- ❌ Queries separadas para comentarios de reporte (← embebidos)
-
-### 📊 Beneficio de Performance
-
-| Operación | Antes | Después |
-|-----------|-------|---------|
-| Leer usuario + favoritos + config | 2-3 queries | 1 query |
-| Leer reporte + categoría | 2 queries | 1 query |
-| Leer reporte + comentarios | 2 queries | 1 query |
-| Índices necesarios | Más | Menos |
-
----
-
 ## 🚀 Próximos Pasos
 
 - [ ] Agregar Unit Tests (Jest)
@@ -501,13 +444,6 @@ report.comentarios = [
 - [ ] Integración ChatGPT/Claude
 - [ ] Notificaciones por email/SMS
 - [ ] WebSockets para updates en tiempo real
-
----
-
-## 📚 Documentación Detallada
-
-- **[MIGRATION.md](./MIGRATION.md)** - Migración de estructura anterior
-- **[ARCHITECTURE_MVC.md](./ARCHITECTURE_MVC.md)** - Explicación detallada del patrón MVC
 
 ---
 
