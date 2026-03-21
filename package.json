@@ -15,7 +15,7 @@
     "bcrypt": "^6.0.0",
     "cli-progress": "^3.12.0",
     "cookie-parser": "^1.4.6",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
@@ -26,6 +26,7 @@
     "morgan": "^1.10.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
+    "vercel": "^50.34.3",
     "winston": "^3.11.0",
     "zod": "^3.22.4"
   }
