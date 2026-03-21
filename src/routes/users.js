@@ -21,6 +21,8 @@ function validate(req, res, next) {
  *   get:
  *     summary: Obtener perfil y reputación del usuario
  *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Datos del perfil

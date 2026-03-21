@@ -19,8 +19,6 @@ const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
  *   post:
  *     summary: Registro de usuario
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
