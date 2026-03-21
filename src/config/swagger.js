@@ -20,7 +20,7 @@ Una API REST integral para la gestión de la seguridad en montaña y la elaborac
 - **Informes TTL** - Eliminación automática de informes después de 48 horas
 
 ## URL base
-\`http://localhost:3000\`
+${process.env.SWAGGER_URL} || "http://localhost:3000"
 
 ## Autenticación
 La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la solicitud. Los tokens JWT están pendientes.
@@ -43,7 +43,7 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
     },
     servers: [
       {
-        url: "http://localhost:{port}",
+        url: `${process.env.SWAGGER_URL}` || "http://localhost:{port}",
         description: "Local development server",
         variables: {
           port: { default: process.env.PORT || "3000" },
