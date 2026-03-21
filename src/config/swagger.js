@@ -7,33 +7,31 @@ const options = {
       title: "Mountain Safety Platform API",
       version: "1.0.0",
       description: `
-A comprehensive REST API for mountain safety management and community reporting.
+Una API REST integral para la gestión de la seguridad en montaña y la elaboración de informes para la comunidad.
+## Características
+- **Autenticación y autorización de usuarios** - Registro e inicio de sesión con acceso basado en roles
+- **Gestión de zonas** - Zonas geográficas con soporte GeoJSON para consultas de proximidad
+- **Almacenamiento en caché de datos meteorológicos** - Almacena y gestiona datos meteorológicos para zonas de montaña
+- **Informes de la comunidad** - Envía y valida informes con geolocalización
+- **Sistema de reputación** - Validación de la comunidad con puntos y seguimiento de la reputación
+- **Foros de usuarios** - Comentarios y debates por zona
+- **Asistente de IA** - Chat para obtener orientación inteligente sobre seguridad en la montaña
+- **Panel de administración** - Métricas del sistema, gestión de usuarios y gestión de categorías
+- **Informes TTL** - Eliminación automática de informes después de 48 horas
 
-## Features
-- **User Authentication & Authorization** - Registration, login with role-based access
-- **Zone Management** - Geographic zones with GeoJSON support for proximity queries
-- **Weather Caching** - Store and manage meteorological data for mountain zones
-- **Community Reports** - Submit and validate reports with geolocation
-- **Reputation System** - Community validation with points and reputation tracking
-- **User Forums** - Comments and discussions per zone
-- **AI Assistant** - Chat endpoint for intelligent mountain safety guidance
-- **Admin Panel** - System metrics, user management, category management
-- **TTL Reports** - Automatic deletion of reports after 48 hours
+## URL base
+\`http://localhost:3000\`
 
-## Base URL
-\`http://localhost:3000/api\`
-
-## Authentication
-Most endpoints require a \`userId\` in the request body. JWT tokens are TODO.
-
-## Collections
-- Users (with roles: PUBLIC, USER, ADMIN)
-- Zones (geographic areas with GeoJSON)
-- Reports (community reports with validation)
-- Comments (forum discussions)
-- Report Categories (types of reports)
-- System Metrics (performance tracking)
-- Favorite Zones (user preferences with alerts)
+## Autenticación
+La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la solicitud. Los tokens JWT están pendientes.
+## Colecciones
+- Usuarios (con roles: PÚBLICO, USUARIO, ADMINISTRADOR)
+- Zonas (áreas geográficas con GeoJSON)
+- Informes (informes de la comunidad con validación)
+- Comentarios (discusiones del foro)
+- Categorías de informes (tipos de informes)
+- Métricas del sistema (seguimiento del rendimiento)
+- Zonas favoritas (preferencias de usuario con alertas)
       `.trim(),
       contact: {
         name: "Mountain Safety Platform Team",
@@ -45,7 +43,7 @@ Most endpoints require a \`userId\` in the request body. JWT tokens are TODO.
     },
     servers: [
       {
-        url: "http://localhost:{port}/api",
+        url: "http://localhost:{port}",
         description: "Local development server",
         variables: {
           port: { default: process.env.PORT || "3000" },
@@ -204,7 +202,7 @@ Most endpoints require a \`userId\` in the request body. JWT tokens are TODO.
         ValidationError: {
           type: "object",
           properties: {
-            error: { type: "string", example: "Validation Error" },
+            error: { type: "string", example: "Error de validación" },
             errors: {
               type: "array",
               items: {

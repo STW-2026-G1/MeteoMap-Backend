@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
 const swaggerUi = require("swagger-ui-express");
 const fs = require("fs");
 const path = require("path");
@@ -12,6 +13,7 @@ const swaggerSpec = require("./config/swagger");
 const { connect, disconnect } = require("./config/database");
 const httpLogger = require("./middleware/httpLogger");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
+const isAuth = require("./middleware/auth");
 
 // Import new routers
 const authRouter = require("./routes/auth");
@@ -36,6 +38,7 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off so Swagger UI loads
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser()); // Necesario para leer cookies HttpOnly (Refresh Token)
 
 // HTTP request logging
 app.use(httpLogger);
@@ -87,10 +90,12 @@ app.get("/docs.json", (req, res) => {
 // ---------------------------------------------------------------------------
 // API routes
 // ---------------------------------------------------------------------------
-// Authentication endpoints
+// Authentication endpoints (públicas)
 app.use("/api/auth", authRouter);
 
-// User management endpoints
+// User management endpoints (protegidas - ejemplo)
+// Para proteger las rutas de usuario, agregar el middleware isAuth:
+// app.use("/api/user", isAuth, usersRouter);
 app.use("/api/user", usersRouter);
 
 // Zone management and weather endpoints
@@ -105,7 +110,9 @@ app.use("/api/comments", commentsRouter);
 // Chat and IA endpoint
 app.use("/api/chat", chatRouter);
 
-// Admin panel endpoints
+// Admin panel endpoints (protegidas - requiere rol ADMIN)
+// Para proteger las rutas de admin, agregar el middleware isAuth:
+// app.use("/api/admin", isAuth, adminRouter);
 app.use("/api/admin", adminRouter);
 
 // ---------------------------------------------------------------------------
@@ -124,13 +131,13 @@ async function start() {
     await connect();
 
     app.listen(PORT, () => {
-      logger.info(`Server running on http://localhost:${PORT}`);
+      logger.info(`Servidor ejecutándose en http://localhost:${PORT}`);
       logger.info(`Swagger UI:  http://localhost:${PORT}/docs`);
       logger.info(`OpenAPI JSON:http://localhost:${PORT}/docs.json`);
       logger.info(`Health:      http://localhost:${PORT}/health`);
     });
   } catch (err) {
-    logger.error("Failed to start server", { error: err.message });
+    logger.error("Fallo al iniciar el servidor", { error: err.message });
     process.exit(1);
   }
 }

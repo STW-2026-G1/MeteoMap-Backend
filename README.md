@@ -14,19 +14,21 @@ src/
 ├── config/
 │   ├── database.js              # Conexión MongoDB
 │   ├── logger.js                # Winston logger
-│   └── swagger.js               # OpenAPI spec
+│   ├── swagger.js               # OpenAPI spec
+|   └── jwt.js                   # Configuración JWT centralizada
 ├── models/                       # Esquemas Mongoose
 │   ├── User.js                  # Usuarios (preferencias embebidas)
 │   ├── Zone.js                  # Zonas con GeoJSON
 │   ├── Report.js                # Reportes (categoría + comentarios embebidos)
 │   ├── Comment.js               # Comentarios de zona
 │   └── SystemMetric.js          # Métricas del sistema
-├── services/                     # 🆕 Lógica de negocio (pura)
+├── services/                     # Lógica de negocio (pura)
 │   ├── userService.js           # Gestión de usuarios
 │   ├── reportService.js         # Operaciones de reportes
 │   ├── commentService.js        # Gestión de comentarios
-│   └── zoneService.js           # Datos de zonas
-├── controllers/                  # 🆕 Handlers HTTP
+│   ├── zoneService.js           # Datos de zonas
+|   └── tokenService.js          # Generación/verificación JWT
+├── controllers/                  # Handlers HTTP
 │   ├── userController.js        # Mapeo HTTP → userService
 │   ├── reportController.js      # Mapeo HTTP → reportService
 │   ├── commentController.js     # Mapeo HTTP → commentService
@@ -41,16 +43,18 @@ src/
 │   └── admin.js                 # Administración
 ├── middleware/
 │   ├── errorHandler.js          # Manejo global de errores
-│   └── httpLogger.js            # Logger de HTTP
+│   ├── httpLogger.js            # Logger de HTTP
+│   └── auth.js                   # Middleware isAuth
 ├── utils/
-│   └── query.js                 # Utilidades BD
+│   ├── query.js                 # Utilidades BD
+|   └── validation.js            # Esquemas Zod
 └── test/
-    ├── auth.rest                # 🆕 Autenticación
-    ├── users.rest               # 🆕 Usuarios
-    ├── zones.rest               # 🆕 Zonas
-    ├── reports.rest             # 🆕 Reportes  
-    ├── comments.rest            # 🆕 Comentarios
-    └── admin.rest               # 🆕 Administración
+    ├── auth.rest                # Autenticación
+    ├── users.rest               # Usuarios
+    ├── zones.rest               # Zonas
+    ├── reports.rest             # Reportes  
+    ├── comments.rest            # Comentarios
+    └── admin.rest               # Administración
 ```
 
 ---
