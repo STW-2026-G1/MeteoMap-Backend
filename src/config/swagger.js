@@ -51,6 +51,14 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
       },
     ],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Paste only the JWT access token",
+        },
+      },
       schemas: {
         // ─── User Schemas ───
         User: {
