@@ -28,7 +28,7 @@ class TokenService {
 
       // Generar Access Token (corta duración)
       const accessToken = jwt.sign(cleanPayload, JWT_CONFIG.ACCESS_TOKEN.secret, {
-        expiresIn: JWT_CONFIG.ACCESS_TOKEN.expiresIn,
+        // expiresIn: JWT_CONFIG.ACCESS_TOKEN.expiresIn,
         algorithm: JWT_CONFIG.ACCESS_TOKEN.algorithm,
       });
 
@@ -62,7 +62,7 @@ class TokenService {
    */
   verifyAccessToken(token) {
     try {
-      // Rechazar explícitamente algoritmo "none"
+      // Decoficar el token
       const decoded = jwt.verify(token, JWT_CONFIG.ACCESS_TOKEN.secret, {
         algorithms: [JWT_CONFIG.ACCESS_TOKEN.algorithm],
       });

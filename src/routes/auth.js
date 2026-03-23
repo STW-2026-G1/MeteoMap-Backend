@@ -313,14 +313,6 @@ router.post("/refresh", async (req, res, next) => {
  *         description: Sesión cerrada exitosamente
  */
 router.post("/logout", (req, res) => {
-  // Limpiar la cookie del Refresh Token
-  res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-  });
-
   logger.info("Usuario cerró sesión", { ip: req.ip });
 
   res.json({

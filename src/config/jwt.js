@@ -8,7 +8,7 @@ const JWT_CONFIG = {
   // Access Token: corta duración (15 minutos)
   ACCESS_TOKEN: {
     secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-    expiresIn: "15m",
+    // expiresIn: "15m",
     algorithm: "HS256",
   },
 

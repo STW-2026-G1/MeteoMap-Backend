@@ -1,5 +1,4 @@
 const userService = require("../services/userService");
-const logger = require("../config/logger");
 
 class UserController {
   /**
@@ -16,13 +15,50 @@ class UserController {
   }
 
   /**
-   * PUT /api/user/favorites
+   * GET /api/user/me
+   * Obtener el perfil del usuario autenticado
+   */
+  async getMyProfile(req, res, next) {
+    try {
+      const userId = req.user.userId; // Asumiendo que isAuth agregó req.user
+      const profile = await userService.getProfile(userId);
+      res.json(profile);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PUT /api/user/me/favorites
+   * Añadir o quitar zona favorita del usuario autenticado
    */
   async updateFavorites(req, res, next) {
     try {
-      const { userId, zonaId, accion, configuracion } = req.body;
-      const result = await userService.updateFavorites(userId, zonaId, accion, configuracion);
+      const userId = req.user.userId; // Del token
+      const { zonaId, accion, configuracion_alertas, metodo_notificacion } = req.body;
+      
+      const result = await userService.updateFavorites(
+        userId,
+        zonaId,
+        accion,
+        configuracion_alertas,
+        metodo_notificacion
+      );
+      
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+  /**
+   * GET /api/user/me/favorites
+   * Obtener las zonas favoritas del usuario autenticado
+   */
+  async getFavorites(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const user = await userService.getProfile(userId);
+      res.json({ preferencias: user.preferencias });
     } catch (err) {
       next(err);
     }

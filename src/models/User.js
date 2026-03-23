@@ -46,13 +46,13 @@ const userSchema = new mongoose.Schema(
       ultimo_reset: { type: Date, default: Date.now },
     },
     // Estado de la cuenta
-    estado: { type: String, enum: ["ACTIVO", "BLOQUEADO"], default: "ACTIVO" },
-    // Reputación
-    reputacion: {
-      puntos: { type: Number, default: 0 },
-      medalla: { type: String, default: "Novato" },
-      strikes_spam: { type: Number, default: 0 },
-    },
+    v: { type: String, enum: ["ACTIVO", "BLOQUEADO"], default: "ACTIVO" },
+    // // Reputación
+    // reputacion: {
+    //   puntos: { type: Number, default: 0 },
+    //   medalla: { type: String, default: "Novato" },
+    //   strikes_spam: { type: Number, default: 0 },
+    // },
   },
   {
     timestamps: true,

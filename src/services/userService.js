@@ -9,15 +9,19 @@ class UserService {
     try {
       const user = await User.findById(userId);
       if (!user) {
-        throw new Error("Usuario no encontrado");
+        const error = new Error("Usuario no encontrado");
+        error.status = 404;
+        throw error;
       }
 
       return {
+        message: "Datos del usuario",
         id: user._id,
         email: user.datos_acceso.email,
         perfil: user.perfil,
-        reputacion: user.reputacion,
         preferencias: user.preferencias,
+        limites_ia: user.limites_ia,
+        estado: user.v,
       };
     } catch (err) {
       logger.error(`Error en getProfile: ${err.message}`);
