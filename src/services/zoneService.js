@@ -67,20 +67,34 @@ class ZoneService {
 
         // Obtener coordenadas
         const [longitud, latitud] = zone.geolocalizacion.coordinates;
+        logger.debug(`Coordenadas extraídas - Lat: ${latitud}, Lon: ${longitud}`);
 
-        // Solicitar datos a Open-Meteo
-        const datosNuevos = await weatherService.fetchWeatherData(latitud, longitud);
+        try {
+          // Solicitar datos a Open-Meteo
+          const datosNuevos = await weatherService.fetchWeatherData(latitud, longitud);
 
-        // Actualizar caché en la base de datos
-        zone.cache_meteo = {
-          datos_crudos: datosNuevos,
-          ultima_actualizacion: new Date(),
-        };
+          // Actualizar caché en la base de datos
+          zone.cache_meteo = {
+            datos_crudos: datosNuevos,
+            ultima_actualizacion: new Date(),
+          };
 
-        await zone.save();
-        logger.info(`Caché actualizado para zona: ${zoneId}`);
+          await zone.save();
+          logger.info(`Caché actualizado para zona: ${zoneId}`);
 
-        datosMeteo = datosNuevos;
+          datosMeteo = datosNuevos;
+        } catch (weatherErr) {
+          logger.error(`Error al obtener datos de Open-Meteo para zona ${zoneId}: ${weatherErr.message}`);
+          
+          // Si hay datos en caché antiguo, usarlos como fallback
+          if (zone.cache_meteo && zone.cache_meteo.datos_crudos) {
+            logger.warn(`Usando caché antiguo para zona ${zoneId} debido a error de Open-Meteo`);
+            datosMeteo = zone.cache_meteo.datos_crudos;
+          } else {
+            // Si no hay fallback, propagar el error
+            throw new Error(`No se pudo obtener datos meteorológicos: ${weatherErr.message}`);
+          }
+        }
       }
 
       return {

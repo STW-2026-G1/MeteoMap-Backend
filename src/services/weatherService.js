@@ -23,10 +23,19 @@ class WeatherService {
 
       logger.debug(`Solicitando datos meteorológicos a Open-Meteo para [${latitude}, ${longitude}]`);
 
-      const response = await fetch(url.toString());
+      // Agregar timeout de 10 segundos
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(url.toString(), {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Open-Meteo API error: ${response.status}`);
+        logger.error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -36,8 +45,10 @@ class WeatherService {
       // Transformar respuesta de Open-Meteo a formato estándar
       return this._transformOpenMeteoData(data);
     } catch (err) {
-      logger.error(`Error obteniendo datos de Open-Meteo: ${err.message}`);
-      throw err;
+      logger.error(`Error obteniendo datos de Open-Meteo: ${err.name} - ${err.message}`);
+      // Loguear el stack trace completo en debug
+      logger.debug(`Stack trace: ${err.stack}`);
+      throw new Error(`Error de conexión con Open-Meteo: ${err.message}`);
     }
   }
 
