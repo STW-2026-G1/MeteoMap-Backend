@@ -1,6 +1,7 @@
 const Zone = require("../models/Zone");
 const Report = require("../models/Report");
 const logger = require("../config/logger");
+const weatherService = require("./weatherService");
 
 class ZoneService {
   /**
@@ -42,6 +43,7 @@ class ZoneService {
 
   /**
    * Obtener datos meteorológicos de una zona
+   * Verifica caché y actualiza si es necesario desde Open-Meteo
    */
   async getWeatherData(zoneId) {
     try {
@@ -52,16 +54,62 @@ class ZoneService {
 
       logger.debug(`ZoneService.getWeatherData para zona: ${zoneId}`);
 
+      // Verificar si el caché es válido (menos de 30 minutos)
+      const cacheValido = this._isCacheValido(zone.cache_meteo);
+
+      let datosMeteo;
+
+      if (cacheValido) {
+        logger.debug(`Usando caché para zona: ${zoneId}`);
+        datosMeteo = zone.cache_meteo.datos_crudos;
+      } else {
+        logger.debug(`Actualizando datos meteorológicos para zona: ${zoneId}`);
+
+        // Obtener coordenadas
+        const [longitud, latitud] = zone.geolocalizacion.coordinates;
+
+        // Solicitar datos a Open-Meteo
+        const datosNuevos = await weatherService.fetchWeatherData(latitud, longitud);
+
+        // Actualizar caché en la base de datos
+        zone.cache_meteo = {
+          datos_crudos: datosNuevos,
+          ultima_actualizacion: new Date(),
+        };
+
+        await zone.save();
+        logger.info(`Caché actualizado para zona: ${zoneId}`);
+
+        datosMeteo = datosNuevos;
+      }
+
       return {
         zona: zone.nombre,
         geolocalizacion: zone.geolocalizacion,
-        cache_meteo: zone.cache_meteo || {},
-        nota: "Los datos meteorológicos se actualizan desde la API externa (AEMET/Open-Meteo)",
+        cache_meteo: zone.cache_meteo,
+        datos: datosMeteo,
+        nota: "Datos meteorológicos actualizados desde Open-Meteo",
       };
     } catch (err) {
       logger.error(`Error en getWeatherData: ${err.message}`);
       throw err;
     }
+  }
+
+  /**
+   * Verificar si el caché es válido (menos de 30 minutos)
+   * @private
+   */
+  _isCacheValido(cacheMeto) {
+    if (!cacheMeto || !cacheMeto.ultima_actualizacion) {
+      return false;
+    }
+
+    const minutosTranscurridos =
+      (new Date() - new Date(cacheMeto.ultima_actualizacion)) / (1000 * 60);
+
+    // Caché válido si tiene menos de 30 minutos
+    return minutosTranscurridos < 30;
   }
 
   /**
@@ -97,6 +145,66 @@ class ZoneService {
       };
     } catch (err) {
       logger.error(`Error en getZoneDashboard: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Crear una nueva zona
+   */
+  async createZone(zoneData) {
+    try {
+      // Validaciones básicas
+      if (!zoneData.nombre) {
+        throw new Error("El nombre de la zona es requerido");
+      }
+      if (!zoneData.geolocalizacion || !zoneData.geolocalizacion.coordinates) {
+        throw new Error("La geolocalización con coordenadas es requerida");
+      }
+
+      // Crear nueva zona
+      const newZone = new Zone({
+        nombre: zoneData.nombre,
+        descripcion: zoneData.descripcion || "",
+        geolocalizacion: {
+          type: "Point",
+          coordinates: zoneData.geolocalizacion.coordinates,
+        },
+        estado: zoneData.estado || "ACTIVA",
+        cache_meteo: {
+          datos_crudos: null,
+          ultima_actualizacion: null,
+        },
+      });
+
+      // Guardar en la base de datos
+      await newZone.save();
+
+      logger.info(`ZoneService.createZone: Nueva zona creada con ID ${newZone._id}`);
+
+      return newZone;
+    } catch (err) {
+      logger.error(`Error en createZone: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Eliminar una zona por ID
+   */
+  async deleteZone(zoneId) {
+    try {
+      const deletedZone = await Zone.findByIdAndDelete(zoneId);
+      
+      if (!deletedZone) {
+        throw new Error("Zona no encontrada");
+      }
+
+      logger.info(`ZoneService.deleteZone: Zona eliminada con ID ${zoneId}`);
+
+      return deletedZone;
+    } catch (err) {
+      logger.error(`Error en deleteZone: ${err.message}`);
       throw err;
     }
   }

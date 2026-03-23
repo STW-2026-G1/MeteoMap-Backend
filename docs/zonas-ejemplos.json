@@ -1,0 +1,132 @@
+[
+  {
+    "nombre": "Picos de Europa",
+    "descripcion": "Macizo montañoso situado en Asturias, Cantabria y León. Es uno de los relieves más escarpados de la Península Ibérica con altura máxima de 2648 metros (Torre de Cerredo). Famoso por sus desfiladeros y rutas de senderismo desafiantes.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-2.5, 43.3]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Sierra de Guadarrama",
+    "descripcion": "Cordillera montañosa en la región central de España que forma parte del Sistema Central. Con altura máxima de 2428 metros (Peñalara), es muy accesible desde Madrid y muy frecuentada por montañeros. Famosa por sus lagos de alta montaña.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-3.8, 40.7]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Teide",
+    "descripcion": "Volcán activo y montaña más alta de España con 3718 metros de altura, situado en la isla de Tenerife, Islas Canarias. Es Patrimonio de la Humanidad y uno de los volcanes más altos del mundo medido desde el fondo oceánico.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-16.64, 28.27]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Pirineos",
+    "descripcion": "Cordillera montañosa que forma la frontera natural entre España y Francia. Se extiende por 430 km y contiene picos como Aneto (3404 m). Ofrece una gran variedad de rutas y ecosistemas alpinos.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [0.5, 42.7]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Sierra Nevada",
+    "descripcion": "Cordillera situada en Andalucía (Granada y Almería) con el Mulhacén (3482 m) como pico más alto de la Península Ibérica. Famosa por sus glaciares y por ser estación de esquí. Ofrece rutas alpinas variadas.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-3.4, 36.9]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Montes de León",
+    "descripcion": "Rango de montañas en la provincia de León que forma parte de la Cordillera Cantábrica. Ideal para senderismo con vistas panorámicas a los valles. Alturas entre 1500-2000 metros con bosques de roble y haya.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-5.7, 42.5]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Sistema Ibérico",
+    "descripcion": "Gran sistema montañoso que se extiende desde el País Vasco hasta Castilla-La Mancha. Con alturas entre 1000-2500 metros, ofrece paisajes variados con bosques, cañones y vistas extensas. Menos concurrido que otras sierras.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-1.5, 41.5]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Montseny",
+    "descripcion": "Macizo montañoso en Cataluña, en la provincia de Barcelona. Máxima altitud de 1706 metros (Les Agudes). Muy cercano a Barcelona, es popular para excursionismo y ofrece diversidad de flora debido a su posición geográfica.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [2.4, 41.8]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Picos del Buitre",
+    "descripcion": "Conjunto de picos situados en el Parque Natural de Gredos (Ávila). Con altitudes entre 1500-1800 metros, son ideales para escalada y senderismo. Famosos por sus formaciones rocosas y vistas del valle.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-5.3, 40.3]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  },
+  {
+    "nombre": "Ruta del Cares",
+    "descripcion": "Desfiladero en los Picos de Europa (Asturias-Castilla y León) que sigue el río Cares. Es una de las rutas de senderismo más populares de España con paisajes espectaculares. Altitud entre 200-300 metros en el fondo del cañón.",
+    "geolocalizacion": {
+      "type": "Point",
+      "coordinates": [-2.3, 43.2]
+    },
+    "estado": "ACTIVA",
+    "cache_meteo": {
+      "datos_crudos": null,
+      "ultima_actualizacion": null
+    }
+  }
+]
