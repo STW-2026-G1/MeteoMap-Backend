@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const { body, param, validationResult } = require("express-validator");
 const commentController = require("../controllers/commentController");
+const isAuth = require("../middleware/auth");
 
 const router = Router();
 
@@ -17,69 +18,170 @@ function validate(req, res, next) {
 
 /**
  * @swagger
- * /api/comments/:zoneId:
+ * /api/comments/zone/{zoneId}:
  *   get:
  *     summary: Hilos de discusión por zona
  *     tags: [Comments]
+ *     parameters:
+ *       - in: path
+ *         name: zoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la zona de MongoDB
+ *     responses:
+ *       200:
+ *         description: Lista de comentarios de la zona
+ *       400:
+ *         description: ID de zona inválido
  */
-router.get("/:zoneId", [param("zoneId").isMongoId()], validate, (req, res, next) =>
-  commentController.getCommentsByZone(req, res, next)
+router.get(
+  "/zone/:zoneId",
+  [param("zoneId").isMongoId()],
+  validate,
+  (req, res, next) => commentController.getCommentsByZone(req, res, next)
 );
 
 /**
  * @swagger
- * /api/reports/:reportId/comments:
+ * /api/comments/report/{reportId}:
  *   get:
- *     summary: Obtener comentarios embebidos de un reporte
+ *     summary: Obtener comentarios de un reporte
  *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del reporte meteorológico
+ *     responses:
+ *       200:
+ *         description: Lista de comentarios del reporte
+ *       400:
+ *         description: ID de reporte inválido
  */
-router.get("/report/:reportId/comments", [param("reportId").isMongoId()], validate, (req, res, next) =>
-  commentController.getReportComments(req, res, next)
+router.get(
+  "/report/:reportId",
+   isAuth,
+  [param("reportId").isMongoId()],
+  validate,
+  (req, res, next) => commentController.getReportComments(req, res, next)
 );
 
 /**
  * @swagger
- * /api/comments:
+ * /api/comments/zone/{zoneId}:
  *   post:
- *     summary: Publicar comentario
+ *     summary: Publicar comentario zona
  *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: zoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [usuario_id, contenido]
+ *             properties:
+ *               contenido:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Comentario creado exitosamente
+ *       400:
+ *         description: Datos inválidos
  */
 router.post(
-  "/",
+  "/zone/:zoneId",
+   isAuth,
   [
-    body("usuario_id").isMongoId(),
-    body("zona_id").isMongoId(),
-    body("reporte_id").optional().isMongoId(),
+    param("zoneId").isMongoId(),
     body("contenido").isString().trim().isLength({ min: 1, max: 5000 }),
     body("etiqueta").optional().isString().trim(),
   ],
   validate,
-  (req, res, next) => commentController.createComment(req, res, next)
+  (req, res, next) => commentController.createZoneComment(req, res, next)
 );
 
 /**
  * @swagger
- * /api/comments/:id:
- *   delete:
- *     summary: Borrar comentario
+ * /api/comments/report/{reportId}:
+ *   post:
+ *     summary: Publicar comentario reporte
  *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reportId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [usuario_id, contenido]
+ *             properties:
+ *               usuario_id:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Comentario añadido a reporte exitosamente
+ *       400:
+ *         description: Datos inválidos
  */
-router.delete("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
-  commentController.deleteComment(req, res, next)
+router.post(
+  "/report/:reportId",
+  isAuth,
+  [
+    param("reportId").isMongoId(),
+    body("contenido").isString().trim().isLength({ min: 1, max: 5000 }),
+    body("etiqueta").optional().isString().trim(),
+  ],
+  validate,
+  (req, res, next) => commentController.createReportComment(req, res, next)
 );
 
 /**
  * @swagger
- * /api/reports/:reportId/comments/:commentIndex:
+ * /api/comments/{id}:
  *   delete:
- *     summary: Borrar comentario embebido de un reporte
+ *     summary: Borrar comentario (Zona o Reporte)
  *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID único del comentario a borrar
+ *     responses:
+ *       200:
+ *         description: Comentario marcado como eliminado
+ *       404:
+ *         description: No se encontró el comentario
  */
 router.delete(
-  "/report/:reportId/comments/:commentIndex",
-  [param("reportId").isMongoId(), param("commentIndex").isInt()],
+  "/:id",
+   isAuth,
+  [param("id").isMongoId()],
   validate,
-  (req, res, next) => commentController.deleteReportComment(req, res, next)
+  (req, res, next) => commentController.deleteComment(req, res, next)
 );
 
 module.exports = router;

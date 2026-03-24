@@ -73,14 +73,14 @@ class CommentService {
           throw new Error("Reporte no encontrado");
         }
 
-        const nuevoComentario = {
-          usuario_id,
-          autor_nombre: user.perfil.nombre,
-          contenido,
-          etiqueta: etiqueta || null,
-          estado: "ACTIVO",
-          fecha: new Date(),
-        };
+        const nuevoComentario = new Comment({
+         usuario_id,
+         reporte_id, 
+         zona_id: null,    
+         contenido,
+         etiqueata: etiqueta || null,
+         estado: "ACTIVO",
+        });
 
         report.comentarios.push(nuevoComentario);
         await report.save();
@@ -141,31 +141,6 @@ class CommentService {
     }
   }
 
-  /**
-   * Eliminar comentario embebido de un reporte
-   */
-  async deleteReportComment(reportId, commentIndex) {
-    try {
-      const report = await Report.findById(reportId);
-      if (!report) {
-        throw new Error("Reporte no encontrado");
-      }
-
-      if (commentIndex < 0 || commentIndex >= report.comentarios.length) {
-        throw new Error("Índice de comentario no válido");
-      }
-
-      report.comentarios[commentIndex].estado = "ELIMINADO";
-      await report.save();
-
-      logger.info(`Comentario embebido en reporte ${reportId} marcado como eliminado`);
-
-      return { message: "Comentario eliminado del reporte" };
-    } catch (err) {
-      logger.error(`Error en deleteReportComment: ${err.message}`);
-      throw err;
-    }
-  }
 }
 
 module.exports = new CommentService();
