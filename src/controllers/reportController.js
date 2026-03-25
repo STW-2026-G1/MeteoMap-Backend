@@ -7,13 +7,19 @@ class ReportController {
    */
   async getReports(req, res, next) {
     try {
-      const { zonaId, estado, limit } = req.query;
+      const { zonaId, estado, limit, lat, lng, radius } = req.query;
       const filters = {};
       if (zonaId) filters.zonaId = zonaId;
       if (estado) filters.estado = estado;
       if (limit) filters.limit = parseInt(limit);
+      if (lat && lng) {
+        filters.lat = parseFloat(lat);
+        filters.lng = parseFloat(lng);
+      }
+      if (radius) filters.radius = parseInt(radius);
 
       const result = await reportService.getReports(filters);
+      console.log("ReportController.getReports", { filters, results: result });
       res.json(result);
     } catch (err) {
       next(err);
@@ -38,7 +44,10 @@ class ReportController {
    */
   async createReport(req, res, next) {
     try {
-      const reportData = req.body;
+      const reportData = {
+        ...req.body,
+        usuario_id: req.user.userId,
+      };
       const report = await reportService.createReport(reportData);
       res.status(201).json({
         message: "Reporte creado exitosamente",

@@ -9,11 +9,23 @@ class ReportService {
    */
   async getReports(filters = {}) {
     try {
-      const { zonaId, estado, limit = 100 } = filters;
+      const { zonaId, estado, limit = 100, lat, lng, radius = 5000 } = filters;
       const query = { estado: "ACTIVO" };
 
       if (zonaId) query.zona_id = zonaId;
       if (estado) query.estado = estado;
+
+      if (lat && lng) {
+        query.geolocalizacion = {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [lng, lat],
+            },
+            $maxDistance: radius,
+          },
+        };
+      }
 
       const reports = await Report.find(query)
         .populate("usuario_id", "perfil.nombre reputacion")

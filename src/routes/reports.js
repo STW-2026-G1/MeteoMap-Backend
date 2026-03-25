@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const { body, param, query, validationResult } = require("express-validator");
 const reportController = require("../controllers/reportController");
+const isAuth = require("../middleware/auth");
 
 const router = Router();
 
@@ -21,17 +22,78 @@ function validate(req, res, next) {
  *   get:
  *     summary: Obtener reportes cercanos o por zona
  *     tags: [Reports]
+ *     parameters:
+ *       - in: query
+ *         name: lat
+ *         schema:
+ *           type: number
+ *         description: Latitud
+ *       - in: query
+ *         name: lng
+ *         schema:
+ *           type: number
+ *         description: Longitud
+ *       - in: query
+ *         name: radius
+ *         schema:
+ *           type: number
+ *         description: Radio de búsqueda en metros (por defecto 5000)
+ *       - in: query
+ *         name: zonaId
+ *         schema:
+ *           type: string
+ *         description: ID de la zona
+ *     responses:
+ *       200:
+ *         description: Lista de reportes obtenida con éxito
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 count:
+ *                   type: integer
+ *                 reports:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Report'
  */
-router.get("/", async (req, res, next) => {
-  reportController.getReports(req, res, next);
-});
+router.get(
+  "/",
+  [
+    query("lat").optional().isFloat(),
+    query("lng").optional().isFloat(),
+    query("radius").optional().isInt(),
+    query("zonaId").optional().isMongoId(),
+  ],
+  validate,
+  async (req, res, next) => {
+    reportController.getReports(req, res, next);
+  }
+);
 
 /**
  * @swagger
- * /api/reports/:id:
+ * /api/reports/{id}:
  *   get:
  *     summary: Obtener reporte por ID
  *     tags: [Reports]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del reporte
+ *     responses:
+ *       200:
+ *         description: Reporte obtenido con éxito
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Report'
+ *       404:
+ *         description: Reporte no encontrado
  */
 router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
   reportController.getReportById(req, res, next)
@@ -43,16 +105,56 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
  *   post:
  *     summary: Crear nuevo reporte con geolocalización
  *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - zona_id
+ *               - nombre_categoria
+ *               - icono_marcador
+ *               - tipo
+ *               - descripcion
+ *               - coordinates
+ *             properties:
+ *               zona_id:
+ *                 type: string
+ *               nombre_categoria:
+ *                 type: string
+ *               icono_marcador:
+ *                 type: string
+ *               tipo:
+ *                 type: string
+ *               descripcion:
+ *                 type: string
+ *               foto_url:
+ *                 type: string
+ *               coordinates:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *                 description: "[Longitud, Latitud]"
+ *                 example: [-3.703790, 40.416775]
+ *     responses:
+ *       201:
+ *         description: Reporte creado exitosamente
+ *       401:
+ *         description: No autorizado
  */
 router.post(
   "/",
+  isAuth,
   [
-    body("usuario_id").isMongoId(),
     body("zona_id").isMongoId(),
     body("nombre_categoria").isString().trim(),
     body("icono_marcador").isString().trim(),
     body("tipo").isString().trim(),
     body("descripcion").isString().trim().isLength({ min: 5 }),
+    body("foto_url").optional().isString().trim(),
     body("coordinates").isArray({ min: 2, max: 2 }),
   ],
   validate,
@@ -61,13 +163,40 @@ router.post(
 
 /**
  * @swagger
- * /api/reports/:id/validate:
+ * /api/reports/{id}/validate:
  *   patch:
  *     summary: Confirmar o desmentir un reporte
  *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del reporte
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - accion
+ *             properties:
+ *               accion:
+ *                 type: string
+ *                 enum: [confirmar, desmentir]
+ *     responses:
+ *       200:
+ *         description: Reporte validado con éxito
+ *       404:
+ *         description: Reporte no encontrado
  */
 router.patch(
   "/:id/validate",
+  isAuth,
   [param("id").isMongoId(), body("accion").isIn(["confirmar", "desmentir"])],
   validate,
   (req, res, next) => reportController.validateReport(req, res, next)
@@ -75,13 +204,31 @@ router.patch(
 
 /**
  * @swagger
- * /api/reports/:id:
+ * /api/reports/{id}:
  *   delete:
  *     summary: Borrar reporte (moderación)
  *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del reporte
+ *     responses:
+ *       200:
+ *         description: Reporte eliminado con éxito
+ *       404:
+ *         description: Reporte no encontrado
  */
-router.delete("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
-  reportController.deleteReport(req, res, next)
+router.delete(
+  "/:id",
+  isAuth,
+  [param("id").isMongoId()],
+  validate,
+  (req, res, next) => reportController.deleteReport(req, res, next)
 );
 
 module.exports = router;

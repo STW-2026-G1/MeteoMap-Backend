@@ -90,6 +90,7 @@ app.get("/docs.json", (req, res) => {
 // ---------------------------------------------------------------------------
 // API routes
 // ---------------------------------------------------------------------------
+// TODO, usar el middleware isAuth!!!
 // Authentication endpoints (públicas)
 app.use("/api/auth", authRouter);
 

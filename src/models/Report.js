@@ -16,6 +16,7 @@ const reportSchema = new mongoose.Schema(
     },
     tipo: { type: String, required: true },
     contenido: {
+      // NOTE, con <= 4 caracteres peta
       descripcion: { type: String, required: true },
       foto_url: String,
     },
@@ -24,7 +25,8 @@ const reportSchema = new mongoose.Schema(
       confirmaciones: { type: Number, default: 0 },
       desmentidos: { type: Number, default: 0 },
     },
-    estado: { type: String, enum: ["PENDIENTE", "ACTIVO", "OCULTO", "SPAM"], default: "PENDIENTE" },
+    // NOTE: reports activos por defecto
+    estado: { type: String, enum: ["PENDIENTE", "ACTIVO", "OCULTO", "SPAM"], default: "ACTIVO" },
     valoracion_global: { type: Number, default: 0 },
     // Array de comentarios embebidos (si esperas <50 comentarios por reporte)
     comentarios: [
