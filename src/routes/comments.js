@@ -91,7 +91,7 @@ router.get(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [usuario_id, contenido]
+ *             required: [contenido]
  *             properties:
  *               contenido:
  *                 type: string
@@ -133,9 +133,9 @@ router.post(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [usuario_id, contenido]
+ *             required: [contenido]
  *             properties:
- *               usuario_id:
+ *               contenido:
  *                 type: string
  *     responses:
  *       201:
