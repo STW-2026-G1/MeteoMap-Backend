@@ -8,7 +8,6 @@ const { validateRequest, loginSchema, registerSchema } = require("../utils/valid
 const router = Router();
 
 const BCRYPT_SALT_ROUNDS = 12;
-const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
 // ============================================================================
 // POST /api/auth/register - Registro de usuario
@@ -111,12 +110,7 @@ router.post(
  *               password: { type: string, minLength: 8 }
  *     responses:
  *       200:
- *         description: Login exitoso. El Refresh Token se envía como cookie HttpOnly
- *         headers:
- *           Set-Cookie:
- *             schema:
- *               type: string
- *               example: refreshToken=abc123...; HttpOnly; Secure; SameSite=Strict; Path=/
+ *         description: Login exitoso
  *         content:
  *           application/json:
  *             schema:
@@ -167,32 +161,19 @@ router.post(
         });
       }
 
-      // Generar tokens JWT (Access + Refresh)
-      const { accessToken, refreshToken } = tokenService.generateTokenPair({
+      // Generar Access Token
+      const accessToken = tokenService.generateTokenPair({
         userId: user._id.toString(),
         email: user.datos_acceso.email,
         rol: user.datos_acceso.rol,
       });
 
-      // Configurar cookie HttpOnly y Secure para el Refresh Token
-      // Secure: solo se envía por HTTPS (en producción)
-      // HttpOnly: no puede ser accedido por JavaScript (previene XSS)
-      // SameSite: previene CSRF
-      res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días en milisegundos
-        path: "/",
-      });
-
       logger.info(`Login exitoso`, { email, userId: user._id });
 
-      // Devolver Access Token en el cuerpo (no el Refresh Token)
+      // Devolver Access Token
       res.json({
         message: "Login exitoso",
         accessToken,
-        refreshToken,
         user: {
           id: user._id,
           email: user.datos_acceso.email,
@@ -207,106 +188,13 @@ router.post(
 );
 
 // ============================================================================
-// POST /api/auth/refresh - Refrescar Access Token
-// ============================================================================
-/**
- * @swagger
- * /api/auth/refresh:
- *   post:
- *     summary: Refrescar Access Token usando el Refresh Token (cookie HttpOnly)
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Nuevo Access Token generado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message: { type: string }
- *                 accessToken: { type: string }
- *       401:
- *         description: Refresh Token inválido o expirado
- */
-router.post("/refresh", async (req, res, next) => {
-  try {
-    // Obtener el Refresh Token de las cookies
-    const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE_NAME];
-
-    if (!refreshToken) {
-      logger.warn("Refresh fallido: no se encontró refresh token en cookies", {
-        ip: req.ip,
-      });
-      return res.status(401).json({
-        error: "Refresh token no encontrado",
-      });
-    }
-
-    // Verificar y decodificar el Refresh Token
-    const decoded = tokenService.verifyRefreshToken(refreshToken);
-
-    // Obtener datos adicionales del usuario (email, rol) de la BD
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      logger.warn("Refresh fallido: usuario no encontrado", { userId: decoded.userId });
-      return res.status(401).json({
-        error: "Usuario no encontrado",
-      });
-    }
-
-    if (user.estado === "BLOQUEADO") {
-      logger.warn("Refresh fallido: usuario bloqueado", { userId: decoded.userId });
-      return res.status(403).json({
-        error: "Usuario bloqueado",
-      });
-    }
-
-    // Generar nuevo Access Token (el Refresh Token sigue siendo válido)
-    const newAccessToken = tokenService.generateNewAccessToken(refreshToken);
-
-    // Opcionalmente, obtener datos completos del usuario para incluir en la respuesta
-    // (Sin incluir el password_hash)
-    const userData = {
-      id: user._id,
-      email: user.datos_acceso.email,
-      nombre: user.perfil.nombre,
-      rol: user.datos_acceso.rol,
-    };
-
-    logger.info(`Access token refrescado`, { userId: decoded.userId });
-
-    res.json({
-      message: "Access token refrescado exitosamente",
-      accessToken: newAccessToken,
-      user: userData,
-    });
-  } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      logger.warn("Refresh fallido: refresh token expirado", { ip: req.ip });
-      return res.status(401).json({
-        error: "Refresh token expirado. Por favor, inicia sesión nuevamente.",
-      });
-    }
-
-    if (err.name === "JsonWebTokenError") {
-      logger.warn("Refresh fallido: refresh token inválido", { ip: req.ip });
-      return res.status(401).json({
-        error: "Refresh token inválido",
-      });
-    }
-
-    next(err);
-  }
-});
-
-// ============================================================================
 // POST /api/auth/logout - Cerrar sesión
 // ============================================================================
 /**
  * @swagger
  * /api/auth/logout:
  *   post:
- *     summary: Cerrar sesión y limpiar cookies
+ *     summary: Cerrar sesión
  *     tags: [Auth]
  *     responses:
  *       200:

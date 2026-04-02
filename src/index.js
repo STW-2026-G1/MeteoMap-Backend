@@ -38,7 +38,7 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off so Swagger UI loads
 app.use(cors());
 app.use(express.json());
-app.use(cookieParser()); // Necesario para leer cookies HttpOnly (Refresh Token)
+app.use(cookieParser());
 
 // HTTP request logging
 app.use(httpLogger);

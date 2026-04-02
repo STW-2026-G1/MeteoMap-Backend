@@ -76,18 +76,7 @@ const registerSchema = z.object({
 });
 
 /**
- * Schema para el endpoint de REFRESH TOKEN
- * 
- * Validaciones:
- * - refreshToken: debe ser una cadena no vacía (se obtiene de cookie HttpOnly)
- */
-const refreshSchema = z.object({
-  refreshToken: z
-    .string()
-    .min(1, "Refresh token es requerido"),
-});
 
-/**
  * Función auxiliar para validar datos contra un schema
  * @param {Object} schema - Schema de Zod
  * @param {Object} data - Datos a validar
@@ -144,7 +133,6 @@ module.exports = {
   // Schemas
   loginSchema,
   registerSchema,
-  refreshSchema,
 
   // Utilidades
   validateData,
