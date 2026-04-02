@@ -81,6 +81,64 @@ class UserController {
       next(err);
     }
   }
+
+  /**
+   * DELETE /api/user/delete
+   * Eliminar usuario autenticado
+   */
+  async deleteUser(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const result = await userService.deleteUser(userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PUT /api/user/update
+   * Actualizar perfil del usuario autenticado
+   */
+  async updateUser(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const { nombre, email, avatar_url, biografia, ubicacion } = req.body;
+
+      const result = await userService.updateUser(userId, {
+        nombre,
+        email,
+        avatar_url,
+        biografia,
+        ubicacion,
+      });
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * PUT /api/user/updatepassword
+   * Actualizar contraseña del usuario autenticado
+   */
+  async updatePassword(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const { currentPassword, newPassword } = req.body;
+
+      const result = await userService.updatePassword(
+        userId,
+        currentPassword,
+        newPassword
+      );
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new UserController();

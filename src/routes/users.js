@@ -348,16 +348,241 @@ router.get(
 
 /**
  * @swagger
- * /api/user/alerts/:userId/:zoneId:
- *   patch:
+ * /api/user/alerts/{userId}/{zoneId}:
+ *   put:
  *     summary: Actualizar configuración de alertas para una zona
  *     tags: [User]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del usuario
+ *       - in: path
+ *         name: zoneId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la zona
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               configuracion_alertas:
+ *                 type: object
+ *                 properties:
+ *                   aludes:
+ *                     type: object
+ *                     properties:
+ *                       activo:
+ *                         type: boolean
+ *                       umbral_nivel:
+ *                         type: number
+ *                   viento:
+ *                     type: object
+ *                     properties:
+ *                       activo:
+ *                         type: boolean
+ *                       umbral_kmh:
+ *                         type: number
+ *                   reportes_comunidad:
+ *                     type: object
+ *                     properties:
+ *                       activo:
+ *                         type: boolean
+ *                       tipos_suscritos:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *     responses:
+ *       200:
+ *         description: Configuración de alertas actualizada
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Usuario o zona no encontrados
  */
-router.patch(
+router.put(
   "/alerts/:userId/:zoneId",
   [param("userId").isMongoId(), param("zoneId").isMongoId()],
   validate,
   (req, res, next) => userController.updateAlertConfig(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/user/delete:
+ *   delete:
+ *     summary: Eliminar usuario autenticado
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Usuario eliminado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuario eliminado exitosamente"
+ *                 userId:
+ *                   type: string
+ *                   example: "507f1f77bcf86cd799439011"
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.delete(
+  "/delete",
+  isAuth,
+  validate,
+  userController.deleteUser
+);
+
+/**
+ * @swagger
+ * /api/user/update:
+ *   put:
+ *     summary: Actualizar perfil del usuario autenticado
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 description: Nombre del usuario
+ *                 example: "Juan Pérez"
+ *               email:
+ *                 type: string
+ *                 description: Email del usuario
+ *                 example: "juan@example.com"
+ *               avatar_url:
+ *                 type: string
+ *                 description: URL del avatar
+ *                 example: "https://example.com/avatar.jpg"
+ *               biografia:
+ *                 type: string
+ *                 description: Biografía del usuario
+ *                 example: "Amante de las montañas y la meteorología"
+ *               ubicacion:
+ *                 type: string
+ *                 description: Ubicación del usuario
+ *                 example: "Barcelona, España"
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     perfil:
+ *                       type: object
+ *       400:
+ *         description: Datos inválidos o email duplicado
+ *       401:
+ *         description: No autorizado
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.put(
+  "/update",
+  isAuth,
+  [
+    body("nombre").optional().isString().trim(),
+    body("email").optional().isEmail().withMessage("Email no válido"),
+    body("avatar_url").optional().isURL(),
+    body("biografia").optional().isString().trim(),
+    body("ubicacion").optional().isString().trim(),
+  ],
+  validate,
+  userController.updateUser
+);
+
+/**
+ * @swagger
+ * /api/user/updatepassword:
+ *   put:
+ *     summary: Actualizar contraseña del usuario autenticado
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: Contraseña actual
+ *                 example: "OldPassword123!"
+ *               newPassword:
+ *                 type: string
+ *                 description: Nueva contraseña (mínimo 8 caracteres)
+ *                 minLength: 8
+ *                 example: "NewPassword123!"
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Datos inválidos o contraseña muy corta
+ *       401:
+ *         description: Contraseña actual incorrecta o no autorizado
+ *       404:
+ *         description: Usuario no encontrado
+ */
+router.put(
+  "/updatepassword",
+  isAuth,
+  [
+    body("currentPassword")
+      .isString()
+      .notEmpty()
+      .withMessage("Contraseña actual es requerida"),
+    body("newPassword")
+      .isString()
+      .isLength({ min: 8 })
+      .withMessage("Nueva contraseña debe tener al menos 8 caracteres"),
+  ],
+  validate,
+  userController.updatePassword
 );
 
 module.exports = router;
