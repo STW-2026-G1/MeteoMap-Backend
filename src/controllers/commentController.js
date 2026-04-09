@@ -79,15 +79,59 @@ class CommentController {
   /**
    * DELETE /api/comments/{id}
    */
-  async deleteComment(req, res, next) {
-    try {
-      const { id } = req.params;
-      const result = await commentService.deleteComment(id);
-      res.json(result);
-    } catch (err) {
-      next(err);
-    }
-  }
+  // En el controller
+   async deleteComment(req, res, next) {
+      try {
+         const { id } = req.params;
+         const { userId, rol } = req.user;
+         
+         // El servicio debería comprobar si el usuario es dueño o admin
+         const result = await commentService.deleteComment(id, userId, rol);
+         res.json(result);
+      } catch (err) { next(err); }
+   }
+
+   async replyComment(req, res, next) {
+      try {
+         const { id } = req.params; // ID del comentario al que respondes
+         const { contenido } = req.body;
+         const { userId } = req.user;
+
+         const reply = await commentService.createComment({
+            usuario_id: userId,
+            contenido,
+            parent_id: id, // Guardamos la referencia al padre
+            estado: "ACTIVO"
+         });
+         res.status(201).json(reply);
+      } catch (err) { next(err); }
+   }
+
+   async likeComment(req, res, next) {
+      try {
+         const { id } = req.params; // ID del comentario
+         const { userId } = req.user; // ID del token
+         const result = await commentService.likeComment(id, userId);
+         res.json({ message: "Me gusta añadido", likes: result.likes.length });
+      } catch (err) { next(err); }
+   }
+
+   async unlikeComment(req, res, next) {
+      try {
+         const { id } = req.params;
+         const { userId } = req.user;
+         const result = await commentService.unlikeComment(id, userId);
+         res.json({ message: "Me gusta quitado", likes: result.likes.length });
+      } catch (err) { next(err); }
+   }
+
+   async getReplies(req, res, next) {
+      try {
+         const { id } = req.params;
+         const result = await commentService.getRepliesByParent(id);
+         res.json(result);
+      } catch (err) { next(err); }
+   }
 
 }
 

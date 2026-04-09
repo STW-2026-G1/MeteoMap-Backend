@@ -10,6 +10,8 @@ const commentSchema = new mongoose.Schema(
     contenido: { type: String, required: true },
     etiqueta: String, // La "categoría"
     estado: { type: String, enum: ["ACTIVO", "SPAM", "ELIMINADO"], default: "ACTIVO" },
+    parent_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: null }, // Para respuestas
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   {
     timestamps: true,

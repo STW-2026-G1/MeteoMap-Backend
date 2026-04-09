@@ -9,7 +9,7 @@ class CommentService {
    */
   async getCommentsByZone(zoneId, limit = 50) {
     try {
-      const comments = await Comment.find({ zona_id: zoneId, estado: "ACTIVO" })
+      const comments = await Comment.find({ zona_id: zoneId, estado: "ACTIVO", parent_id: null})
         .populate("usuario_id", "perfil.nombre reputacion")
         .sort({ createdAt: -1 })
         .limit(limit);
@@ -57,70 +57,57 @@ class CommentService {
    * Crear comentario (híbrido: zona o reporte)
    */
   async createComment(commentData) {
-    try {
-      const { usuario_id, zona_id, reporte_id, contenido, etiqueta } = commentData;
+      try {
+         const { usuario_id, zona_id, reporte_id, contenido, etiqueta, parent_id } = commentData;
 
-      // Obtener nombre del usuario para desnormalizar
-      const user = await User.findById(usuario_id).select("perfil.nombre");
-      if (!user) {
-        throw new Error("Usuario no encontrado");
+         let finalZonaId = zona_id;
+         let finalReporteId = reporte_id;
+
+         // 1. Lógica de herencia para respuestas
+         if (parent_id) {
+            const parent = await Comment.findById(parent_id);
+            if (parent) {
+            finalZonaId = parent.zona_id;
+            finalReporteId = parent.reporte_id;
+            } else {
+            throw new Error("El comentario padre no existe");
+            }
+         }
+
+         // 2. Crear el nuevo documento
+         const newComment = new Comment({
+            usuario_id,
+            zona_id: finalZonaId || null,
+            reporte_id: finalReporteId || null,
+            parent_id: parent_id || null,
+            contenido,
+            etiqueta: etiqueta || null,
+            estado: "ACTIVO",
+            likes: []
+         });
+
+         await newComment.save();
+
+         // 3. SI ES UN REPORTE: También debemos actualizar el documento del Reporte
+         if (finalReporteId) {
+            const Report = require("../models/Report"); // Importación local si es necesario
+            await Report.findByIdAndUpdate(finalReporteId, {
+            $push: { comentarios: newComment._id }
+            });
+         }
+
+         // 4. Devolver con populate para que el Front tenga los datos del autor
+         return await Comment.findById(newComment._id)
+            .populate("usuario_id", "perfil.nombre reputacion");
+
+      } catch (err) {
+         logger.error(`Error en createComment: ${err.message}`);
+         throw err;
       }
-
-      // Si hay reporte_id, agregar comentario embebido en el reporte
-      if (reporte_id) {
-        const report = await Report.findById(reporte_id);
-        if (!report) {
-          throw new Error("Reporte no encontrado");
-        }
-
-        const nuevoComentario = new Comment({
-         usuario_id,
-         reporte_id, 
-         zona_id: null,    
-         contenido,
-         etiqueata: etiqueta || null,
-         estado: "ACTIVO",
-        });
-
-        report.comentarios.push(nuevoComentario);
-        await report.save();
-        logger.info(`Comentario añadido a reporte ${reporte_id} por usuario ${usuario_id}`);
-
-        return {
-          type: "embedded",
-          message: "Comentario publicado en reporte",
-          comment: nuevoComentario,
-        };
-      } else {
-        // Comentario de zona - usar colección separada
-        const newComment = new Comment({
-          usuario_id,
-          zona_id,
-          reporte_id: null,
-          contenido,
-          etiqueta: etiqueta || null,
-          estado: "ACTIVO",
-        });
-
-        await newComment.save();
-        await newComment.populate("usuario_id", "perfil.nombre");
-
-        logger.info(`Nuevo comentario de zona creado por usuario ${usuario_id}`);
-
-        return {
-          type: "zone",
-          message: "Comentario publicado",
-          comment: newComment,
-        };
-      }
-    } catch (err) {
-      logger.error(`Error en createComment: ${err.message}`);
-      throw err;
-    }
-  }
+   }
 
   /**
-   * Eliminar comentario (solo de zona, los embebidos requieren actualización de reporte)
+   * Eliminar comentario 
    */
   async deleteComment(commentId) {
     try {
@@ -140,6 +127,43 @@ class CommentService {
       throw err;
     }
   }
+
+  async likeComment(commentId, userId) {
+   // $addToSet añade el ID al array solo si no existe ya
+   return await Comment.findByIdAndUpdate(
+      commentId,
+      { $addToSet: { likes: userId } },
+      { new: true }
+   );
+   }
+
+  async unlikeComment(commentId, userId) {
+      // $pull elimina el ID del array
+      return await Comment.findByIdAndUpdate(
+         commentId,
+         { $pull: { likes: userId } },
+         { new: true }
+      );
+   }
+
+   async getRepliesByParent(parentId) {
+      try {
+         const replies = await Comment.find({ 
+            parent_id: parentId, 
+            estado: "ACTIVO" 
+            })
+            .populate("usuario_id", "perfil.nombre reputacion")
+            .sort({ createdAt: 1 }); // Las respuestas suelen ir de la más vieja a la más nueva
+
+         return {
+            count: replies.length,
+            replies
+         };
+      } catch (err) {
+         logger.error(`Error en getRepliesByParent: ${err.message}`);
+         throw err;
+      }
+   }
 
 }
 

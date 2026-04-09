@@ -157,6 +157,124 @@ router.post(
 
 /**
  * @swagger
+ * /api/comments/{id}/reply:
+ *   post:
+ *     summary: Responder a un comentario (crear hilo)
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del comentario padre
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [contenido]
+ *             properties:
+ *               contenido:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Respuesta creada
+ */
+router.post(
+  "/:id/reply",
+  isAuth,
+  [
+    param("id").isMongoId(),
+    body("contenido").isString().trim().notEmpty(),
+  ],
+  validate,
+  (req, res, next) => commentController.replyComment(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/comments/{id}/like:
+ *   post:
+ *     summary: Dar me gusta a un comentario
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Like añadido
+ */
+router.post(
+  "/:id/like",
+  isAuth,
+  [param("id").isMongoId()],
+  validate,
+  (req, res, next) => commentController.likeComment(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/comments/{id}/unlike:
+ *   delete:
+ *     summary: Quitar me gusta de un comentario
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: commentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Like eliminado
+ */
+router.delete(
+  "/:id/unlike",
+  isAuth,
+  [param("id").isMongoId()],
+  validate,
+  (req, res, next) => commentController.unlikeComment(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/comments/{id}/replies:
+ *   get:
+ *     summary: Obtener las respuestas de un comentario
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del comentario padre
+ *     responses:
+ *       200:
+ *         description: Lista de respuestas del comentario
+ */
+router.get(
+  "/:id/replies",
+  [param("id").isMongoId()],
+  validate,
+  (req, res, next) => commentController.getReplies(req, res, next)
+);
+
+/**
+ * @swagger
  * /api/comments/{id}:
  *   delete:
  *     summary: Borrar comentario (Zona o Reporte)
