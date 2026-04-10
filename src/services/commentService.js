@@ -10,7 +10,7 @@ class CommentService {
   async getCommentsByZone(zoneId, limit = 50) {
     try {
       const comments = await Comment.find({ zona_id: zoneId, estado: "ACTIVO", parent_id: null})
-        .populate("usuario_id", "perfil.nombre reputacion")
+        .populate("usuario_id", "perfil.nombre")
         .sort({ createdAt: -1 })
         .limit(limit);
 
@@ -98,7 +98,7 @@ class CommentService {
 
          // 4. Devolver con populate para que el Front tenga los datos del autor
          return await Comment.findById(newComment._id)
-            .populate("usuario_id", "perfil.nombre reputacion");
+            .populate("usuario_id", "perfil.nombre");
 
       } catch (err) {
          logger.error(`Error en createComment: ${err.message}`);
@@ -152,7 +152,7 @@ class CommentService {
             parent_id: parentId, 
             estado: "ACTIVO" 
             })
-            .populate("usuario_id", "perfil.nombre reputacion")
+            .populate("usuario_id", "perfil.nombre")
             .sort({ createdAt: 1 }); // Las respuestas suelen ir de la más vieja a la más nueva
 
          return {

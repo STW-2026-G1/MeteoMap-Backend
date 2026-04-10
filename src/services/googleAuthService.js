@@ -1,0 +1,106 @@
+const logger = require("../config/logger");
+const User = require("../models/User");
+
+/**
+ * Servicio para autenticación con Google OAuth2
+ * Valida tokens ID de Google y gestiona usuarios
+ */
+class GoogleAuthService {
+  /**
+   * Verifica y procesa login con Google
+   * @param {object} tokenPayload - Payload decodificado del token de Google
+   * @returns {object} Usuario autenticado o nuevo usuario creado
+   */
+  async handleGoogleLogin(tokenPayload) {
+    try {
+      const { email, name, picture, sub: googleId } = tokenPayload;
+
+      if (!email || !googleId) {
+        throw new Error("Token de Google inválido: faltan email o sub");
+      }
+
+      // Buscar usuario existente por email O por google_id
+      let user = await User.findOne({
+        $or: [
+          { "datos_acceso.email": email },
+          { "datos_acceso.google_id": googleId },
+        ],
+      });
+
+      if (user) {
+        // Usuario existe: verificar y actualizar datos de Google
+        if (!user.datos_acceso.google_id) {
+          // Usuario local que ahora usa Google
+          user.datos_acceso.google_id = googleId;
+          user.datos_acceso.provider = "google";
+          logger.info(`Usuario local vinculado con Google: ${email}`);
+        }
+
+        // Actualizar perfil si tiene datos nuevos de Google
+        if (name && !user.perfil.nombre) {
+          user.perfil.nombre = name;
+        }
+        if (picture && !user.perfil.avatar_url) {
+          user.perfil.avatar_url = picture;
+        }
+
+        await user.save();
+        logger.info(`Login con Google exitoso: ${email}`);
+
+        return {
+          isNewUser: false,
+          user,
+        };
+      }
+
+      // Crear nuevo usuario con Google
+      const newUser = new User({
+        datos_acceso: {
+          email: email.toLowerCase(),
+          google_id: googleId,
+          provider: "google",
+          rol: "USER",
+        },
+        perfil: {
+          nombre: name || "",
+          email: email.toLowerCase(),
+          avatar_url: picture || "",
+        },
+      });
+
+      await newUser.save();
+      logger.info(`Nuevo usuario creado con Google: ${email}`);
+
+      return {
+        isNewUser: true,
+        user: newUser,
+      };
+    } catch (err) {
+      logger.error(`Error en handleGoogleLogin: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Valida que un usuario tiene habilitado OAuth con Google
+   */
+  async validateGoogleUser(userId) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error("Usuario no encontrado");
+      }
+
+      if (!user.datos_acceso.google_id) {
+        throw new Error("Usuario no tiene habilitado Google OAuth");
+      }
+
+      return user;
+    } catch (err) {
+      logger.error(`Error en validateGoogleUser: ${err.message}`);
+      throw err;
+    }
+  }
+}
+
+module.exports = new GoogleAuthService();

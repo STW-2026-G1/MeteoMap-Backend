@@ -1,0 +1,36 @@
+# Endpoint de la base de datos
+MONGODB_URI=mongodb+srv://stw2026_db_user:eHViTn0f93bJbfSf@cluster0.eee7svd.mongodb.net/?appName=Cluster0
+# Collection Names
+MONGODB_COLLECTION_USERS=users
+MONGODB_COLLECTION_ZONES=zones
+MONGODB_COLLECTION_REPORTS=reports
+MONGODB_COLLECTION_CATEGORIES=report_categories
+MONGODB_COLLECTION_COMMENTS=comments
+MONGODB_COLLECTION_METRICS=system_metrics
+MONGODB_COLLECTION_FAVORITES=favorite_zones
+
+# Nivel de logs (info o debug)
+LOG_LEVEL=debug
+
+# Access Token Secret - CAMBIAR EN PRODUCCIÓN
+# Recomendación: usar al menos 32 caracteres aleatorios
+# Ejemplo: openssl rand -base64 32
+JWT_ACCESS_TOKEN_SECRET=7MUhfyZQ42I47IxJkRSjQX+LX9bNCndKK+t6+zH+Ze8=
+
+# Refresh Token Secret - CAMBIAR EN PRODUCCIÓN
+# Usar un secreto diferente y complejo
+JWT_REFRESH_TOKEN_SECRET=03t2idzmfVcCfs1KvLyvqdrKFPoPh8FT2A8OlvX0Lxs=
+
+# JWT Expiration
+JWT_ACCESS_TOKEN_EXPIRATION=15m
+JWT_REFRESH_TOKEN_EXPIRATION=7d
+
+# Gemini
+GEMINI_API_KEY=AIzaSyA7DwseYgoVRQL8hRP3sve0huw9HeSbWXg
+AEMET_API_KEY=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4MzkzMTZAdW5pemFyLmVzIiwianRpIjoiOGRhOWQ0M2EtY2E0Ny00NzRiLTliNTYtNTRiNzY1OGZhZTMxIiwiaXNzIjoiQUVNRVQiLCJpYXQiOjE3NzU2NTkxODMsInVzZXJJZCI6IjhkYTlkNDNhLWNhNDctNDc0Yi05YjU2LTU0Yjc2NThmYWUzMSIsInJvbGUiOiIifQ.-rtODqyp5lcgzlDhMOCi7nUCvEjlcl1cDDMno84V7rE
+
+# Google OAuth2 - Obtener en https://console.cloud.google.com
+# GOOGLE_CLIENT_ID: Tu Client ID de Google API Console
+# Ejemplo: 123456789-abc123def456.apps.googleusercontent.com
+GOOGLE_CLIENT_ID=tu_google_client_id_aqui
+GOOGLE_CLIENT_SECRET=tu_google_client_secret_aqui

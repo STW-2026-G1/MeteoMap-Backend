@@ -63,7 +63,7 @@ src/
 
 ✅ **Autenticación y Autorización**
 - Registro e inicio de sesión
-- Roles (PUBLIC, USER, ADMIN)
+- Roles (USER, ADMIN)
 
 ✅ **Gestión de Zonas**
 - Zonas geográficas con GeoJSON
@@ -129,7 +129,26 @@ MONGODB_URI=mongodb://localhost:27017
 
 # Logging
 LOG_LEVEL=info
+
+# JWT
+JWT_ACCESS_TOKEN_SECRET=tu_secreto_muy_seguro_de_minimo_32_caracteres
+JWT_ACCESS_TOKEN_EXPIRATION=15m
+
+# Google OAuth2 (opcional)
+GOOGLE_CLIENT_ID=tu_client_id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=tu_client_secret
 ```
+
+### Configurar Google OAuth2
+
+1. Ir a [Google Cloud Console](https://console.cloud.google.com)
+2. Crear nuevo proyecto
+3. Habilitar "Google+ API"
+4. Crear credenciales: OAuth 2.0 Client ID (Web application)
+5. Agregar URLs autorizadas:
+   - **JavaScript origins**: `http://localhost:3000`
+   - **Authorized redirect URIs**: `http://localhost:3000/auth/callback`
+6. Copiar Client ID y Secret al archivo `.env`
 
 ---
 
@@ -151,8 +170,10 @@ curl http://localhost:3000/health
 
 ### Autenticación (`test/auth.rest`)
 ```
-POST   /api/auth/register         # Registrar usuario
-POST   /api/auth/login            # Iniciar sesión
+POST   /api/auth/register         # Registrar usuario (email + contraseña)
+POST   /api/auth/login            # Iniciar sesión (email + contraseña)
+POST   /api/auth/login-google     # Iniciar sesión con Google OAuth2
+POST   /api/auth/logout           # Cerrar sesión
 ```
 
 ### Usuarios (`test/users.rest`)
@@ -208,39 +229,25 @@ GET    /api/admin/health           # Estado de salud
 {
   _id: ObjectId,
   datos_acceso: {
-    email: String (unique),
-    password_hash: String,
-    rol: "PUBLIC" | "USER" | "ADMIN"
+    email: String (unique, lowercase),
+    password_hash: String (optional - solo para auth local),
+    google_id: String (unique, sparse - para Google OAuth),
+    provider: "local" | "google", // Tipo de autenticación
+    rol: "USER" | "ADMIN"
   },
   perfil: {
     nombre: String,
-    avatar_url: String
+    email: String,
+    avatar_url: String,
+    biografia: String,
+    ubicacion: String
   },
-  preferencias: [
-    {
-      zona_id: ObjectId,
-      configuracion_alertas: {
-        aludes: { activo: Boolean, umbral_nivel: Number },
-        viento: { activo: Boolean, umbral_kmh: Number },
-        reportes_comunidad: { 
-          activo: Boolean, 
-          tipos_suscritos: [String]
-        }
-      },
-      metodo_notificacion: "PUSH" | "EMAIL" | "SMS" | "NINGUNO",
-      fecha_agregada: Date
-    }
-  ],
+  preferencias: [ObjectId], // Array de zone_ids
   limites_ia: {
     peticiones_hoy: Number,
     ultimo_reset: Date
   },
   estado: "ACTIVO" | "BLOQUEADO",
-  reputacion: {
-    puntos: Number,
-    medalla: String,
-    strikes_spam: Number
-  },
   timestamps: true
 }
 ```

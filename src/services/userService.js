@@ -24,7 +24,7 @@ class UserService {
         perfil: user.perfil,
         preferencias: user.preferencias,
         limites_ia: user.limites_ia,
-        estado: user.v,
+        estado: user.estado,
       };
     } catch (err) {
       logger.error(`Error en getProfile: ${err.message}`);
@@ -35,7 +35,7 @@ class UserService {
   /**
    * Agregar o remover zona favorita
    */
-  async updateFavorites(userId, zonaId, accion, configuracion) {
+  async updateFavorites(userId, zonaId, accion) {
     try {
       const user = await User.findById(userId);
       if (!user) {
@@ -44,21 +44,12 @@ class UserService {
 
       if (accion === "add") {
         // Verificar que no existe ya
-        const existe = user.preferencias.some((p) => p.zona_id.toString() === zonaId);
+        const existe = user.preferencias.some((p) => p.toString() === zonaId);
         if (!existe) {
-          // Agregar nueva preferencia con configuración
-          user.preferencias.push({
-            zona_id: zonaId,
-            configuracion_alertas: configuracion?.configuracion_alertas || {
-              aludes: { activo: false },
-              viento: { activo: false },
-              reportes_comunidad: { activo: false, tipos_suscritos: [] },
-            },
-            metodo_notificacion: configuracion?.metodo_notificacion || "PUSH",
-          });
+          user.preferencias.push(zonaId);
         }
       } else if (accion === "remove") {
-        user.preferencias = user.preferencias.filter((p) => p.zona_id.toString() !== zonaId);
+        user.preferencias = user.preferencias.filter((p) => p.toString() !== zonaId);
       } else {
         throw new Error("Acción no válida. Use 'add' o 'remove'");
       }
@@ -77,33 +68,6 @@ class UserService {
   }
 
   /**
-   * Actualizar configuración de alertas para una zona favorita
-   */
-  async updateAlertConfig(userId, zonaId, configuracion_alertas) {
-    try {
-      const user = await User.findById(userId);
-      if (!user) {
-        throw new Error("Usuario no encontrado");
-      }
-
-      const preferencia = user.preferencias.find((p) => p.zona_id.toString() === zonaId);
-      if (!preferencia) {
-        throw new Error("Zona no está en favoritos");
-      }
-
-      preferencia.configuracion_alertas = configuracion_alertas;
-      await user.save();
-
-      logger.info(`Configuración de alertas actualizada para ${userId} en zona ${zonaId}`);
-
-      return preferencia;
-    } catch (err) {
-      logger.error(`Error en updateAlertConfig: ${err.message}`);
-      throw err;
-    }
-  }
-
-  /**
    * Eliminar usuario
    */
   async deleteUser(userId) {
@@ -115,7 +79,14 @@ class UserService {
         throw error;
       }
 
-      await User.findByIdAndDelete(userId);
+      if (user.estado === "ELIMINADO") {
+        const error = new Error("Usuario ya eliminado");
+        error.status = 400;
+        throw error;
+      }
+      
+      user.estado = "ELIMINADO";
+      await user.save();
       logger.info(`Usuario eliminado: ${userId}`);
 
       return {

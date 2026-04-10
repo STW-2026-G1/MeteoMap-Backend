@@ -28,7 +28,7 @@ class ReportService {
       }
 
       const reports = await Report.find(query)
-        .populate("usuario_id", "perfil.nombre reputacion")
+        .populate("usuario_id", "perfil.nombre")
         .populate("zona_id", "nombre")
         .limit(limit);
 
@@ -154,7 +154,7 @@ class ReportService {
   async getReportById(reportId) {
     try {
       const report = await Report.findById(reportId)
-        .populate("usuario_id", "perfil.nombre reputacion")
+        .populate("usuario_id", "perfil.nombre")
         .populate("zona_id", "nombre");
 
       if (!report) {

@@ -31,7 +31,7 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
 - Comentarios (discusiones del foro)
 - Categorías de informes (tipos de informes)
 - Métricas del sistema (seguimiento del rendimiento)
-- Zonas favoritas (preferencias de usuario con alertas)
+- Zonas favoritas (preferencias de usuario)
       `.trim(),
       contact: {
         name: "Mountain Safety Platform Team",
@@ -69,25 +69,20 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
               type: "object",
               properties: {
                 email: { type: "string", example: "user@example.com" },
-                rol: { type: "string", enum: ["PUBLIC", "USER", "ADMIN"], default: "PUBLIC" },
+                rol: { type: "string", enum: ["USER", "ADMIN"], default: "USER" },
               },
             },
             perfil: {
               type: "object",
               properties: {
                 nombre: { type: "string", example: "Juan Pérez" },
+                email: { type: "string", example: "user@example.com" },
                 avatar_url: { type: "string" },
+                biografia: { type: "string" },
+                ubicacion: { type: "string" },
               },
             },
-            reputacion: {
-              type: "object",
-              properties: {
-                puntos: { type: "integer", example: 150 },
-                medalla: { type: "string", example: "Colaborador" },
-                strikes_spam: { type: "integer", example: 0 },
-              },
-            },
-            estado: { type: "string", enum: ["ACTIVO", "BLOQUEADO"], default: "ACTIVO" },
+            estado: { type: "string", enum: ["ACTIVO", "BLOQUEADO", "ELIMINADO"], default: "ACTIVO" },
             preferencias: {
               type: "array",
               items: { type: "string" },

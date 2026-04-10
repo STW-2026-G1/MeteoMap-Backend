@@ -44,3 +44,19 @@ Content-Type: application/json
   "email": "testuser@example.com",
   "password": "wrongpassword"
 }
+
+###
+### Login with Google OAuth2
+### @name authLoginGoogle
+POST {{baseAPI}}/auth/login-google
+Content-Type: application/json
+
+{
+  "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1Njc4OTBhYmNkZWYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY91bnRzLmdvb2dsZS5jb20iLCJhenAiOiJjbGllbnRfaWQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiJjbGllbnRfaWQuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDc2OTE1MDM1MDAwNjE1MDcxNTExMzk2MDEzMDc3MjEwMjMiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6Ikdvb2dsZSBVc2VyIiwicGljdHVyZSI6Imh0dHBzOi8vcy5ncmF2YXRhci5jb20vYXZhdGFyIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyNDI2MjJ9.signature"
+}
+
+###
+### Logout
+### @name authLogout
+POST {{baseAPI}}/auth/logout
+Content-Type: application/json

@@ -52,42 +52,8 @@ function validate(req, res, next) {
  *                 preferencias:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       zona_id:
- *                         type: string
- *                       configuracion_alertas:
- *                         type: object
- *                         properties:
- *                           aludes:
- *                             type: object
- *                             properties:
- *                               activo:
- *                                 type: boolean
- *                               umbral_nivel:
- *                                 type: number
- *                           viento:
- *                             type: object
- *                             properties:
- *                               activo:
- *                                 type: boolean
- *                               umbral_kmh:
- *                                 type: number
- *                           reportes_comunidad:
- *                             type: object
- *                             properties:
- *                               activo:
- *                                 type: boolean
- *                               tipos_suscritos:
- *                                 type: array
- *                                 items:
- *                                   type: string
- *                       metodo_notificacion:
- *                         type: string
- *                         enum: [PUSH, EMAIL, SMS, NINGUNO]
- *                       fecha_agregada:
- *                         type: string
- *                         format: date-time
+ *                     type: string
+ *                     description: Zone ObjectId
  *                 limites_ia:
  *                   type: object
  *                   properties:
@@ -144,42 +110,8 @@ router.get(
  *                 preferencias:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       zona_id:
- *                         type: string
- *                       configuracion_alertas:
- *                         type: object
- *                         properties:
- *                           aludes:
- *                             type: object
- *                             properties:
- *                               activo:
- *                                 type: boolean
- *                               umbral_nivel:
- *                                 type: number
- *                           viento:
- *                             type: object
- *                             properties:
- *                               activo:
- *                                 type: boolean
- *                               umbral_kmh:
- *                                 type: number
- *                           reportes_comunidad:
- *                             type: object
- *                             properties:
- *                               activo:
- *                                 type: boolean
- *                               tipos_suscritos:
- *                                 type: array
- *                                 items:
- *                                   type: string
- *                       metodo_notificacion:
- *                         type: string
- *                         enum: [PUSH, EMAIL, SMS, NINGUNO]
- *                       fecha_agregada:
- *                         type: string
- *                         format: date-time
+ *                     type: string
+ *                     description: Zone ObjectId
  *                 limites_ia:
  *                   type: object
  *                   properties:
@@ -191,15 +123,6 @@ router.get(
  *                 estado:
  *                   type: string
  *                   enum: [ACTIVO, BLOQUEADO]
- *                 reputacion:
- *                   type: object
- *                   properties:
- *                     puntos:
- *                       type: number
- *                     medalla:
- *                       type: string
- *                     strikes_spam:
- *                       type: number
  *                 createdAt:
  *                   type: string
  *                   format: date-time
@@ -245,39 +168,6 @@ router.get(
  *                 enum: [add, remove]
  *                 description: add para añadir, remove para quitar
  *                 example: "add"
- *               configuracion_alertas:
- *                 type: object
- *                 description: Configuración de alertas (solo para acción add)
- *                 properties:
- *                   aludes:
- *                     type: object
- *                     properties:
- *                       activo:
- *                         type: boolean
- *                       umbral_nivel:
- *                         type: number
- *                         minimum: 1
- *                         maximum: 5
- *                   viento:
- *                     type: object
- *                     properties:
- *                       activo:
- *                         type: boolean
- *                       umbral_kmh:
- *                         type: number
- *                   reportes_comunidad:
- *                     type: object
- *                     properties:
- *                       activo:
- *                         type: boolean
- *                       tipos_suscritos:
- *                         type: array
- *                         items:
- *                           type: string
- *               metodo_notificacion:
- *                 type: string
- *                 enum: [PUSH, EMAIL, SMS, NINGUNO]
- *                 default: PUSH
  *     responses:
  *       200:
  *         description: Favoritos actualizados correctamente
@@ -291,7 +181,7 @@ router.get(
  *                 preferencias:
  *                   type: array
  *                   items:
- *                     type: object
+ *                     type: string
  *       400:
  *         description: |
  *           Error de validación. Posibles causas:
@@ -308,8 +198,6 @@ router.put(
   [
     body("zonaId").isMongoId().withMessage("ID de zona inválido"),
     body("accion").isIn(["add", "remove"]).withMessage("Acción debe ser add o remove"),
-    body("configuracion_alertas").optional().isObject(),
-    body("metodo_notificacion").optional().isIn(["PUSH", "EMAIL", "SMS", "NINGUNO"])
   ],
   validate,
   userController.updateFavorites
@@ -345,80 +233,10 @@ router.get(
   userController.getFavorites
 );
 
-
-/**
- * @swagger
- * /api/user/alerts/{userId}/{zoneId}:
- *   put:
- *     summary: Actualizar configuración de alertas para una zona
- *     tags: [User]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del usuario
- *       - in: path
- *         name: zoneId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de la zona
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               configuracion_alertas:
- *                 type: object
- *                 properties:
- *                   aludes:
- *                     type: object
- *                     properties:
- *                       activo:
- *                         type: boolean
- *                       umbral_nivel:
- *                         type: number
- *                   viento:
- *                     type: object
- *                     properties:
- *                       activo:
- *                         type: boolean
- *                       umbral_kmh:
- *                         type: number
- *                   reportes_comunidad:
- *                     type: object
- *                     properties:
- *                       activo:
- *                         type: boolean
- *                       tipos_suscritos:
- *                         type: array
- *                         items:
- *                           type: string
- *     responses:
- *       200:
- *         description: Configuración de alertas actualizada
- *       400:
- *         description: Datos inválidos
- *       401:
- *         description: No autorizado
- *       404:
- *         description: Usuario o zona no encontrados
- */
-router.put(
-  "/alerts/:userId/:zoneId",
-  [param("userId").isMongoId(), param("zoneId").isMongoId()],
-  validate,
-  (req, res, next) => userController.updateAlertConfig(req, res, next)
-);
-
 /**
  * @swagger
  * /api/user/delete:
- *   delete:
+ *   post:
  *     summary: Eliminar usuario autenticado
  *     tags: [User]
  *     security:
@@ -442,7 +260,7 @@ router.put(
  *       404:
  *         description: Usuario no encontrado
  */
-router.delete(
+router.post(
   "/delete",
   isAuth,
   validate,

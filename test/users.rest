@@ -26,22 +26,7 @@ Content-Type: application/json
 
 {
   "zonaId": "{{zoneId}}",
-  "accion": "add",
-  "configuracion_alertas": {
-    "aludes": {
-      "activo": true,
-      "umbral_nivel": 3
-    },
-    "viento": {
-      "activo": true,
-      "umbral_kmh": 50
-    },
-    "reportes_comunidad": {
-      "activo": true,
-      "tipos_suscritos": ["Avalancha", "Alud"]
-    }
-  },
-  "metodo_notificacion": "PUSH"
+  "accion": "add"
 }
 
 ###
@@ -54,28 +39,6 @@ Content-Type: application/json
 {
   "zonaId": "{{zoneId}}",
   "accion": "remove"
-}
-
-###
-### Update Alert Configuration
-### @name userUpdateAlerts
-PUT {{baseAPI}}/user/alerts/{{userId}}/{{zoneId}}
-Content-Type: application/json
-
-{
-  "configuracion_alertas": {
-    "aludes": {
-      "activo": true,
-      "umbral_nivel": 4
-    },
-    "viento": {
-      "activo": false
-    },
-    "reportes_comunidad": {
-      "activo": true,
-      "tipos_suscritos": ["Hielo", "Nieve mojada"]
-    }
-  }
 }
 
 ###
