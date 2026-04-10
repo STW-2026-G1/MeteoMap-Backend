@@ -12,14 +12,17 @@ function errorHandler(err, req, res, next) {
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Error Interno del Servidor";
 
-  // Guarda todos los detalles técnicos del fallo en 'error.log'
-  logger.error("Error no manejado", {
-    status,
-    message,
-    stack: err.stack, // El rastro exacto de qué línea de código falló
-    method: req.method,
-    url: req.url,
-  });
+  // Solo loguear como error los 500s (errores internos del servidor)
+  // Los 4xx se loguean en el HTTP logger (warn)
+  if (status >= 500) {
+    logger.error("Error no manejado", {
+      status,
+      message,
+      stack: err.stack,
+      method: req.method,
+      url: req.url,
+    });
+  }
 
   // Responde al usuario que hizo la petición
   res.status(status).json({

@@ -69,7 +69,6 @@ class AuthService {
         },
       };
     } catch (err) {
-      logger.error(`Error en register: ${err.message}`);
       throw err;
     }
   }
@@ -88,7 +87,6 @@ class AuthService {
       });
 
       if (!user) {
-        logger.warn(`Login fallido: usuario no encontrado`, { email });
         const error = new Error("Credenciales inválidas");
         error.status = 401;
         throw error;
@@ -96,10 +94,6 @@ class AuthService {
 
       // Verificar que el usuario no esté bloqueado
       if (user.estado === "BLOQUEADO") {
-        logger.warn(`Intento de login de usuario bloqueado`, {
-          email,
-          userId: user._id,
-        });
         const error = new Error("Usuario bloqueado");
         error.status = 403;
         throw error;
@@ -107,10 +101,6 @@ class AuthService {
 
       // Verificar que el usuario usa auth local
       if (user.datos_acceso.provider !== "local") {
-        logger.warn(`Login fallido: usuario no usa auth local`, {
-          email,
-          provider: user.datos_acceso.provider,
-        });
         const error = new Error("Este usuario no usa autenticación con contraseña");
         error.status = 400;
         throw error;
@@ -123,7 +113,6 @@ class AuthService {
       );
 
       if (!passwordMatch) {
-        logger.warn(`Login fallido: contraseña incorrecta`, { email });
         const error = new Error("Credenciales inválidas");
         error.status = 401;
         throw error;
@@ -152,7 +141,6 @@ class AuthService {
         },
       };
     } catch (err) {
-      logger.error(`Error en loginWithEmail: ${err.message}`);
       throw err;
     }
   }
