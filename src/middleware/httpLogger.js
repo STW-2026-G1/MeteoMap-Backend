@@ -16,4 +16,22 @@ const httpLogger = morgan(
   { stream, skip }
 );
 
+// Middleware adicional para loguear respuestas con errores 4xx
+httpLogger.errorLogger = (req, res, next) => {
+  const originalJson = res.json;
+  
+  res.json = function(data) {
+    // Debuggear todos los errores 4xx
+    if (res.statusCode >= 400 && res.statusCode < 500) {
+      logger.warn(`[${res.statusCode}] ${data.error || "Error"} on ${req.method} ${req.url}`, {
+        statusCode: res.statusCode,
+        message: data.message,
+      });
+    }
+    return originalJson.call(this, data);
+  };
+  
+  next();
+};
+
 module.exports = httpLogger;

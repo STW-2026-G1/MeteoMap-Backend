@@ -40,7 +40,10 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
-// HTTP request logging
+// Error logger BEFORE Morgan para interceptar res.json correctamente
+app.use(httpLogger.errorLogger);
+
+// HTTP request logging (Morgan)
 app.use(httpLogger);
 
 // ---------------------------------------------------------------------------

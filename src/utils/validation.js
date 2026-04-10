@@ -117,9 +117,13 @@ function validateRequest(schema) {
     const result = validateData(schema, req.body);
 
     if (!result.success) {
+      // Construir mensaje con primer error para el frontend
+      const firstErrorField = Object.keys(result.errors)[0];
+      const firstErrorMessage = result.errors[firstErrorField];
+      
       return res.status(400).json({
         error: "Validación fallida",
-        details: result.errors,
+        message: firstErrorMessage,
       });
     }
 
