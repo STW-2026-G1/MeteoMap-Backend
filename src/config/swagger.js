@@ -13,7 +13,6 @@ Una API REST integral para la gestión de la seguridad en montaña y la elaborac
 - **Gestión de zonas** - Zonas geográficas con soporte GeoJSON para consultas de proximidad
 - **Almacenamiento en caché de datos meteorológicos** - Almacena y gestiona datos meteorológicos para zonas de montaña
 - **Informes de la comunidad** - Envía y valida informes con geolocalización
-- **Sistema de reputación** - Validación de la comunidad con puntos y seguimiento de la reputación
 - **Foros de usuarios** - Comentarios y debates por zona
 - **Asistente de IA** - Chat para obtener orientación inteligente sobre seguridad en la montaña
 - **Panel de administración** - Métricas del sistema, gestión de usuarios y gestión de categorías

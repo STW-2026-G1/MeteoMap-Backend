@@ -73,18 +73,15 @@ src/
 ✅ **Reportes Comunitarios (MongoDB Native)**
 - Categoría embebida (sin referencias)
 - Comentarios embebidos en reportes
-- Validación basada en reputación
 - Auto-eliminación después de 48h (TTL)
 
 ✅ **Preferencias de Usuario (MongoDB Native)**
 - Array de favoritos con config embebida
-- Configuración de alertas por zona
 - Métodos de notificación personalizados
 
 ✅ **Sistema Social**
 - Comentarios en foro por zona
 - Comentarios embebidos en reportes
-- Reputación y medallas de usuario
 
 ✅ **Monitoreo del Sistema**
 - Métricas en tiempo real
@@ -180,7 +177,6 @@ POST   /api/auth/logout           # Cerrar sesión
 ```
 GET    /api/user/profile/:userId                    # Obtener perfil
 PUT    /api/user/favorites                          # Agregar/remover favorito
-PATCH  /api/user/alerts/:userId/:zoneId            # Actualizar alertas
 ```
 
 ### Zonas (`test/zones.rest`)
@@ -399,7 +395,7 @@ Response ← Controller (formato) ← Service (resultado) ← Query
 | Archivo | Endpoints |
 |---------|-----------|
 | `test/auth.rest` | Register, Login |
-| `test/users.rest` | Profile, Favorites, Alerts |
+| `test/users.rest` | Profile, Favorites |
 | `test/zones.rest` | List, Get, Weather, Dashboard |
 | `test/reports.rest` | CRUD, Validate |
 | `test/comments.rest` | Zone comments, Report comments |

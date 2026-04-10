@@ -18,7 +18,7 @@ function validate(req, res, next) {
  * @swagger
  * /api/user/profile/{userId}:
  *   get:
- *     summary: Obtener perfil y reputación del usuario
+ *     summary: Obtener perfil del usuario
  *     tags: [User]
  *     parameters:
  *       - in: path
