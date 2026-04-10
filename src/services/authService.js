@@ -51,7 +51,6 @@ class AuthService {
         },
         perfil: {
           nombre: nombre || "",
-          email: email.toLowerCase(),
         },
       });
 

@@ -130,7 +130,6 @@ class UserService {
         }
 
         user.datos_acceso.email = updateData.email;
-        user.perfil.email = updateData.email;
       }
 
       // Actualizar avatar

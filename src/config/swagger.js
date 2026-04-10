@@ -75,7 +75,6 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
               type: "object",
               properties: {
                 nombre: { type: "string", example: "Juan Pérez" },
-                email: { type: "string", example: "user@example.com" },
                 avatar_url: { type: "string" },
                 biografia: { type: "string" },
                 ubicacion: { type: "string" },

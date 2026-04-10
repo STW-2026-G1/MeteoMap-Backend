@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema(
     // Perfil
     perfil: {
       nombre: String,
-      email: String,
       avatar_url: String,
       biografia: String,
       ubicacion: String,

@@ -63,7 +63,6 @@ class GoogleAuthService {
         },
         perfil: {
           nombre: name || "",
-          email: email.toLowerCase(),
           avatar_url: picture || "",
         },
       });

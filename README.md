@@ -233,7 +233,6 @@ GET    /api/admin/health           # Estado de salud
   },
   perfil: {
     nombre: String,
-    email: String,
     avatar_url: String,
     biografia: String,
     ubicacion: String
