@@ -83,7 +83,11 @@ class AuthController {
       const { user } = await googleAuthService.handleGoogleLogin(tokenPayload);
 
       // Generar JWT
-      const accessToken = tokenService.generateAccessToken(user._id);
+      const accessToken = tokenService.generateSingleJWT({
+        userId: user._id.toString(),
+        email: user.datos_acceso.email,
+        rol: user.datos_acceso.rol,
+      });
 
       logger.info(`Login exitoso con Google: ${user.datos_acceso.email}`);
 
