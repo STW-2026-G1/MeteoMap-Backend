@@ -82,7 +82,7 @@ class AuthController {
       // Procesar login con Google (crear o actualizar usuario)
       const { user } = await googleAuthService.handleGoogleLogin(tokenPayload);
 
-      // Generar JWT token
+      // Generar JWT
       const accessToken = tokenService.generateAccessToken(user._id);
 
       logger.info(`Login exitoso con Google: ${user.datos_acceso.email}`);

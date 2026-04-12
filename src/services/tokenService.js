@@ -11,7 +11,7 @@ class TokenService {
    * @param {Object} payload - Datos a incluir en el token (ej: { userId, email, rol })
    * @returns {string} accessToken
    */
-  generateTokenPair(payload) {
+  generateSingleJWT(payload) {
     try {
       // Validar que el algoritmo "none" NO se use
       const algorithm = JWT_CONFIG.ACCESS_TOKEN.algorithm;

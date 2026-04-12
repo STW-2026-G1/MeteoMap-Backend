@@ -119,7 +119,7 @@ class AuthService {
       }
 
       // Generar token
-      const accessToken = tokenService.generateTokenPair({
+      const accessToken = tokenService.generateSingleJWT({
         userId: user._id.toString(),
         email: user.datos_acceso.email,
         rol: user.datos_acceso.rol,

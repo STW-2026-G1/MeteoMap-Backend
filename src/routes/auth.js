@@ -1,10 +1,6 @@
 const { Router } = require("express");
 const { validateRequest, loginSchema, registerSchema } = require("../utils/validation");
 const authController = require("../controllers/authController");
-const logger = require("../config/logger");
-const tokenService = require("../services/tokenService");
-const googleAuthService = require("../services/googleAuthService");
-const { verifyGoogleToken } = require("../utils/oauthValidator");
 
 const router = Router();
 
