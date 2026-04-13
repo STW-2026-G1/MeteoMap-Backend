@@ -1,6 +1,7 @@
 const Report = require("../models/Report");
 const User = require("../models/User");
 const Zone = require("../models/Zone");
+const categoryService = require("./categoryService");
 const logger = require("../config/logger");
 
 class ReportService {
@@ -51,16 +52,16 @@ class ReportService {
     try {
       const { usuario_id, zona_id, nombre_categoria, icono_marcador, tipo, descripcion, foto_url, coordinates } = reportData;
 
-      // Verificar usuario
-      const user = await User.findById(usuario_id);
-      if (!user) {
-        throw new Error("Usuario no encontrado");
-      }
-
       // Verificar zona
       const zone = await Zone.findById(zona_id);
       if (!zone) {
         throw new Error("Zona no encontrada");
+      }
+
+      // Verificar categoría
+      const categoryExists = await categoryService.validateCategoryExists(nombre_categoria);
+      if (!categoryExists) {
+        throw new Error(`La categoría '${nombre_categoria}' no existe o no está activa`);
       }
 
       const newReport = new Report({

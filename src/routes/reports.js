@@ -164,7 +164,7 @@ router.post(
 /**
  * @swagger
  * /api/reports/{id}/validate:
- *   patch:
+ *   put:
  *     summary: Confirmar o desmentir un reporte
  *     tags: [Reports]
  *     security:
@@ -194,7 +194,7 @@ router.post(
  *       404:
  *         description: Reporte no encontrado
  */
-router.patch(
+router.put(
   "/:id/validate",
   isAuth,
   [param("id").isMongoId(), body("accion").isIn(["confirmar", "desmentir"])],

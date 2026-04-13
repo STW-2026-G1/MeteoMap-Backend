@@ -20,6 +20,7 @@ const authRouter = require("./routes/auth");
 const usersRouter = require("./routes/users");
 const zonesRouter = require("./routes/zones");
 const reportsRouter = require("./routes/reports");
+const categoriesRouter = require("./routes/categories");
 const commentsRouter = require("./routes/comments");
 const chatRouter = require("./routes/chat");
 const adminRouter = require("./routes/admin");
@@ -107,6 +108,9 @@ app.use("/api/zones", zonesRouter);
 
 // Community reports endpoint
 app.use("/api/reports", reportsRouter);
+
+// Report categories endpoint
+app.use("/api/categories", categoriesRouter);
 
 // Comments and forum endpoints
 app.use("/api/comments", commentsRouter);
