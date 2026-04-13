@@ -2,7 +2,7 @@ const logger = require("../config/logger");
 
 // Si una petición llega hasta aquí abajo sin ser contestada, es que la ruta no existe
 function notFound(req, res, next) {
-  res.status(404).json({ error: "No econtrado", message: `Ruta ${req.method} ${req.url} not found` });
+  res.status(404).json({ error: "No encontrado", message: `Ruta ${req.method} ${req.url} not found` });
 }
 
 

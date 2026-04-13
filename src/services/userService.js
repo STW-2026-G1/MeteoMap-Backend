@@ -132,9 +132,14 @@ class UserService {
         user.datos_acceso.email = updateData.email;
       }
 
-      // Actualizar avatar
-      if (updateData.avatar_url !== undefined) {
-        user.perfil.avatar_url = updateData.avatar_url;
+      // Actualizar avatar_seed
+      if (updateData.avatar_seed !== undefined) {
+        user.perfil.avatar_seed = updateData.avatar_seed;
+      }
+
+      // Actualizar avatar_style
+      if (updateData.avatar_style !== undefined) {
+        user.perfil.avatar_style = updateData.avatar_style;
       }
 
       // Actualizar biografía

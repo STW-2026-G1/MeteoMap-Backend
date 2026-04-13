@@ -83,15 +83,22 @@ class UserController {
   async updateUser(req, res, next) {
     try {
       const userId = req.user.userId;
-      const { nombre, email, avatar_url, biografia, ubicacion } = req.body;
+      console.log("updateUser - userId:", userId);
+      const { nombre, email, biografia, ubicacion, avatar_style } = req.body;
 
-      const result = await userService.updateUser(userId, {
+      const updateData = {
         nombre,
         email,
-        avatar_url,
         biografia,
         ubicacion,
-      });
+        avatar_style,
+      };
+
+      if (nombre) {
+        updateData.avatar_seed = nombre;
+      }
+
+      const result = await userService.updateUser(userId, updateData);
 
       res.json(result);
     } catch (err) {

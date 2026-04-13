@@ -15,9 +15,10 @@ class AuthService {
    * @param {string} email - Email del usuario
    * @param {string} password - Contraseña en texto plano
    * @param {string} nombre - Nombre del usuario
+   * @param {string} avatar_style - Estilo del avatar
    * @returns {object} Usuario creado
    */
-  async register(email, password, nombre) {
+  async register(email, password, nombre, avatar_style = 'avataaars') {
     try {
       // Verificar si el usuario ya existe
       const existingUser = await User.findOne({
@@ -51,6 +52,8 @@ class AuthService {
         },
         perfil: {
           nombre: nombre || "",
+          avatar_seed: nombre || "",
+          avatar_style: avatar_style,
         },
       });
 

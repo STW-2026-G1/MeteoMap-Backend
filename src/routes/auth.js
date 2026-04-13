@@ -20,6 +20,7 @@ const router = Router();
  *               email: { type: string }
  *               password: { type: string }
  *               nombre: { type: string }
+ *               avatar_style: { type: string, enum: ["avataaars", "bottts", "lorelei", "pixel-art", "thumbs", "notionists", "notionists-neutral", "dylan", "croodles", "personas"] }  
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente

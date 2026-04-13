@@ -73,6 +73,12 @@ const registerSchema = z.object({
     .trim()
     .optional()
     .default(""),
+  
+  avatar_style: z
+    .string()
+    .optional()
+    .default('avataaars')
+    .refine(val => ['avataaars', 'bottts', 'lorelei', 'pixel-art', 'thumbs', 'notionists', 'notionists-neutral', 'dylan', 'croodles', 'personas'].includes(val), "Estilo de avatar inválido"),
 });
 
 /**
