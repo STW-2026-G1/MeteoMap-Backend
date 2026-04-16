@@ -26,7 +26,7 @@ const reportSchema = new mongoose.Schema(
       desmentidos: { type: Number, default: 0 },
     },
     // NOTE: reports activos por defecto
-    estado: { type: String, enum: ["PENDIENTE", "ACTIVO", "OCULTO", "SPAM"], default: "ACTIVO" },
+    estado: { type: String, enum: ["SOSPECHOSO", "LEGITIMO"], default: "SOSPECHOSO" },
     valoracion_global: { type: Number, default: 0 },
     // Array de comentarios embebidos (si esperas <50 comentarios por reporte)
     comentarios: [
