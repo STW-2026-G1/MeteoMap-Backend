@@ -19,8 +19,16 @@ class UserService {
 
       return {
         message: "Datos del usuario",
-        id: user._id,
-        email: user.datos_acceso.email,
+        user: {
+          id: user._id.toString(),
+          email: user.datos_acceso.email,
+          nombre: user.perfil.nombre,
+          biografia: user.perfil.biografia,
+          ubicacion: user.perfil.ubicacion,
+          avatar_style: user.perfil.avatar_style,
+          avatar_seed: user.perfil.avatar_seed,
+          createdAt: user.createdAt,
+        },
         perfil: user.perfil,
         preferencias: user.preferencias,
         limites_ia: user.limites_ia,
@@ -68,7 +76,7 @@ class UserService {
   }
 
   /**
-   * Eliminar usuario
+   * Eliminar usuario (soft delete)
    */
   async deleteUser(userId) {
     try {
@@ -80,18 +88,25 @@ class UserService {
       }
 
       if (user.estado === "ELIMINADO") {
-        const error = new Error("Usuario ya eliminado");
+        const error = new Error("Esta cuenta ya fue eliminada anteriormente");
         error.status = 400;
         throw error;
       }
       
       user.estado = "ELIMINADO";
+      user.fechaEliminacion = new Date();
       await user.save();
-      logger.info(`Usuario eliminado: ${userId}`);
+      
+      logger.info(`Cuenta de usuario eliminada: ${userId} (${user.datos_acceso.email})`, {
+        userId,
+        email: user.datos_acceso.email,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
-        message: "Usuario eliminado exitosamente",
+        message: "Cuenta eliminada exitosamente. Tu cuenta estará disponible para recuperar durante 30 días",
         userId,
+        fechaEliminacion: user.fechaEliminacion,
       };
     } catch (err) {
       logger.error(`Error en deleteUser: ${err.message}`);
@@ -158,9 +173,14 @@ class UserService {
       return {
         message: "Perfil actualizado exitosamente",
         user: {
-          id: user._id,
+          id: user._id.toString(),
           email: user.datos_acceso.email,
-          perfil: user.perfil,
+          nombre: user.perfil.nombre,
+          biografia: user.perfil.biografia,
+          ubicacion: user.perfil.ubicacion,
+          avatar_style: user.perfil.avatar_style,
+          avatar_seed: user.perfil.avatar_seed,
+          createdAt: user.createdAt,
         },
       };
     } catch (err) {
@@ -181,6 +201,13 @@ class UserService {
         throw error;
       }
 
+      // Verificar que el usuario no esté eliminado
+      if (user.estado === "ELIMINADO") {
+        const error = new Error("No puedes cambiar la contraseña de una cuenta eliminada");
+        error.status = 403;
+        throw error;
+      }
+
       // Verificar que la contraseña actual es correcta
       const passwordMatch = await bcrypt.compare(
         currentPassword,
@@ -188,6 +215,7 @@ class UserService {
       );
 
       if (!passwordMatch) {
+        logger.warn(`Intento fallido de cambiar contraseña - contraseña incorrecta: ${userId}`);
         const error = new Error("Contraseña actual incorrecta");
         error.status = 401;
         throw error;

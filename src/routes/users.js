@@ -1,7 +1,8 @@
 const { Router } = require("express");
 const { param, body, validationResult } = require("express-validator");
 const userController = require("../controllers/userController");
-const isAuth = require("../middleware/auth")
+const isAuth = require("../middleware/auth");
+const { updatePasswordSchema, validateRequest } = require("../utils/validation");
 const router = Router();
 
 function validate(req, res, next) {
@@ -390,17 +391,7 @@ router.put(
 router.put(
   "/updatepassword",
   isAuth,
-  [
-    body("currentPassword")
-      .isString()
-      .notEmpty()
-      .withMessage("Contraseña actual es requerida"),
-    body("newPassword")
-      .isString()
-      .isLength({ min: 8 })
-      .withMessage("Nueva contraseña debe tener al menos 8 caracteres"),
-  ],
-  validate,
+  validateRequest(updatePasswordSchema),
   userController.updatePassword
 );
 

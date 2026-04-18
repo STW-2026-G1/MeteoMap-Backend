@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { validateRequest, loginSchema, registerSchema } = require("../utils/validation");
+const { validateRequest, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } = require("../utils/validation");
 const authController = require("../controllers/authController");
 
 const router = Router();
@@ -119,5 +119,58 @@ router.post("/logout", authController.logout);
  *         description: Error en servidor
  */
 router.post("/login-google", authController.loginGoogle);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Solicitar recuperación de contraseña
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string, example: user@example.com }
+ *     responses:
+ *       200:
+ *         description: Solicitud procesada (respuesta genérica por seguridad)
+ *       400:
+ *         description: Email inválido
+ */
+router.post(
+  "/forgot-password",
+  validateRequest(forgotPasswordSchema),
+  authController.forgotPassword
+);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Restablecer contraseña con token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token: { type: string, description: "Token de recuperación de la URL" }
+ *               newPassword: { type: string, minLength: 8, description: "Contraseña con mayúscula, minúscula, número y carácter especial" }
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada correctamente
+ *       400:
+ *         description: Token inválido/expirado o contraseña no cumple requisitos
+ */
+router.post(
+  "/reset-password",
+  validateRequest(resetPasswordSchema),
+  authController.resetPassword
+);
 
 module.exports = router;
