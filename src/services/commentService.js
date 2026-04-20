@@ -110,23 +110,21 @@ class CommentService {
    * Eliminar comentario 
    */
   async deleteComment(commentId) {
-    try {
-      const comment = await Comment.findById(commentId);
-      if (!comment) {
-        throw new Error("Comentario no encontrado");
-      }
-
-      comment.estado = "ELIMINADO";
-      await comment.save();
-
-      logger.info(`Comentario ${commentId} marcado como eliminado`);
-
-      return { message: "Comentario eliminado" };
-    } catch (err) {
-      logger.error(`Error en deleteComment: ${err.message}`);
-      throw err;
+  try {
+    // Borrado físico directo
+    const result = await Comment.findByIdAndDelete(commentId);
+    
+    if (!result) {
+      throw new Error("Comentario no encontrado");
     }
+
+    logger.info(`Comentario ${commentId} eliminado físicamente de la DB`);
+    return { message: "Comentario eliminado" };
+  } catch (err) {
+    logger.error(`Error en deleteComment: ${err.message}`);
+    throw err;
   }
+}
 
   async likeComment(commentId, userId) {
    // $addToSet añade el ID al array solo si no existe ya
