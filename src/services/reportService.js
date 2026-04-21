@@ -112,14 +112,6 @@ class ReportService {
         report.validaciones.desmentidos += 1;
       }
 
-      // Calcular valoración global
-      report.valoracion_global = report.validaciones.confirmaciones - report.validaciones.desmentidos;
-
-      // Si baja de -3, marcar como OCULTO
-      if (report.valoracion_global < -3) {
-        report.estado = "OCULTO";
-      }
-
       await report.save();
       logger.info(`Reporte ${reportId} validado: ${accion}`);
 

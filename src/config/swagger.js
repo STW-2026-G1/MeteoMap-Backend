@@ -153,7 +153,6 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
                 desmentidos: { type: "integer", example: 1 },
               },
             },
-            valoracion_global: { type: "integer", example: 4 },
             estado: {
               type: "string",
               enum: ["PENDIENTE", "ACTIVO", "OCULTO", "SPAM"],

@@ -10,11 +10,11 @@ const reportSchema = new mongoose.Schema(
       icono_marcador: { type: String, required: true },
     },
     // Ubicación exacta del reporte (puede diferir del centro de la zona)
+    // TODO, seguro que lo queremos quitar?
     geolocalizacion: {
       type: { type: String, enum: ["Point"], default: "Point" },
       coordinates: { type: [Number], required: true },
     },
-    tipo: { type: String, required: true },
     contenido: {
       // NOTE, con <= 4 caracteres peta
       descripcion: { type: String, required: true },
@@ -27,7 +27,6 @@ const reportSchema = new mongoose.Schema(
     },
     // NOTE: reports activos por defecto
     estado: { type: String, enum: ["SOSPECHOSO", "LEGITIMO"], default: "SOSPECHOSO" },
-    valoracion_global: { type: Number, default: 0 },
     // Array de comentarios embebidos (si esperas <50 comentarios por reporte)
     comentarios: [
       {

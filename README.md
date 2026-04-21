@@ -271,7 +271,6 @@ GET    /api/admin/health           # Estado de salud
     desmentidos: Number
   },
   estado: "PENDIENTE" | "ACTIVO" | "OCULTO" | "SPAM",
-  valoracion_global: Number,
   comentarios: [ 
     {
       usuario_id: ObjectId,
