@@ -250,8 +250,8 @@ class ChatService {
             zona: r.zona_id?.nombre,
             fecha: r.createdAt,
             validaciones: {
-              confirmaciones: r.validaciones?.confirmaciones || 0,
-              desmentidos: r.validaciones?.desmentidos || 0,
+              confirmaciones: r.validaciones?.usuarios_confirmaron?.length || 0,
+              desmentidos: r.validaciones?.usuarios_desmintieron?.length || 0,
             },
           }));
         } catch (err) {

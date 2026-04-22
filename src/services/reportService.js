@@ -10,27 +10,17 @@ class ReportService {
    */
   async getReports(filters = {}) {
     try {
-      const { zonaId, estado, limit = 100, lat, lng, radius = 5000 } = filters;
-      const query = { estado: "ACTIVO" };
+      const { zonaId, estado, limit = 100, lat, lng, radius = 5000, usuarioId } = filters;
+      const query = {};
 
       if (zonaId) query.zona_id = zonaId;
       if (estado) query.estado = estado;
-
-      if (lat && lng) {
-        query.geolocalizacion = {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [lng, lat],
-            },
-            $maxDistance: radius,
-          },
-        };
-      }
+      if (usuarioId) query.usuario_id = usuarioId;
 
       const reports = await Report.find(query)
         .populate("usuario_id", "perfil.nombre")
         .populate("zona_id", "nombre")
+        .populate("categoria_id", "nombre icono_marcador")
         .limit(limit);
 
       logger.debug("ReportService.getReports", { filter: query });
@@ -50,7 +40,7 @@ class ReportService {
    */
   async createReport(reportData) {
     try {
-      const { usuario_id, zona_id, nombre_categoria, icono_marcador, tipo, descripcion, foto_url, coordinates } = reportData;
+      const { usuario_id, zona_id, nombre_categoria, icono_marcador, tipo, descripcion } = reportData;
 
       // Verificar zona
       const zone = await Zone.findById(zona_id);
@@ -59,28 +49,25 @@ class ReportService {
       }
 
       // Verificar categoría
-      const categoryExists = await categoryService.validateCategoryExists(nombre_categoria);
-      if (!categoryExists) {
-        throw new Error(`La categoría '${nombre_categoria}' no existe o no está activa`);
+      let category = await categoryService.getCategoryByName(nombre_categoria);
+      if (!category) {
+        logger.info(`La categoría '${nombre_categoria}' no existe. Creando nueva categoría...`);
+        category = await categoryService.createCategory({
+          nombre: nombre_categoria,
+          icono_marcador: icono_marcador || "⚠️",
+          descripcion: `Categoría autogenerada para el tipo: ${tipo || "Reporte"}`,
+          creado_por: usuario_id
+        });
       }
 
       const newReport = new Report({
         usuario_id,
         zona_id,
-        categoria: {
-          nombre: nombre_categoria,
-          icono_marcador,
-        },
-        tipo,
+        categoria_id: category._id,
         contenido: {
           descripcion,
-          foto_url,
         },
-        geolocalizacion: {
-          type: "Point",
-          coordinates,
-        },
-      });
+        });
 
       await newReport.save();
       logger.info(`Nuevo reporte creado por usuario ${usuario_id}`);
@@ -95,7 +82,7 @@ class ReportService {
   /**
    * Validar reporte (confirmar/desmentir)
    */
-  async validateReport(reportId, accion) {
+  async validateReport(reportId, accion, userId) {
     try {
       if (!["confirmar", "desmentir"].includes(accion)) {
         throw new Error("Acción no válida. Use 'confirmar' o 'desmentir'");
@@ -106,10 +93,33 @@ class ReportService {
         throw new Error("Reporte no encontrado");
       }
 
+      // Arrays para registrar votos y prevenir votos múltiples
+      const confirmaron = report.validaciones.usuarios_confirmaron || [];
+      const desmintieron = report.validaciones.usuarios_desmintieron || [];
+
+      const hasConfirmed = confirmaron.includes(userId);
+      const hasDenied = desmintieron.includes(userId);
+
       if (accion === "confirmar") {
-        report.validaciones.confirmaciones += 1;
+        if (hasConfirmed) {
+          // Toggle off
+          report.validaciones.usuarios_confirmaron.pull(userId);
+        } else {
+          if (hasDenied) {
+            report.validaciones.usuarios_desmintieron.pull(userId);
+          }
+          report.validaciones.usuarios_confirmaron.push(userId);
+        }
       } else if (accion === "desmentir") {
-        report.validaciones.desmentidos += 1;
+        if (hasDenied) {
+          // Toggle off
+          report.validaciones.usuarios_desmintieron.pull(userId);
+        } else {
+          if (hasConfirmed) {
+            report.validaciones.usuarios_confirmaron.pull(userId);
+          }
+          report.validaciones.usuarios_desmintieron.push(userId);
+        }
       }
 
       await report.save();
@@ -148,7 +158,8 @@ class ReportService {
     try {
       const report = await Report.findById(reportId)
         .populate("usuario_id", "perfil.nombre")
-        .populate("zona_id", "nombre");
+        .populate("zona_id", "nombre")
+        .populate("categoria_id", "nombre icono_marcador");
 
       if (!report) {
         throw new Error("Reporte no encontrado");

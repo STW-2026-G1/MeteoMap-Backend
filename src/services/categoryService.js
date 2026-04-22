@@ -72,6 +72,13 @@ class CategoryService {
   }
 
   /**
+   * Obtener categoría por nombre
+   */
+  async getCategoryByName(nombre) {
+    return await ReportCategory.findOne({ nombre, estado: "ACTIVA" });
+  }
+
+  /**
    * Validar si existe una categoría por nombre
    */
   async validateCategoryExists(nombre) {

@@ -7,11 +7,12 @@ class ReportController {
    */
   async getReports(req, res, next) {
     try {
-      const { zonaId, estado, limit, lat, lng, radius } = req.query;
+      const { zonaId, estado, limit, lat, lng, radius, usuarioId } = req.query;
       const filters = {};
       if (zonaId) filters.zonaId = zonaId;
       if (estado) filters.estado = estado;
       if (limit) filters.limit = parseInt(limit);
+      if (usuarioId) filters.usuarioId = usuarioId;
       if (lat && lng) {
         filters.lat = parseFloat(lat);
         filters.lng = parseFloat(lng);
@@ -65,8 +66,9 @@ class ReportController {
     try {
       const { id } = req.params;
       const { accion } = req.body;
+      const userId = req.user.userId;
 
-      const report = await reportService.validateReport(id, accion);
+      const report = await reportService.validateReport(id, accion, userId);
       res.json({
         message: "Reporte validado",
         report,

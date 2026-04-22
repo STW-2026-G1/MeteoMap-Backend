@@ -119,7 +119,6 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
  *               - icono_marcador
  *               - tipo
  *               - descripcion
- *               - coordinates
  *             properties:
  *               zona_id:
  *                 type: string
@@ -131,14 +130,6 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
  *                 type: string
  *               descripcion:
  *                 type: string
- *               foto_url:
- *                 type: string
- *               coordinates:
- *                 type: array
- *                 items:
- *                   type: number
- *                 description: "[Longitud, Latitud]"
- *                 example: [-3.703790, 40.416775]
  *     responses:
  *       201:
  *         description: Reporte creado exitosamente
@@ -151,11 +142,7 @@ router.post(
   [
     body("zona_id").isMongoId(),
     body("nombre_categoria").isString().trim(),
-    body("icono_marcador").isString().trim(),
-    body("tipo").isString().trim(),
     body("descripcion").isString().trim().isLength({ min: 5 }),
-    body("foto_url").optional().isString().trim(),
-    body("coordinates").isArray({ min: 2, max: 2 }),
   ],
   validate,
   (req, res, next) => reportController.createReport(req, res, next)
