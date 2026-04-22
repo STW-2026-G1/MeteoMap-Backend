@@ -150,6 +150,46 @@ router.post(
 
 /**
  * @swagger
+ * /api/reports/{id}:
+ *   put:
+ *     summary: Actualizar reporte
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del reporte
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               descripcion:
+ *                 type: string
+ *               categoria_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Reporte actualizado con éxito
+ *       404:
+ *         description: Reporte no encontrado
+ */
+router.put(
+  "/:id",
+  isAuth,
+  [param("id").isMongoId(), body("descripcion").optional().isString().trim().isLength({ min: 5 })],
+  validate,
+  (req, res, next) => reportController.updateReport(req, res, next)
+);
+
+/**
+ * @swagger
  * /api/reports/{id}/validate:
  *   put:
  *     summary: Confirmar o desmentir un reporte

@@ -18,7 +18,7 @@ class ReportService {
       if (usuarioId) query.usuario_id = usuarioId;
 
       const reports = await Report.find(query)
-        .populate("usuario_id", "perfil.nombre")
+        .populate("usuario_id", "_id perfil.nombre avatar_seed")
         .populate("zona_id", "nombre")
         .populate("categoria_id", "nombre icono_marcador")
         .limit(limit);
@@ -64,6 +64,7 @@ class ReportService {
         usuario_id,
         zona_id,
         categoria_id: category._id,
+        tipo,
         contenido: {
           descripcion,
         },
@@ -133,18 +134,57 @@ class ReportService {
   }
 
   /**
-   * Eliminar reporte
+   * Actualizar reporte
+   */
+  async updateReport(reportId, updateData) {
+    try {
+      const updateFields = {};
+      
+      // Solo permitir actualizar descripción y tipo
+      if (updateData.descripcion !== undefined) {
+        updateFields["contenido.descripcion"] = updateData.descripcion;
+      }
+      if (updateData.tipo !== undefined) {
+        updateFields["tipo"] = updateData.tipo;
+      }
+      
+      const report = await Report.findByIdAndUpdate(
+        reportId,
+        { $set: updateFields },
+        { new: true, runValidators: true }
+      ).populate("usuario_id categoria_id zona_id");
+
+      if (!report) {
+        throw new Error("Reporte no encontrado");
+      }
+
+      logger.info(`Reporte ${reportId} actualizado`);
+
+      return report;
+    } catch (err) {
+      logger.error(`Error en updateReport: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Eliminar reporte (y sus comentarios asociados)
    */
   async deleteReport(reportId) {
     try {
+      const Comment = require("../models/Comment");
+      
       const report = await Report.findByIdAndDelete(reportId);
       if (!report) {
         throw new Error("Reporte no encontrado");
       }
 
-      logger.info(`Reporte ${reportId} eliminado`);
+      // Eliminar comentarios asociados a este reporte
+      await Comment.deleteMany({ reporte_id: reportId });
 
-      return { message: "Reporte eliminado" };
+      logger.info(`Reporte ${reportId} y sus comentarios eliminados`);
+
+      return { message: "Reporte y comentarios asociados eliminados" };
     } catch (err) {
       logger.error(`Error en deleteReport: ${err.message}`);
       throw err;
@@ -157,7 +197,7 @@ class ReportService {
   async getReportById(reportId) {
     try {
       const report = await Report.findById(reportId)
-        .populate("usuario_id", "perfil.nombre")
+        .populate("usuario_id", "_id perfil.nombre avatar_seed")
         .populate("zona_id", "nombre")
         .populate("categoria_id", "nombre icono_marcador");
 
