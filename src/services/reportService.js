@@ -18,7 +18,7 @@ class ReportService {
       if (usuarioId) query.usuario_id = usuarioId;
 
       const reports = await Report.find(query)
-        .populate("usuario_id", "_id perfil.nombre avatar_seed")
+        .populate("usuario_id", "_id perfil.nombre perfil.avatar_seed perfil.avatar_style")
         .populate("zona_id", "nombre")
         .populate("categoria_id", "nombre icono_marcador")
         .limit(limit);
@@ -40,7 +40,7 @@ class ReportService {
    */
   async createReport(reportData) {
     try {
-      const { usuario_id, zona_id, nombre_categoria, icono_marcador, tipo, descripcion } = reportData;
+      const { usuario_id, zona_id, categoria_id, descripcion } = reportData;
 
       // Verificar zona
       const zone = await Zone.findById(zona_id);
@@ -48,27 +48,22 @@ class ReportService {
         throw new Error("Zona no encontrada");
       }
 
-      // Verificar categoría
-      let category = await categoryService.getCategoryByName(nombre_categoria);
+      // Verificar categoría por ID
+      const category = await categoryService.getCategoryById(categoria_id);
       if (!category) {
-        logger.info(`La categoría '${nombre_categoria}' no existe. Creando nueva categoría...`);
-        category = await categoryService.createCategory({
-          nombre: nombre_categoria,
-          icono_marcador: icono_marcador || "⚠️",
-          descripcion: `Categoría autogenerada para el tipo: ${tipo || "Reporte"}`,
-          creado_por: usuario_id
-        });
+        const error = new Error(`La categoría con ID '${categoria_id}' no existe.`);
+        error.status = 400;
+        throw error;
       }
 
       const newReport = new Report({
         usuario_id,
         zona_id,
         categoria_id: category._id,
-        tipo,
         contenido: {
           descripcion,
         },
-        });
+      });
 
       await newReport.save();
       logger.info(`Nuevo reporte creado por usuario ${usuario_id}`);
@@ -139,15 +134,23 @@ class ReportService {
   async updateReport(reportId, updateData) {
     try {
       const updateFields = {};
-      
-      // Solo permitir actualizar descripción y tipo
+
+      // Solo permitir actualizar descripción y categoría
       if (updateData.descripcion !== undefined) {
         updateFields["contenido.descripcion"] = updateData.descripcion;
       }
-      if (updateData.tipo !== undefined) {
-        updateFields["tipo"] = updateData.tipo;
+
+      if (updateData.categoria_id !== undefined) {
+        // Validar que la nueva categoría existe
+        const category = await categoryService.getCategoryById(updateData.categoria_id);
+        if (!category) {
+          const error = new Error(`La categoría con ID '${updateData.categoria_id}' no existe.`);
+          error.status = 400;
+          throw error;
+        }
+        updateFields["categoria_id"] = updateData.categoria_id;
       }
-      
+
       const report = await Report.findByIdAndUpdate(
         reportId,
         { $set: updateFields },
@@ -173,7 +176,7 @@ class ReportService {
   async deleteReport(reportId) {
     try {
       const Comment = require("../models/Comment");
-      
+
       const report = await Report.findByIdAndDelete(reportId);
       if (!report) {
         throw new Error("Reporte no encontrado");
@@ -197,7 +200,7 @@ class ReportService {
   async getReportById(reportId) {
     try {
       const report = await Report.findById(reportId)
-        .populate("usuario_id", "_id perfil.nombre avatar_seed")
+        .populate("usuario_id", "_id perfil.nombre perfil.avatar_seed perfil.avatar_style")
         .populate("zona_id", "nombre")
         .populate("categoria_id", "nombre icono_marcador");
 

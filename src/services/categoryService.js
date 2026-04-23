@@ -7,7 +7,7 @@ class CategoryService {
    */
   async getCategories() {
     try {
-      const categories = await ReportCategory.find({ estado: "ACTIVA" });
+      const categories = await ReportCategory.find({});
       return categories;
     } catch (err) {
       logger.error(`Error en getCategories: ${err.message}`);
@@ -58,13 +58,12 @@ class CategoryService {
    */
   async deleteCategory(id) {
     try {
-      // En este caso lo borramos físicamente o lo marcamos como INACTIVA
-      const category = await ReportCategory.findByIdAndUpdate(id, { estado: "INACTIVA" }, { new: true });
+      const category = await ReportCategory.findByIdAndDelete(id);
       if (!category) {
         throw new Error("Categoría no encontrada");
       }
-      logger.info(`Categoría desactivada: ${id}`);
-      return { message: "Categoría eliminada (desactivada)" };
+      logger.info(`Categoría eliminada: ${id}`);
+      return { message: "Categoría eliminada" };
     } catch (err) {
       logger.error(`Error en deleteCategory: ${err.message}`);
       throw err;
@@ -75,14 +74,21 @@ class CategoryService {
    * Obtener categoría por nombre
    */
   async getCategoryByName(nombre) {
-    return await ReportCategory.findOne({ nombre, estado: "ACTIVA" });
+    return await ReportCategory.findOne({ nombre });
+  }
+
+  /**
+   * Obtener categoría por ID
+   */
+  async getCategoryById(id) {
+    return await ReportCategory.findById(id);
   }
 
   /**
    * Validar si existe una categoría por nombre
    */
   async validateCategoryExists(nombre) {
-    const category = await ReportCategory.findOne({ nombre, estado: "ACTIVA" });
+    const category = await ReportCategory.findOne({ nombre });
     return !!category;
   }
 }

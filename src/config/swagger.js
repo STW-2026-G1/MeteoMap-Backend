@@ -182,8 +182,6 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             nombre: { type: "string", example: "Avalancha" },
             descripcion: { type: "string", example: "Avalanchas activas o potenciales" },
             icono_marcador: { type: "string", example: "icon_avalanche" },
-            estado: { type: "string", enum: ["ACTIVA", "INACTIVA"], default: "ACTIVA" },
-            creado_por: { type: "string", description: "Admin user ObjectId" },
           },
         },
 

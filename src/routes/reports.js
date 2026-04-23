@@ -115,18 +115,12 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
  *             type: object
  *             required:
  *               - zona_id
- *               - nombre_categoria
- *               - icono_marcador
- *               - tipo
+ *               - categoria_id
  *               - descripcion
  *             properties:
  *               zona_id:
  *                 type: string
- *               nombre_categoria:
- *                 type: string
- *               icono_marcador:
- *                 type: string
- *               tipo:
+ *               categoria_id:
  *                 type: string
  *               descripcion:
  *                 type: string
@@ -141,7 +135,7 @@ router.post(
   isAuth,
   [
     body("zona_id").isMongoId(),
-    body("nombre_categoria").isString().trim(),
+    body("categoria_id").isMongoId(),
     body("descripcion").isString().trim().isLength({ min: 5 }),
   ],
   validate,

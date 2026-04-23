@@ -122,7 +122,6 @@ router.patch(
  *               nombre: { type: string }
  *               descripcion: { type: string }
  *               icono_marcador: { type: string }
- *               creado_por: { type: string }
  *     responses:
  *       201:
  *         description: Categoría creada
@@ -133,12 +132,11 @@ router.post(
     body("nombre").isString().trim(),
     body("descripcion").optional().isString().trim(),
     body("icono_marcador").optional().isString().trim(),
-    body("creado_por").isMongoId(),
   ],
   validate,
   async (req, res, next) => {
     try {
-      const { nombre, descripcion, icono_marcador, creado_por } = req.body;
+      const { nombre, descripcion, icono_marcador } = req.body;
 
       // Verificar que no existe ya esta categoría
       const existing = await ReportCategory.findOne({ nombre });
@@ -150,7 +148,6 @@ router.post(
         nombre,
         descripcion,
         icono_marcador,
-        creado_por,
       });
 
       await newCategory.save();

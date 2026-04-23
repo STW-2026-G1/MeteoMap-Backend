@@ -85,22 +85,22 @@ class ReportController {
     try {
       const { id } = req.params;
       const { descripcion, categoria_id } = req.body;
-      
+
       // Obtener el reporte para validar que pertenece al usuario
       const report = await reportService.getReportById(id);
       if (!report) {
         return res.status(404).json({ error: "Reporte no encontrado" });
       }
-      
+
       // Validar que el usuario es el propietario
       // report.usuario_id es un documento poblado, acceder a su _id
       const reportOwnerId = report.usuario_id?._id?.toString() || report.usuario_id?.toString();
       const userId = req.user.userId?.toString() || req.user.userId;
-      
+
       if (reportOwnerId !== userId) {
         return res.status(403).json({ error: "No tienes permiso para editar este reporte" });
       }
-      
+
       const result = await reportService.updateReport(id, { descripcion, categoria_id });
       res.json(result);
     } catch (err) {
@@ -114,22 +114,22 @@ class ReportController {
   async deleteReport(req, res, next) {
     try {
       const { id } = req.params;
-      
+
       // Obtener el reporte para validar que pertenece al usuario
       const report = await reportService.getReportById(id);
       if (!report) {
         return res.status(404).json({ error: "Reporte no encontrado" });
       }
-      
+
       // Validar que el usuario es el propietario
       // report.usuario_id es un documento poblado, acceder a su _id
       const reportOwnerId = report.usuario_id?._id?.toString() || report.usuario_id?.toString();
       const userId = req.user.userId?.toString() || req.user.userId;
-      
+
       if (reportOwnerId !== userId) {
         return res.status(403).json({ error: "No tienes permiso para eliminar este reporte" });
       }
-      
+
       const result = await reportService.deleteReport(id);
       res.json(result);
     } catch (err) {

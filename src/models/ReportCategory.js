@@ -5,8 +5,6 @@ const reportCategorySchema = new mongoose.Schema(
     nombre: { type: String, required: true, unique: true },
     descripcion: String,
     icono_marcador: String,
-    estado: { type: String, enum: ["ACTIVA", "INACTIVA"], default: "ACTIVA" },
-    creado_por: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

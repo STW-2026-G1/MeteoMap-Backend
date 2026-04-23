@@ -44,12 +44,6 @@ function validate(req, res, next) {
  *                   icono_marcador:
  *                     type: string
  *                     example: "snowflake"
- *                   estado:
- *                     type: string
- *                     example: "ACTIVA"
- *                   creado_por:
- *                     type: string
- *                     example: "60d5ecb74b24c72b8c8b4568"
  *                   createdAt:
  *                     type: string
  *                     format: date-time
@@ -132,9 +126,6 @@ router.post(
  *                 type: string
  *               icono_marcador:
  *                 type: string
- *               estado:
- *                 type: string
- *                 enum: [ACTIVA, INACTIVA]
  *     responses:
  *       200:
  *         description: Categoría actualizada exitosamente
@@ -147,7 +138,6 @@ router.put(
     body("nombre").optional().isString().trim().notEmpty(),
     body("descripcion").optional().isString().trim(),
     body("icono_marcador").optional().isString().trim(),
-    body("estado").optional().isIn(["ACTIVA", "INACTIVA"]),
   ],
   validate,
   (req, res, next) => categoryController.updateCategory(req, res, next)
@@ -157,7 +147,7 @@ router.put(
  * @swagger
  * /api/categories/{id}:
  *   delete:
- *     summary: Eliminar (desactivar) categoría
+ *     summary: Eliminar categoría
  *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
@@ -170,7 +160,7 @@ router.put(
  *         description: ID de la categoría
  *     responses:
  *       200:
- *         description: Categoría desactivada con éxito
+ *         description: Categoría eliminada con éxito
  *       404:
  *         description: Categoría no encontrada
  */
