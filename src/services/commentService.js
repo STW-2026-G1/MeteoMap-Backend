@@ -31,21 +31,16 @@ class CommentService {
    */
   async getReportComments(reportId, limit = 50) {
     try {
-      const report = await Report.findById(reportId);
-      if (!report) {
-        throw new Error("Reporte no encontrado");
-      }
-
-      const comentarios = report.comentarios
-        .filter((c) => c.estado === "ACTIVO")
-        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-        .slice(0, limit);
+      const comments = await Comment.find({ reporte_id: reportId, estado: "ACTIVO", parent_id: null})
+        .populate("usuario_id", "perfil.nombre perfil.avatar_seed perfil.avatar_style")
+        .sort({ createdAt: -1 })
+        .limit(limit);
 
       logger.debug(`CommentService.getReportComments para reporte: ${reportId}`);
 
       return {
-        count: comentarios.length,
-        comments: comentarios,
+        count: comments.length,
+        comments,
       };
     } catch (err) {
       logger.error(`Error en getReportComments: ${err.message}`);
