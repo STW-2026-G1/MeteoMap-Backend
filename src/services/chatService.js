@@ -268,7 +268,7 @@ class ChatService {
       // Obtener reportes recientes con análisis
       if (analisis.entidadPrincipal === "reporte" || analisis.dominio === "seguridad") {
         try {
-          const resultado = await reportService.getReports({ limit: 15 });
+        
           
           const resultado = await reportService.getReports(filtros);
           datos.reportesRecientes = resultado.reports.map((r) => ({
