@@ -55,13 +55,13 @@ class ZoneService {
       logger.debug(`ZoneService.getWeatherData para zona: ${zoneId}`);
 
       // Verificar si el caché es válido (menos de 30 minutos)
-      const cacheValido = this._isCacheValido(zone.cache_meteo);
+      const cacheValido = this._isCacheValido(zone.cache_meteo.current, 30);
 
       let datosMeteo;
 
       if (cacheValido) {
         logger.debug(`Usando caché para zona: ${zoneId}`);
-        datosMeteo = zone.cache_meteo.datos_crudos;
+        datosMeteo = zone.cache_meteo.current.datos_crudos;
       } else {
         logger.debug(`Actualizando datos meteorológicos para zona: ${zoneId}`);
 
@@ -74,22 +74,22 @@ class ZoneService {
           const datosNuevos = await weatherService.fetchWeatherData(latitud, longitud);
 
           // Actualizar caché en la base de datos
-          zone.cache_meteo = {
+          zone.cache_meteo.current = {
             datos_crudos: datosNuevos,
             ultima_actualizacion: new Date(),
           };
 
           await zone.save();
-          logger.info(`Caché actualizado para zona: ${zoneId}`);
+          logger.info(`Caché current actualizado para zona: ${zoneId}`);
 
           datosMeteo = datosNuevos;
         } catch (weatherErr) {
           logger.error(`Error al obtener datos de Open-Meteo para zona ${zoneId}: ${weatherErr.message}`);
           
           // Si hay datos en caché antiguo, usarlos como fallback
-          if (zone.cache_meteo && zone.cache_meteo.datos_crudos) {
+          if (zone.cache_meteo.current && zone.cache_meteo.current.datos_crudos) {
             logger.warn(`Usando caché antiguo para zona ${zoneId} debido a error de Open-Meteo`);
-            datosMeteo = zone.cache_meteo.datos_crudos;
+            datosMeteo = zone.cache_meteo.current.datos_crudos;
           } else {
             // Si no hay fallback, propagar el error
             throw new Error(`No se pudo obtener datos meteorológicos: ${weatherErr.message}`);
@@ -100,7 +100,7 @@ class ZoneService {
       return {
         zona: zone.nombre,
         geolocalizacion: zone.geolocalizacion,
-        cache_meteo: zone.cache_meteo,
+        cache_meteo: zone.cache_meteo.current,
         datos: datosMeteo,
         nota: "Datos meteorológicos actualizados desde Open-Meteo",
       };
@@ -110,20 +110,93 @@ class ZoneService {
     }
   }
 
+
   /**
-   * Verificar si el caché es válido (menos de 30 minutos)
-   * @private
+   * Obtener predicción de temperatura de una zona
+   * Verifica caché y actualiza si es necesario desde Open-Meteo
    */
-  _isCacheValido(cacheMeto) {
-    if (!cacheMeto || !cacheMeto.ultima_actualizacion) {
+  async getWeatherForecast(zoneId) {
+    try {
+      const zone = await Zone.findById(zoneId);
+      if (!zone) {
+        throw new Error("Zona no encontrada");
+      }
+
+      logger.debug(`ZoneService.getWeatherForecast para zona: ${zoneId}`);
+
+      // Verificar si el caché es válido (menos de 6 horas = 360 minutos)
+      const cacheValido = this._isCacheValido(zone.cache_meteo.forecast, 360);
+
+      let datosMeteo;
+
+      if (cacheValido) {
+        logger.debug(`Usando caché para zona: ${zoneId}`);
+        datosMeteo = zone.cache_meteo.forecast.datos_crudos;
+      } else {
+        logger.debug(`Actualizando predicción de temperatura para zona: ${zoneId}`);
+
+        // Obtener coordenadas
+        const [longitud, latitud] = zone.geolocalizacion.coordinates;
+        logger.debug(`Coordenadas extraídas - Lat: ${latitud}, Lon: ${longitud}`);
+
+        try {
+          // Solicitar datos a Open-Meteo
+          const datosNuevos = await weatherService.fetchWeatherForecast(latitud, longitud);
+
+          // Actualizar caché en la base de datos
+          zone.cache_meteo.forecast = {
+            datos_crudos: datosNuevos,
+            ultima_actualizacion: new Date(),
+          };
+
+          await zone.save();
+          logger.info(`Caché forecast actualizado para zona: ${zoneId}`);
+
+          datosMeteo = datosNuevos;
+        } catch (weatherErr) {
+          logger.error(`Error al obtener predicción de Open-Meteo para zona ${zoneId}: ${weatherErr.message}`);
+          
+          // Si hay datos en caché antiguo, usarlos como fallback
+          if (zone.cache_meteo.forecast && zone.cache_meteo.forecast.datos_crudos) {
+            logger.warn(`Usando caché antiguo para zona ${zoneId} debido a error de Open-Meteo`);
+            datosMeteo = zone.cache_meteo.forecast.datos_crudos;
+          } else {
+            // Si no hay fallback, propagar el error
+            throw new Error(`No se pudo obtener predicción meteorológica: ${weatherErr.message}`);
+          }
+        }
+      }
+
+      return {
+        zona: zone.nombre,
+        geolocalizacion: zone.geolocalizacion,
+        cache_meteo: zone.cache_meteo.forecast,
+        datos: datosMeteo,
+        nota: "Predicción de temperatura actualizada desde Open-Meteo",
+      };
+    } catch (err) {
+      logger.error(`Error en getWeatherForecast: ${err.message}`);
+      throw err;
+    }
+  }
+
+
+
+  /**
+   * Verificar si el caché es válido (menos de X minutos)
+   * @private
+   * @param {Object} cache - Objeto con datos_crudos y ultima_actualizacion
+   * @param {number} tiempoValido - Minutos para considerar válido el caché
+   */
+  _isCacheValido(cache, tiempoValido) {
+    if (!cache || !cache.ultima_actualizacion) {
       return false;
     }
 
     const minutosTranscurridos =
-      (new Date() - new Date(cacheMeto.ultima_actualizacion)) / (1000 * 60);
+      (new Date() - new Date(cache.ultima_actualizacion)) / (1000 * 60);
 
-    // Caché válido si tiene menos de 30 minutos
-    return minutosTranscurridos < 30;
+    return minutosTranscurridos < tiempoValido;
   }
 
   /**

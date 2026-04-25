@@ -177,7 +177,69 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             createdAt: { type: "string", format: "date-time" },
           },
         },
-
+        // ─── Alerts Schema ───
+       AemetAlert: {
+          type: "object",
+          properties: {
+            id: { 
+              type: "string", 
+              description: "Identificador único de la alerta (procedente de AEMET)" 
+            },
+            zona: { 
+              type: "string", 
+              example: "Picos de Europa",
+              description: "Nombre de la zona afectada" 
+            },
+            tipo: { 
+              type: "string", 
+              example: "Nevadas",
+              description: "Fenómeno meteorológico (Viento, Lluvia, Nieve, etc.)" 
+            },
+            nivel: { 
+              type: "string", 
+              enum: ["Amarillo", "Naranja", "Rojo", "Sin riesgo"],
+              example: "Naranja" 
+            },
+            nivelNumerico: { 
+              type: "number", 
+              example: 2,
+              description: "Representación numérica para lógica de colores (1: Amarillo, 2: Naranja, 3: Rojo)" 
+            },
+            coordenadas: {
+              type: "object",
+              properties: {
+                latitud: { type: "number", example: 43.15 },
+                longitud: { type: "number", example: -4.82 }
+              },
+              description: "Ubicación central del aviso para posicionar en el mapa"
+            },
+            descripcion: { 
+              type: "string", 
+              example: "Acumulación de nieve en 24 horas: 20 cm.",
+              description: "Detalle completo del aviso"
+            },
+            icono: { 
+              type: "string", 
+              example: "wi-snow",
+              description: "Clase de icono o URL para mostrar en el mapa" 
+            },
+            color: { 
+              type: "string", 
+              example: "#ff9900",
+              description: "Código hexadecimal del color de la alerta" 
+            },
+            validez_inicio: { 
+              type: "string", 
+              format: "date-time",
+              description: "Fecha y hora de inicio de la alerta" 
+            },
+            validez_fin: { 
+              type: "string", 
+              format: "date-time",
+              description: "Fecha y hora de finalización" 
+            }
+          }
+        },
         // ─── Category Schema ───
         ReportCategory: {
           type: "object",
@@ -260,6 +322,7 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
       { name: "Comments", description: "Forum comments" },
       { name: "Chat", description: "AI chat assistant" },
       { name: "Admin", description: "Administration panel" },
+      { name: "AEMET Alerts", descripcion: "Alertas de la aemet" }
     ],
   },
 

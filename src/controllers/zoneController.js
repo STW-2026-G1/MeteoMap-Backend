@@ -83,6 +83,32 @@ class ZoneController {
     }
   }
 
+    /**
+   * GET /api/zones/:Id/forecast
+   */
+  async getWeatherForecast(req, res, next) {
+    try {
+      const { id } = req.params;
+      const weather = await zoneService.getWeatherForecast(id);
+      
+      // Transformar el formato de respuesta
+      res.json({
+        status: "success",
+        data: {
+          _id: id,
+          zona: weather.zona,
+          geolocalizacion: weather.geolocalizacion,
+          datos_crudos: weather.datos,
+          cache_meteo: weather.cache_meteo,
+          nota: weather.nota,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+
   /**
    * GET /api/zones/:id/dashboard
    */

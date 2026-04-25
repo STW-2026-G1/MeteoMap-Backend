@@ -30,8 +30,10 @@
     "nodemon": "^3.1.14",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
+    "tar": "^7.5.13",
     "vercel": "^50.34.3",
     "winston": "^3.11.0",
+    "xml2js": "^0.6.2",
     "zod": "^3.22.4"
   }
 }

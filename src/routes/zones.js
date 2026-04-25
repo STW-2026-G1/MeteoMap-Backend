@@ -109,7 +109,7 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
  *         schema:
  *           type: string
  *         description: ID de MongoDB de la zona
- *         example: "507f1f77bcf86cd799439011"
+ *         example: "69dd1aa7882082402ca106b2"
  *     responses:
  *       200:
  *         description: Datos meteorológicos obtenidos exitosamente
@@ -123,6 +123,36 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
 router.get("/:id/weather", [param("id").isMongoId()], validate, (req, res, next) =>
   zoneController.getWeatherData(req, res, next)
 );
+
+/**
+ * @swagger
+ * /api/zones/{id}/forecast:
+ *   get:
+ *     summary: Predicción de temperatura de una zona para las proximas 12 horas
+ *     description: Obtiene los datos meteorológicos actuales de una zona específica desde Open-Meteo. Los datos se cachean por 30 minutos
+ *     tags: [Zones]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de MongoDB de la zona
+ *         example: "69dd1aa7882082402ca106b1"
+ *     responses:
+ *       200:
+ *         description: Datos meteorológicos obtenidos exitosamente
+ *       400:
+ *         description: ID inválido
+ *       404:
+ *         description: Zona no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+router.get('/:id/forecast',  [param("id").isMongoId()], validate, (req, res, next) => {
+  zoneController.getWeatherForecast(req, res, next)
+});
 
 /**
  * @swagger

@@ -11,8 +11,16 @@ const zoneSchema = new mongoose.Schema(
     },
     // Cache de datos meteorológicos
     cache_meteo: {
-      datos_crudos: mongoose.Schema.Types.Mixed,
-      ultima_actualizacion: Date,
+      // Datos actuales (temperatura, viento, etc.)
+      current: {
+        datos_crudos: mongoose.Schema.Types.Mixed,
+        ultima_actualizacion: Date,
+      },
+      // Predicción de temperatura (próximas x horas)
+      forecast: {
+        datos_crudos: mongoose.Schema.Types.Mixed,
+        ultima_actualizacion: Date,
+      },
     },
     estado: { type: String, enum: ["ACTIVA", "INACTIVA"], default: "ACTIVA" },
   },

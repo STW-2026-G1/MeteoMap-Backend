@@ -1,132 +1,787 @@
 [
   {
-    "nombre": "Picos de Europa",
-    "descripcion": "Macizo montañoso situado en Asturias, Cantabria y León. Es uno de los relieves más escarpados de la Península Ibérica con altura máxima de 2648 metros (Torre de Cerredo). Famoso por sus desfiladeros y rutas de senderismo desafiantes.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-2.5, 43.3]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional del Teide",
+    "descripcion": "Parque nacional volcánico en Tenerife",
+    "geolocalizacion": { "type": "Point", "coordinates": [-16.6425, 28.2724] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 8,
+          "wind_speed_10m": 15,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Sierra de Guadarrama",
-    "descripcion": "Cordillera montañosa en la región central de España que forma parte del Sistema Central. Con altura máxima de 2428 metros (Peñalara), es muy accesible desde Madrid y muy frecuentada por montañeros. Famosa por sus lagos de alta montaña.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-3.8, 40.7]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Sierra Nevada",
+    "descripcion": "Parque de alta montaña en Granada y Almería",
+    "geolocalizacion": { "type": "Point", "coordinates": [-3.37, 37.1] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 3,
+          "wind_speed_10m": 20,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Teide",
-    "descripcion": "Volcán activo y montaña más alta de España con 3718 metros de altura, situado en la isla de Tenerife, Islas Canarias. Es Patrimonio de la Humanidad y uno de los volcanes más altos del mundo medido desde el fondo oceánico.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-16.64, 28.27]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Ordesa y Monte Perdido",
+    "descripcion": "Parque pirenaico con valles glaciares",
+    "geolocalizacion": { "type": "Point", "coordinates": [0.05, 42.67] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": -3,
+          "wind_speed_10m": 20,
+          "weather_code": 2
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Pirineos",
-    "descripcion": "Cordillera montañosa que forma la frontera natural entre España y Francia. Se extiende por 430 km y contiene picos como Aneto (3404 m). Ofrece una gran variedad de rutas y ecosistemas alpinos.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [0.5, 42.7]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de los Picos de Europa",
+    "descripcion": "Macizo montañoso en el norte de España",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.85, 43.2] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 1,
+          "wind_speed_10m": 18,
+          "weather_code": 2
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Sierra Nevada",
-    "descripcion": "Cordillera situada en Andalucía (Granada y Almería) con el Mulhacén (3482 m) como pico más alto de la Península Ibérica. Famosa por sus glaciares y por ser estación de esquí. Ofrece rutas alpinas variadas.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-3.4, 36.9]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Aigüestortes i Estany de Sant Maurici",
+    "descripcion": "Parque de lagos glaciares en Lleida",
+    "geolocalizacion": { "type": "Point", "coordinates": [0.99, 42.58] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": -2,
+          "wind_speed_10m": 22,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Montes de León",
-    "descripcion": "Rango de montañas en la provincia de León que forma parte de la Cordillera Cantábrica. Ideal para senderismo con vistas panorámicas a los valles. Alturas entre 1500-2000 metros con bosques de roble y haya.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-5.7, 42.5]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Doñana",
+    "descripcion": "Humedales protegidos en Andalucía",
+    "geolocalizacion": { "type": "Point", "coordinates": [-6.43, 36.99] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 12,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Sistema Ibérico",
-    "descripcion": "Gran sistema montañoso que se extiende desde el País Vasco hasta Castilla-La Mancha. Con alturas entre 1000-2500 metros, ofrece paisajes variados con bosques, cañones y vistas extensas. Menos concurrido que otras sierras.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-1.5, 41.5]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Monfragüe",
+    "descripcion": "Reserva de aves en Extremadura",
+    "geolocalizacion": { "type": "Point", "coordinates": [-6.0, 39.8] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 12,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Montseny",
-    "descripcion": "Macizo montañoso en Cataluña, en la provincia de Barcelona. Máxima altitud de 1706 metros (Les Agudes). Muy cercano a Barcelona, es popular para excursionismo y ofrece diversidad de flora debido a su posición geográfica.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [2.4, 41.8]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Cabañeros",
+    "descripcion": "Bosque mediterráneo en Castilla-La Mancha",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.5, 39.4] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 9,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Picos del Buitre",
-    "descripcion": "Conjunto de picos situados en el Parque Natural de Gredos (Ávila). Con altitudes entre 1500-1800 metros, son ideales para escalada y senderismo. Famosos por sus formaciones rocosas y vistas del valle.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-5.3, 40.3]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de Tablas de Daimiel",
+    "descripcion": "Humedal en Ciudad Real",
+    "geolocalizacion": { "type": "Point", "coordinates": [-3.72, 39.13] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 8,
+          "wind_speed_10m": 9,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   },
   {
-    "nombre": "Ruta del Cares",
-    "descripcion": "Desfiladero en los Picos de Europa (Asturias-Castilla y León) que sigue el río Cares. Es una de las rutas de senderismo más populares de España con paisajes espectaculares. Altitud entre 200-300 metros en el fondo del cañón.",
-    "geolocalizacion": {
-      "type": "Point",
-      "coordinates": [-2.3, 43.2]
-    },
-    "estado": "ACTIVA",
+    "nombre": "Parque Nacional de la Sierra de Guadarrama",
+    "descripcion": "Sistema montañoso entre Madrid y Segovia",
+    "geolocalizacion": { "type": "Point", "coordinates": [-3.9, 40.8] },
     "cache_meteo": {
-      "datos_crudos": null,
-      "ultima_actualizacion": null
-    }
+      "datos_crudos": {
+        "current": {
+          "temperature": 4,
+          "wind_speed_10m": 12,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+
+  {
+    "nombre": "Parque Nacional de Timanfaya",
+    "descripcion": "Parque volcánico en Lanzarote",
+    "geolocalizacion": { "type": "Point", "coordinates": [-13.73, 29.0] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 15,
+          "wind_speed_10m": 14,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Nacional de Garajonay",
+    "descripcion": "Bosque de laurisilva en La Gomera",
+    "geolocalizacion": { "type": "Point", "coordinates": [-17.24, 28.12] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 16,
+          "wind_speed_10m": 15,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Nacional de la Caldera de Taburiente",
+    "descripcion": "Parque volcánico en La Palma",
+    "geolocalizacion": { "type": "Point", "coordinates": [-17.86, 28.73] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 14,
+          "wind_speed_10m": 16,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Nacional Marítimo-Terrestre del Archipiélago de Cabrera",
+    "descripcion": "Parque marino en Baleares",
+    "geolocalizacion": { "type": "Point", "coordinates": [2.91, 39.15] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 13,
+          "wind_speed_10m": 12,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Nacional de las Islas Atlánticas de Galicia",
+    "descripcion": "Parque insular en Galicia",
+    "geolocalizacion": { "type": "Point", "coordinates": [-8.9, 42.2] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 18,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Grazalema",
+    "descripcion": "Parque natural en Cádiz y Málaga",
+    "geolocalizacion": { "type": "Point", "coordinates": [-5.4, 36.8] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 11,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de las Bardenas Reales",
+    "descripcion": "Paisaje semidesértico en Navarra",
+    "geolocalizacion": { "type": "Point", "coordinates": [-1.5, 42.2] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 7,
+          "wind_speed_10m": 14,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Delta del Ebro",
+    "descripcion": "Humedal en Tarragona",
+    "geolocalizacion": { "type": "Point", "coordinates": [0.73, 40.72] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 9,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Cabo de Gata-Níjar",
+    "descripcion": "Parque volcánico costero en Almería",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.2, 36.8] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 12,
+          "wind_speed_10m": 9,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Somiedo",
+    "descripcion": "Reserva de la biosfera en Asturias",
+    "geolocalizacion": { "type": "Point", "coordinates": [-6.3, 43.1] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 3,
+          "wind_speed_10m": 16,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Redes",
+    "descripcion": "Parque montañoso en Asturias",
+    "geolocalizacion": { "type": "Point", "coordinates": [-5.5, 43.1] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 2,
+          "wind_speed_10m": 15,
+          "weather_code": 2
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Albufera",
+    "descripcion": "Humedal costero en Valencia",
+    "geolocalizacion": { "type": "Point", "coordinates": [-0.35, 39.33] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 8,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Cazorla",
+    "descripcion": "Gran parque natural en Jaén",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.9, 37.9] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 11,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Andújar",
+    "descripcion": "Hábitat del lince ibérico",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.0, 38.2] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Montseny",
+    "descripcion": "Parque en Cataluña",
+    "geolocalizacion": { "type": "Point", "coordinates": [2.45, 41.77] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 6,
+          "wind_speed_10m": 12,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Urkiola",
+    "descripcion": "Parque en el País Vasco",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.65, 43.1] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 4,
+          "wind_speed_10m": 14,
+          "weather_code": 2
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Aralar",
+    "descripcion": "Macizo montañoso en Navarra",
+    "geolocalizacion": { "type": "Point", "coordinates": [-1.9, 43.0] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 3,
+          "wind_speed_10m": 13,
+          "weather_code": 2
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Alto Tajo",
+    "descripcion": "Parque fluvial en Guadalajara",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.0, 40.9] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 6,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Serranía de Cuenca",
+    "descripcion": "Formaciones kársticas",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.1, 40.3] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 5,
+          "wind_speed_10m": 10,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Moncayo",
+    "descripcion": "Parque en Zaragoza y Soria",
+    "geolocalizacion": { "type": "Point", "coordinates": [-1.83, 41.78] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 2,
+          "wind_speed_10m": 12,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Oyambre",
+    "descripcion": "Parque costero en Cantabria",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.35, 43.38] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 8,
+          "wind_speed_10m": 16,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de las Hoces del Río Duratón",
+    "descripcion": "Cañones fluviales en Segovia",
+    "geolocalizacion": { "type": "Point", "coordinates": [-3.9, 41.3] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 5,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Lago de Sanabria",
+    "descripcion": "Lago glaciar en Zamora",
+    "geolocalizacion": { "type": "Point", "coordinates": [-6.7, 42.1] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 1,
+          "wind_speed_10m": 14,
+          "weather_code": 2
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de las Sierras Subbéticas",
+    "descripcion": "Parque en Córdoba",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.3, 37.5] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 11,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Collserola",
+    "descripcion": "Parque periurbano de Barcelona",
+    "geolocalizacion": { "type": "Point", "coordinates": [2.1, 41.42] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 7,
+          "wind_speed_10m": 11,
+          "weather_code": 1
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Espadán",
+    "descripcion": "Parque en Castellón",
+    "geolocalizacion": { "type": "Point", "coordinates": [-0.4, 39.9] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 9,
+          "wind_speed_10m": 9,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra Calderona",
+    "descripcion": "Parque en Valencia",
+    "geolocalizacion": { "type": "Point", "coordinates": [-0.5, 39.7] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 9,
+          "wind_speed_10m": 8,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Peñón de Ifach",
+    "descripcion": "Peñón costero en Alicante",
+    "geolocalizacion": { "type": "Point", "coordinates": [0.08, 38.64] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Font Roja",
+    "descripcion": "Parque en Alicante",
+    "geolocalizacion": { "type": "Point", "coordinates": [-0.55, 38.7] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 9,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de Despeñaperros",
+    "descripcion": "Desfiladero en Jaén",
+    "geolocalizacion": { "type": "Point", "coordinates": [-3.45, 38.38] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 11,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural Sierra de Hornachuelos",
+    "descripcion": "Parque en Córdoba",
+    "geolocalizacion": { "type": "Point", "coordinates": [-5.25, 37.9] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de los Alcornocales",
+    "descripcion": "Bosque mediterráneo en Cádiz",
+    "geolocalizacion": { "type": "Point", "coordinates": [-5.6, 36.5] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 11,
+          "wind_speed_10m": 12,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural del Estrecho",
+    "descripcion": "Parque en el sur de Cádiz",
+    "geolocalizacion": { "type": "Point", "coordinates": [-5.6, 36.0] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 12,
+          "wind_speed_10m": 13,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural Sierra María-Los Vélez",
+    "descripcion": "Parque en Almería",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.2, 37.7] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 12,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Baza",
+    "descripcion": "Parque en Granada",
+    "geolocalizacion": { "type": "Point", "coordinates": [-2.9, 37.4] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 11,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Huétor",
+    "descripcion": "Parque cercano a Granada",
+    "geolocalizacion": { "type": "Point", "coordinates": [-3.45, 37.3] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 9,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de las Nieves",
+    "descripcion": "Parque en Málaga",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.99, 36.7] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra Norte de Sevilla",
+    "descripcion": "Parque en Andalucía",
+    "geolocalizacion": { "type": "Point", "coordinates": [-5.7, 37.9] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 11,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
+  },
+  {
+    "nombre": "Parque Natural de la Sierra de Cardeña y Montoro",
+    "descripcion": "Parque en Córdoba",
+    "geolocalizacion": { "type": "Point", "coordinates": [-4.3, 38.2] },
+    "cache_meteo": {
+      "datos_crudos": {
+        "current": {
+          "temperature": 10,
+          "wind_speed_10m": 10,
+          "weather_code": 0
+        }
+      },
+      "ultima_actualizacion": "2026-04-13T10:00:00Z"
+    },
+    "estado": "ACTIVA"
   }
 ]
