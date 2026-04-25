@@ -41,11 +41,7 @@ function validate(req, res, next) {
  *               pregunta:
  *                 type: string
  *                 description: Tu pregunta sobre montañismo, zonas, clima, etc.
- *                 example: "¿Qué zona es mejor para escalar hoy?"
- *               contexto:
- *                 type: string
- *                 description: Contexto adicional opcional (nivel, experiencia, etc.)
- *                 example: "Soy principiante"
+ *                 example: "¿Que tiempo hace en ordesa?"
  *             required: [usuario_id, pregunta]
  *     responses:
  *       200:

@@ -53,6 +53,56 @@ class WeatherService {
   }
 
   /**
+   * Obtener predicción de temperatura para las próximas 6 horas
+   * @param {number} latitude - Latitud
+   * @param {number} longitude - Longitud
+   * @returns {Promise<Array>} Array con predicción horaria
+   */
+  async fetchWeatherForecast(latitude, longitude) {
+    try {
+      const url = new URL("https://api.open-meteo.com/v1/forecast");
+      url.searchParams.append("latitude", latitude);
+      url.searchParams.append("longitude", longitude);
+      url.searchParams.append("hourly", "temperature_2m");
+      url.searchParams.append("forecast_hours", "12");
+      url.searchParams.append("timezone", "Europe/Madrid");
+
+      logger.debug(`Solicitando predicción de temperatura para [${latitude}, ${longitude}]`);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch(url.toString(), {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        logger.error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      logger.debug("Predicción de temperatura recibida de Open-Meteo");
+
+      // Transformar respuesta a formato estándar
+      return data.hourly.time.map((time, index) => ({
+        hora: new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        temperatura: Math.round(data.hourly.temperature_2m[index])
+      }));
+    } catch (err) {
+      logger.error(`Error obteniendo predicción de Open-Meteo: ${err.name} - ${err.message}`);
+      logger.debug(`Stack trace: ${err.stack}`);
+      throw new Error(`Error de conexión con Open-Meteo: ${err.message}`);
+    }
+  }
+
+
+
+
+  /**
    * Transformar datos de Open-Meteo a formato estándar
    * @private
    */

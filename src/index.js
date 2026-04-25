@@ -24,6 +24,7 @@ const categoriesRouter = require("./routes/categories");
 const commentsRouter = require("./routes/comments");
 const chatRouter = require("./routes/chat");
 const adminRouter = require("./routes/admin");
+const aemetAlertsRouter = require("./routes/aemet-alerts");
 
 // ---------------------------------------------------------------------------
 // Ensure log directory exists
@@ -117,6 +118,9 @@ app.use("/api/comments", commentsRouter);
 
 // Chat and IA endpoint
 app.use("/api/chat", chatRouter);
+
+// AEMET Alerts endpoint
+app.use("/api/aemet-alerts", aemetAlertsRouter);
 
 // Admin panel endpoints (protegidas - requiere rol ADMIN)
 // Para proteger las rutas de admin, agregar el middleware isAuth:
