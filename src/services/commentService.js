@@ -10,7 +10,7 @@ class CommentService {
   async getCommentsByZone(zoneId, limit = 50) {
     try {
       const comments = await Comment.find({ zona_id: zoneId, estado: "ACTIVO", parent_id: null})
-        .populate("usuario_id", "perfil.nombre")
+        .populate("usuario_id", "perfil.nombre perfil.avatar_seed perfil.avatar_style")
         .sort({ createdAt: -1 })
         .limit(limit);
 
@@ -31,21 +31,16 @@ class CommentService {
    */
   async getReportComments(reportId, limit = 50) {
     try {
-      const report = await Report.findById(reportId);
-      if (!report) {
-        throw new Error("Reporte no encontrado");
-      }
-
-      const comentarios = report.comentarios
-        .filter((c) => c.estado === "ACTIVO")
-        .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-        .slice(0, limit);
+      const comments = await Comment.find({ reporte_id: reportId, estado: "ACTIVO", parent_id: null})
+        .populate("usuario_id", "perfil.nombre perfil.avatar_seed perfil.avatar_style")
+        .sort({ createdAt: -1 })
+        .limit(limit);
 
       logger.debug(`CommentService.getReportComments para reporte: ${reportId}`);
 
       return {
-        count: comentarios.length,
-        comments: comentarios,
+        count: comments.length,
+        comments,
       };
     } catch (err) {
       logger.error(`Error en getReportComments: ${err.message}`);
@@ -98,7 +93,7 @@ class CommentService {
 
          // 4. Devolver con populate para que el Front tenga los datos del autor
          return await Comment.findById(newComment._id)
-            .populate("usuario_id", "perfil.nombre");
+            .populate("usuario_id", "perfil.nombre perfil.avatar_seed perfil.avatar_style");
 
       } catch (err) {
          logger.error(`Error en createComment: ${err.message}`);
@@ -110,23 +105,21 @@ class CommentService {
    * Eliminar comentario 
    */
   async deleteComment(commentId) {
-    try {
-      const comment = await Comment.findById(commentId);
-      if (!comment) {
-        throw new Error("Comentario no encontrado");
-      }
-
-      comment.estado = "ELIMINADO";
-      await comment.save();
-
-      logger.info(`Comentario ${commentId} marcado como eliminado`);
-
-      return { message: "Comentario eliminado" };
-    } catch (err) {
-      logger.error(`Error en deleteComment: ${err.message}`);
-      throw err;
+  try {
+    // Borrado físico directo
+    const result = await Comment.findByIdAndDelete(commentId);
+    
+    if (!result) {
+      throw new Error("Comentario no encontrado");
     }
+
+    logger.info(`Comentario ${commentId} eliminado físicamente de la DB`);
+    return { message: "Comentario eliminado" };
+  } catch (err) {
+    logger.error(`Error en deleteComment: ${err.message}`);
+    throw err;
   }
+}
 
   async likeComment(commentId, userId) {
    // $addToSet añade el ID al array solo si no existe ya
@@ -152,7 +145,7 @@ class CommentService {
             parent_id: parentId, 
             estado: "ACTIVO" 
             })
-            .populate("usuario_id", "perfil.nombre")
+            .populate("usuario_id", "perfil.nombre perfil.avatar_seed perfil.avatar_style")
             .sort({ createdAt: 1 }); // Las respuestas suelen ir de la más vieja a la más nueva
 
          return {

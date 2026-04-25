@@ -270,10 +270,18 @@ class ChatService {
         try {
           const resultado = await reportService.getReports({ limit: 15 });
           
-          if (resultado && resultado.reports.length > 0) {
-            datos.reportes = await this._analizarReportes(resultado.reports);
-            datos.fuentes.push("reportes");
-          }
+          const resultado = await reportService.getReports(filtros);
+          datos.reportesRecientes = resultado.reports.map((r) => ({
+            tipo: r.tipo,
+            titulo: r.categoria?.nombre || "Reporte",
+            descripcion: r.contenido?.descripcion || "",
+            zona: r.zona_id?.nombre,
+            fecha: r.createdAt,
+            validaciones: {
+              confirmaciones: r.validaciones?.usuarios_confirmaron?.length || 0,
+              desmentidos: r.validaciones?.usuarios_desmintieron?.length || 0,
+            },
+          }));
         } catch (err) {
           logger.error(`Error obteniendo reportes: ${err.message}`);
         }

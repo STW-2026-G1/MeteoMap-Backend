@@ -10,27 +10,17 @@ class ReportService {
    */
   async getReports(filters = {}) {
     try {
-      const { zonaId, estado, limit = 100, lat, lng, radius = 5000 } = filters;
-      const query = { estado: "ACTIVO" };
+      const { zonaId, estado, limit = 100, lat, lng, radius = 5000, usuarioId } = filters;
+      const query = {};
 
       if (zonaId) query.zona_id = zonaId;
       if (estado) query.estado = estado;
-
-      if (lat && lng) {
-        query.geolocalizacion = {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [lng, lat],
-            },
-            $maxDistance: radius,
-          },
-        };
-      }
+      if (usuarioId) query.usuario_id = usuarioId;
 
       const reports = await Report.find(query)
-        .populate("usuario_id", "perfil.nombre")
+        .populate("usuario_id", "_id perfil.nombre perfil.avatar_seed perfil.avatar_style")
         .populate("zona_id", "nombre")
+        .populate("categoria_id", "nombre icono_marcador")
         .limit(limit);
 
       logger.debug("ReportService.getReports", { filter: query });
@@ -50,7 +40,7 @@ class ReportService {
    */
   async createReport(reportData) {
     try {
-      const { usuario_id, zona_id, nombre_categoria, icono_marcador, tipo, descripcion, foto_url, coordinates } = reportData;
+      const { usuario_id, zona_id, categoria_id, descripcion } = reportData;
 
       // Verificar zona
       const zone = await Zone.findById(zona_id);
@@ -58,27 +48,20 @@ class ReportService {
         throw new Error("Zona no encontrada");
       }
 
-      // Verificar categoría
-      const categoryExists = await categoryService.validateCategoryExists(nombre_categoria);
-      if (!categoryExists) {
-        throw new Error(`La categoría '${nombre_categoria}' no existe o no está activa`);
+      // Verificar categoría por ID
+      const category = await categoryService.getCategoryById(categoria_id);
+      if (!category) {
+        const error = new Error(`La categoría con ID '${categoria_id}' no existe.`);
+        error.status = 400;
+        throw error;
       }
 
       const newReport = new Report({
         usuario_id,
         zona_id,
-        categoria: {
-          nombre: nombre_categoria,
-          icono_marcador,
-        },
-        tipo,
+        categoria_id: category._id,
         contenido: {
           descripcion,
-          foto_url,
-        },
-        geolocalizacion: {
-          type: "Point",
-          coordinates,
         },
       });
 
@@ -95,7 +78,7 @@ class ReportService {
   /**
    * Validar reporte (confirmar/desmentir)
    */
-  async validateReport(reportId, accion) {
+  async validateReport(reportId, accion, userId) {
     try {
       if (!["confirmar", "desmentir"].includes(accion)) {
         throw new Error("Acción no válida. Use 'confirmar' o 'desmentir'");
@@ -106,18 +89,33 @@ class ReportService {
         throw new Error("Reporte no encontrado");
       }
 
+      // Arrays para registrar votos y prevenir votos múltiples
+      const confirmaron = report.validaciones.usuarios_confirmaron || [];
+      const desmintieron = report.validaciones.usuarios_desmintieron || [];
+
+      const hasConfirmed = confirmaron.includes(userId);
+      const hasDenied = desmintieron.includes(userId);
+
       if (accion === "confirmar") {
-        report.validaciones.confirmaciones += 1;
+        if (hasConfirmed) {
+          // Toggle off
+          report.validaciones.usuarios_confirmaron.pull(userId);
+        } else {
+          if (hasDenied) {
+            report.validaciones.usuarios_desmintieron.pull(userId);
+          }
+          report.validaciones.usuarios_confirmaron.push(userId);
+        }
       } else if (accion === "desmentir") {
-        report.validaciones.desmentidos += 1;
-      }
-
-      // Calcular valoración global
-      report.valoracion_global = report.validaciones.confirmaciones - report.validaciones.desmentidos;
-
-      // Si baja de -3, marcar como OCULTO
-      if (report.valoracion_global < -3) {
-        report.estado = "OCULTO";
+        if (hasDenied) {
+          // Toggle off
+          report.validaciones.usuarios_desmintieron.pull(userId);
+        } else {
+          if (hasConfirmed) {
+            report.validaciones.usuarios_confirmaron.pull(userId);
+          }
+          report.validaciones.usuarios_desmintieron.push(userId);
+        }
       }
 
       await report.save();
@@ -131,18 +129,65 @@ class ReportService {
   }
 
   /**
-   * Eliminar reporte
+   * Actualizar reporte
+   */
+  async updateReport(reportId, updateData) {
+    try {
+      const updateFields = {};
+
+      // Solo permitir actualizar descripción y categoría
+      if (updateData.descripcion !== undefined) {
+        updateFields["contenido.descripcion"] = updateData.descripcion;
+      }
+
+      if (updateData.categoria_id !== undefined) {
+        // Validar que la nueva categoría existe
+        const category = await categoryService.getCategoryById(updateData.categoria_id);
+        if (!category) {
+          const error = new Error(`La categoría con ID '${updateData.categoria_id}' no existe.`);
+          error.status = 400;
+          throw error;
+        }
+        updateFields["categoria_id"] = updateData.categoria_id;
+      }
+
+      const report = await Report.findByIdAndUpdate(
+        reportId,
+        { $set: updateFields },
+        { new: true, runValidators: true }
+      ).populate("usuario_id categoria_id zona_id");
+
+      if (!report) {
+        throw new Error("Reporte no encontrado");
+      }
+
+      logger.info(`Reporte ${reportId} actualizado`);
+
+      return report;
+    } catch (err) {
+      logger.error(`Error en updateReport: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Eliminar reporte (y sus comentarios asociados)
    */
   async deleteReport(reportId) {
     try {
+      const Comment = require("../models/Comment");
+
       const report = await Report.findByIdAndDelete(reportId);
       if (!report) {
         throw new Error("Reporte no encontrado");
       }
 
-      logger.info(`Reporte ${reportId} eliminado`);
+      // Eliminar comentarios asociados a este reporte
+      await Comment.deleteMany({ reporte_id: reportId });
 
-      return { message: "Reporte eliminado" };
+      logger.info(`Reporte ${reportId} y sus comentarios eliminados`);
+
+      return { message: "Reporte y comentarios asociados eliminados" };
     } catch (err) {
       logger.error(`Error en deleteReport: ${err.message}`);
       throw err;
@@ -155,8 +200,9 @@ class ReportService {
   async getReportById(reportId) {
     try {
       const report = await Report.findById(reportId)
-        .populate("usuario_id", "perfil.nombre")
-        .populate("zona_id", "nombre");
+        .populate("usuario_id", "_id perfil.nombre perfil.avatar_seed perfil.avatar_style")
+        .populate("zona_id", "nombre")
+        .populate("categoria_id", "nombre icono_marcador");
 
       if (!report) {
         throw new Error("Reporte no encontrado");

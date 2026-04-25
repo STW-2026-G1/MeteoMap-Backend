@@ -8,8 +8,6 @@ const commentSchema = new mongoose.Schema(
     // Si es un comentario de un reporte meteorológico específico
     reporte_id: { type: mongoose.Schema.Types.ObjectId, ref: "Report" },
     contenido: { type: String, required: true },
-    etiqueta: String, // La "categoría"
-    estado: { type: String, enum: ["ACTIVO", "SPAM", "ELIMINADO"], default: "ACTIVO" },
     parent_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: null }, // Para respuestas
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },

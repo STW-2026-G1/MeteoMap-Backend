@@ -1,7 +1,8 @@
 const { Router } = require("express");
 const { param, body, validationResult } = require("express-validator");
 const userController = require("../controllers/userController");
-const isAuth = require("../middleware/auth")
+const isAuth = require("../middleware/auth");
+const { updatePasswordSchema, validateRequest } = require("../utils/validation");
 const router = Router();
 
 function validate(req, res, next) {
@@ -290,10 +291,6 @@ router.post(
  *                 type: string
  *                 description: Email del usuario
  *                 example: "juan@example.com"
- *               avatar_url:
- *                 type: string
- *                 description: URL del avatar
- *                 example: "https://example.com/avatar.jpg"
  *               biografia:
  *                 type: string
  *                 description: Biografía del usuario
@@ -302,6 +299,11 @@ router.post(
  *                 type: string
  *                 description: Ubicación del usuario
  *                 example: "Barcelona, España"
+ *               avatar_style:
+ *                 type: string
+ *                 description: Estilo del avatar (DiceBear)
+ *                 example: "avataaars"
+ *                 enum: ["avataaars", "bottts", "lorelei", "pixel-art", "thumbs", "notionists", "notionists-neutral", "dylan", "croodles", "personas"]
  *     responses:
  *       200:
  *         description: Perfil actualizado exitosamente
@@ -334,9 +336,9 @@ router.put(
   [
     body("nombre").optional().isString().trim(),
     body("email").optional().isEmail().withMessage("Email no válido"),
-    body("avatar_url").optional().isURL(),
     body("biografia").optional().isString().trim(),
     body("ubicacion").optional().isString().trim(),
+    body("avatar_style").optional().isIn(['avataaars', 'bottts', 'lorelei', 'pixel-art', 'thumbs', 'notionists', 'notionists-neutral', 'dylan', 'croodles', 'personas']).withMessage("Estilo de avatar inválido"),
   ],
   validate,
   userController.updateUser
@@ -389,17 +391,7 @@ router.put(
 router.put(
   "/updatepassword",
   isAuth,
-  [
-    body("currentPassword")
-      .isString()
-      .notEmpty()
-      .withMessage("Contraseña actual es requerida"),
-    body("newPassword")
-      .isString()
-      .isLength({ min: 8 })
-      .withMessage("Nueva contraseña debe tener al menos 8 caracteres"),
-  ],
-  validate,
+  validateRequest(updatePasswordSchema),
   userController.updatePassword
 );
 

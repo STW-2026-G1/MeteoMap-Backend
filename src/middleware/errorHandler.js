@@ -2,7 +2,7 @@ const logger = require("../config/logger");
 
 // Si una petición llega hasta aquí abajo sin ser contestada, es que la ruta no existe
 function notFound(req, res, next) {
-  res.status(404).json({ error: "No econtrado", message: `Ruta ${req.method} ${req.url} not found` });
+  res.status(404).json({ error: "No encontrado", message: `Ruta ${req.method} ${req.url} not found` });
 }
 
 
@@ -26,10 +26,7 @@ function errorHandler(err, req, res, next) {
 
   // Responde al usuario que hizo la petición
   res.status(status).json({
-    error: status === 500 ? "Error Interno del Servidor" : err.name || "Error",
-    
-    // Si es Producción y es un error interno (500), 
-    // notifica "Algo salió mal" para no filtrar código sensible
+    error: status === 500 ? "Error Interno del Servidor" : (err.name !== "Error" ? err.name : "Petición Incorrecta"),
     message: process.env.NODE_ENV === "production" && status === 500
       ? "Algo salió mal"
       : message,

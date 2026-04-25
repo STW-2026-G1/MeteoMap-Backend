@@ -115,30 +115,15 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
  *             type: object
  *             required:
  *               - zona_id
- *               - nombre_categoria
- *               - icono_marcador
- *               - tipo
+ *               - categoria_id
  *               - descripcion
- *               - coordinates
  *             properties:
  *               zona_id:
  *                 type: string
- *               nombre_categoria:
- *                 type: string
- *               icono_marcador:
- *                 type: string
- *               tipo:
+ *               categoria_id:
  *                 type: string
  *               descripcion:
  *                 type: string
- *               foto_url:
- *                 type: string
- *               coordinates:
- *                 type: array
- *                 items:
- *                   type: number
- *                 description: "[Longitud, Latitud]"
- *                 example: [-3.703790, 40.416775]
  *     responses:
  *       201:
  *         description: Reporte creado exitosamente
@@ -150,15 +135,51 @@ router.post(
   isAuth,
   [
     body("zona_id").isMongoId(),
-    body("nombre_categoria").isString().trim(),
-    body("icono_marcador").isString().trim(),
-    body("tipo").isString().trim(),
+    body("categoria_id").isMongoId(),
     body("descripcion").isString().trim().isLength({ min: 5 }),
-    body("foto_url").optional().isString().trim(),
-    body("coordinates").isArray({ min: 2, max: 2 }),
   ],
   validate,
   (req, res, next) => reportController.createReport(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/reports/{id}:
+ *   put:
+ *     summary: Actualizar reporte
+ *     tags: [Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del reporte
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               descripcion:
+ *                 type: string
+ *               categoria_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Reporte actualizado con éxito
+ *       404:
+ *         description: Reporte no encontrado
+ */
+router.put(
+  "/:id",
+  isAuth,
+  [param("id").isMongoId(), body("descripcion").optional().isString().trim().isLength({ min: 5 })],
+  validate,
+  (req, res, next) => reportController.updateReport(req, res, next)
 );
 
 /**

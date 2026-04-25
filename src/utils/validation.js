@@ -36,7 +36,7 @@ const loginSchema = z.object({
  * - email: debe ser un email válido, único en la BD
  * - password: mínimo 8 caracteres, máximo 128
  *   * Debe contener: mayúscula, minúscula, número, carácter especial
- * - nombre: opcional, mínimo 2 caracteres, máximo 100
+ * - nombre: requerido, mínimo 2 caracteres, máximo 32
  */
 const registerSchema = z.object({
   email: z
@@ -69,14 +69,101 @@ const registerSchema = z.object({
   nombre: z
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(100, "El nombre no puede exceder 100 caracteres")
-    .trim()
+    .max(32, "El nombre no puede exceder 32 caracteres")
+    .trim(),
+  
+  avatar_style: z
+    .string()
     .optional()
-    .default(""),
+    .default('avataaars')
+    .refine(val => ['avataaars', 'bottts', 'lorelei', 'pixel-art', 'thumbs', 'notionists', 'notionists-neutral', 'dylan', 'croodles', 'personas'].includes(val), "Estilo de avatar inválido"),
 });
 
 /**
+ * Schema para FORGOT PASSWORD
+ * 
+ * Validaciones:
+ * - email: debe ser un email válido
+ */
+const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .email("El email debe ser válido")
+    .toLowerCase()
+    .trim(),
+});
 
+/**
+ * Schema para RESET PASSWORD
+ * 
+ * Validaciones:
+ * - token: debe ser una cadena no vacía
+ * - newPassword: mínimo 8 caracteres, máximo 128
+ *   * Debe contener: mayúscula, minúscula, número, carácter especial
+ */
+const resetPasswordSchema = z.object({
+  token: z
+    .string()
+    .min(1, "Token requerido"),
+  
+  newPassword: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .max(128, "La contraseña no puede exceder 128 caracteres")
+    .regex(
+      /[A-Z]/,
+      "La contraseña debe contener al menos una mayúscula"
+    )
+    .regex(
+      /[a-z]/,
+      "La contraseña debe contener al menos una minúscula"
+    )
+    .regex(
+      /[0-9]/,
+      "La contraseña debe contener al menos un número"
+    )
+    .regex(
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+      "La contraseña debe contener al menos un carácter especial"
+    ),
+});
+
+/**
+ * Schema para UPDATE PASSWORD (cambiar contraseña)
+ * 
+ * Validaciones:
+ * - currentPassword: mínimo 8 caracteres
+ * - newPassword: mínimo 8 caracteres, máximo 128
+ *   * Debe contener: mayúscula, minúscula, número, carácter especial
+ */
+const updatePasswordSchema = z.object({
+  currentPassword: z
+    .string()
+    .min(1, "Contraseña actual requerida"),
+  
+  newPassword: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .max(128, "La contraseña no puede exceder 128 caracteres")
+    .regex(
+      /[A-Z]/,
+      "La contraseña debe contener al menos una mayúscula"
+    )
+    .regex(
+      /[a-z]/,
+      "La contraseña debe contener al menos una minúscula"
+    )
+    .regex(
+      /[0-9]/,
+      "La contraseña debe contener al menos un número"
+    )
+    .regex(
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
+      "La contraseña debe contener al menos un carácter especial"
+    ),
+});
+
+/**
  * Función auxiliar para validar datos contra un schema
  * @param {Object} schema - Schema de Zod
  * @param {Object} data - Datos a validar
@@ -137,6 +224,9 @@ module.exports = {
   // Schemas
   loginSchema,
   registerSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  updatePasswordSchema,
 
   // Utilidades
   validateData,

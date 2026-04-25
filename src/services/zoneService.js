@@ -211,19 +211,19 @@ class ZoneService {
 
       // Estadísticas de reportes para esta zona
       const reportStats = await Report.aggregate([
-        { $match: { zona_id: zone._id } },
-        {
-          $group: {
-            _id: "$tipo",
-            count: { $sum: 1 },
-            avg_confirmaciones: { $avg: "$validaciones.confirmaciones" },
-            avg_desmentidos: { $avg: "$validaciones.desmentidos" },
+          { $match: { zona_id: zone._id } },
+          {
+            $group: {
+              _id: "$tipo",
+              count: { $sum: 1 },
+              avg_confirmaciones: { $avg: { $size: { $ifNull: ["$validaciones.usuarios_confirmaron", []] } } },
+              avg_desmentidos: { $avg: { $size: { $ifNull: ["$validaciones.usuarios_desmintieron", []] } } },
+            },
           },
-        },
-        { $sort: { count: -1 } },
-      ]);
+          { $sort: { count: -1 } },
+        ]);
 
-      logger.debug(`ZoneService.getZoneDashboard para zona: ${zoneId}`);
+        logger.debug(`ZoneService.getZoneDashboard para zona: ${zoneId}`);
 
       return {
         zona: zone.nombre,

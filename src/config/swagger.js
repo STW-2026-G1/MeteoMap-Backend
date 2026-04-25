@@ -132,28 +132,24 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
               type: "object",
               properties: {
                 descripcion: { type: "string", example: "Avalancha vista en cara norte" },
-                foto_url: { type: "string" },
               },
             },
-            geolocalizacion: {
-              type: "object",
-              properties: {
-                type: { type: "string", enum: ["Point"], default: "Point" },
-                coordinates: {
-                  type: "array",
-                  items: { type: "number" },
-                  example: [-5.0, 43.25],
-                },
-              },
-            },
+
             validaciones: {
               type: "object",
               properties: {
-                confirmaciones: { type: "integer", example: 5 },
-                desmentidos: { type: "integer", example: 1 },
+                usuarios_confirmaron: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Lista de User ObjectIds",
+                },
+                usuarios_desmintieron: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Lista de User ObjectIds",
+                },
               },
             },
-            valoracion_global: { type: "integer", example: 4 },
             estado: {
               type: "string",
               enum: ["PENDIENTE", "ACTIVO", "OCULTO", "SPAM"],
@@ -248,8 +244,6 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             nombre: { type: "string", example: "Avalancha" },
             descripcion: { type: "string", example: "Avalanchas activas o potenciales" },
             icono_marcador: { type: "string", example: "icon_avalanche" },
-            estado: { type: "string", enum: ["ACTIVA", "INACTIVA"], default: "ACTIVA" },
-            creado_por: { type: "string", description: "Admin user ObjectId" },
           },
         },
 

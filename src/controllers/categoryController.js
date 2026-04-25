@@ -19,10 +19,7 @@ class CategoryController {
    */
   async createCategory(req, res, next) {
     try {
-      const categoryData = {
-        ...req.body,
-        creado_por: req.user.userId,
-      };
+      const categoryData = req.body;
       const category = await categoryService.createCategory(categoryData);
       res.status(201).json({
         message: "Categoría creada exitosamente",

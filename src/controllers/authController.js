@@ -15,9 +15,9 @@ class AuthController {
    */
   async register(req, res, next) {
     try {
-      const { email, password, nombre } = req.body;
+      const { email, password, nombre, avatar_style } = req.body;
 
-      const result = await authService.register(email, password, nombre);
+      const result = await authService.register(email, password, nombre, avatar_style);
 
       res.status(201).json(result);
     } catch (err) {
@@ -95,13 +95,50 @@ class AuthController {
         message: "Login con Google exitoso",
         accessToken,
         user: {
-          id: user._id,
+          id: user._id.toString(),
           email: user.datos_acceso.email,
           nombre: user.perfil.nombre,
+          avatar_style: user.perfil.avatar_style,
+          avatar_seed: user.perfil.avatar_seed,
+          biografia: user.perfil.biografia,
+          ubicacion: user.perfil.ubicacion,
           avatar_url: user.perfil.avatar_url,
           rol: user.datos_acceso.rol,
+          createdAt: user.createdAt,
         },
       });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/auth/forgot-password
+   * Solicitar recuperación de contraseña
+   */
+  async forgotPassword(req, res, next) {
+    try {
+      const { email } = req.body;
+
+      const result = await authService.forgotPassword(email);
+
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/auth/reset-password
+   * Restablecer contraseña con token
+   */
+  async resetPassword(req, res, next) {
+    try {
+      const { token, newPassword } = req.body;
+
+      const result = await authService.resetPassword(token, newPassword);
+
+      res.json(result);
     } catch (err) {
       next(err);
     }

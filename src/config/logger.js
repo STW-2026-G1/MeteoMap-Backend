@@ -1,22 +1,29 @@
 const { createLogger, format, transports } = require("winston");
 const path = require("path");
 
-const { combine, timestamp, printf, colorize, errors, json } = format;
+const { combine, timestamp, printf, colorize, errors, splat, json } = format;
 
-// Formato visual y limpio exclusivo para cuando estás programando en tu equipo local
+// Formato visual y limpio
 const devFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
-  const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : "";
+  // Filtrar propiedades internas de winston que no queremos en el JSON de meta
+  const metaFiltered = { ...meta };
+  delete metaFiltered[Symbol.for('level')];
+  delete metaFiltered[Symbol.for('message')];
+  delete metaFiltered[Symbol.for('splat')];
+
+  const metaStr = Object.keys(metaFiltered).length ? ` ${JSON.stringify(metaFiltered)}` : "";
   return `${timestamp} [${level}]: ${stack || message}${metaStr}`;
 });
 
 const logger = createLogger({
-  // Nivel mínimo de mensajes que va a registrar
   level: process.env.LOG_LEVEL || "info", 
-  // Siempre incluye la fecha/hora y el error exacto si la app crashea
-  format: combine(errors({ stack: true }), timestamp({ format: "YYYY-MM-DD HH:mm:ss" })),
+  format: combine(
+    errors({ stack: true }), 
+    timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    splat()
+  ),
   
   transports: [
-    // En producción escupe JSON, en local usa texto con colores
     new transports.Console({
       format:
         process.env.NODE_ENV === "production"

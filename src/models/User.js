@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema(
     // Perfil
     perfil: {
       nombre: String,
-      avatar_url: String,
+      avatar_seed: String, // Seed para generar avatar con DiceBear
+      avatar_style: { type: String, default: 'avataaars' },
       biografia: String,
       ubicacion: String,
     },
@@ -26,12 +27,26 @@ const userSchema = new mongoose.Schema(
     },
     // Estado de la cuenta
     estado: { type: String, enum: ["ACTIVO", "BLOQUEADO", "ELIMINADO"], default: "ACTIVO" },
-
+    fechaEliminacion: { type: Date, default: null }, // Timestamp cuando se elimina la cuenta
+    
+    // Recuperación de contraseña
+    passwordResetToken: { type: String, default: null },
   },
   {
     timestamps: true,
     collection: process.env.MONGODB_COLLECTION_USERS || "users",
   }
 );
+
+// Virtual para generar avatar con DiceBear
+userSchema.virtual('perfil.avatar_url').get(function() {
+  const seed = this.perfil.avatar_seed || this.perfil.nombre || this._id.toString();
+  const style = this.perfil.avatar_style || 'avataaars';
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
+});
+
+// Incluir virtuales en JSON
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model("User", userSchema);

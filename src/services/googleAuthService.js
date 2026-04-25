@@ -39,9 +39,7 @@ class GoogleAuthService {
         // Actualizar perfil si tiene datos nuevos de Google
         if (name && !user.perfil.nombre) {
           user.perfil.nombre = name;
-        }
-        if (picture && !user.perfil.avatar_url) {
-          user.perfil.avatar_url = picture;
+          user.perfil.avatar_seed = name;
         }
 
         await user.save();
@@ -63,7 +61,8 @@ class GoogleAuthService {
         },
         perfil: {
           nombre: name || "",
-          avatar_url: picture || "",
+          avatar_seed: name || "",
+          avatar_style: 'avataaars',
         },
       });
 
