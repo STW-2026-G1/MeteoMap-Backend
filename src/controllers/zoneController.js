@@ -10,7 +10,7 @@ class ZoneController {
       const { estado } = req.query;
       const result = await zoneService.getZones(estado || "ACTIVA");
       
-      // Transformar el formato de respuesta
+      // Transformar el formato de respuesta - solo campos válidos
       res.json({
         status: "success",
         count: result.count,
@@ -20,7 +20,10 @@ class ZoneController {
           descripcion: zone.descripcion,
           estado: zone.estado,
           geolocalizacion: zone.geolocalizacion,
-          cache_meteo: zone.cache_meteo,
+          cache_meteo: {
+            current: zone.cache_meteo?.current || null,
+            forecast: zone.cache_meteo?.forecast || null,
+          },
         })),
       });
     } catch (err) {
@@ -36,12 +39,7 @@ class ZoneController {
       const { id } = req.params;
       const zone = await zoneService.getZoneById(id);
       
-      // Transformar el formato de respuesta
-      /*
-      IMPORTANTE: HE CAMBIADO EL FORMATO DE LA RESPUESTA PORQUE ME PARECIA MÁS COMODO
-      SEGURAMENTE SEA INNECESARIO Y ES MEJOR DEJARLO COMO RES.JSON(RESULT) PERO ME VIENE 
-      MUY BIEN PARA DEBUGEAR
-      */
+      // Transformar el formato de respuesta - solo campos válidos
       res.json({
         status: "success",
         data: {
@@ -50,7 +48,10 @@ class ZoneController {
           descripcion: zone.descripcion,
           estado: zone.estado,
           geolocalizacion: zone.geolocalizacion,
-          cache_meteo: zone.cache_meteo,
+          cache_meteo: {
+            current: zone.cache_meteo?.current || null,
+            forecast: zone.cache_meteo?.forecast || null,
+          },
         },
       });
     } catch (err) {
@@ -74,7 +75,10 @@ class ZoneController {
           zona: weather.zona,
           geolocalizacion: weather.geolocalizacion,
           datos_meteorologicos: weather.datos,
-          cache_meteo: weather.cache_meteo,
+          cache_meteo: {
+            current: weather.cache_meteo?.current || null,
+            forecast: weather.cache_meteo?.forecast || null,
+          },
           nota: weather.nota,
         },
       });
@@ -155,7 +159,10 @@ class ZoneController {
           descripcion: newZone.descripcion,
           estado: newZone.estado,
           geolocalizacion: newZone.geolocalizacion,
-          cache_meteo: newZone.cache_meteo,
+          cache_meteo: {
+            current: newZone.cache_meteo?.current || null,
+            forecast: newZone.cache_meteo?.forecast || null,
+          },
         },
       });
     } catch (err) {
@@ -181,11 +188,53 @@ class ZoneController {
           descripcion: deletedZone.descripcion,
           estado: deletedZone.estado,
           geolocalizacion: deletedZone.geolocalizacion,
-          cache_meteo: deletedZone.cache_meteo,
+          cache_meteo: {
+            current: deletedZone.cache_meteo?.current || null,
+            forecast: deletedZone.cache_meteo?.forecast || null,
+          },
         },
       });
     } catch (err) {
       next(err);
+    }
+  }
+
+  /**
+   * GET /api/zones/weather
+   * Sincronizar datos meteorológicos de todas las zonas activas
+   */
+  async syncWeatherData(req, res, next) {
+    try {
+      const weatherService = require("../services/weatherService");
+      const result = await weatherService.syncAllZonesWeather();
+
+      // Determinar status HTTP basado en tasa de éxito
+      const total = result.success + result.failed;
+      const successRate = total > 0 ? (result.success / total) * 100 : 0;
+
+      let statusCode = 200;
+      if (successRate < 80 && successRate > 0) {
+        statusCode = 206; // Partial Content
+      } else if (successRate === 0) {
+        statusCode = 500;
+      }
+
+      return res.status(statusCode).json({
+        status: statusCode === 200 ? "success" : statusCode === 206 ? "partial" : "error",
+        success: result.success,
+        failed: result.failed,
+        errors: result.errors,
+        message: result.message,
+        timestamp: result.timestamp,
+      });
+    } catch (err) {
+      logger.error(`Error en syncWeatherData: ${err.message}`);
+      return res.status(500).json({
+        status: "error",
+        error: "Error sincronizando datos meteorológicos",
+        message: err.message,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }

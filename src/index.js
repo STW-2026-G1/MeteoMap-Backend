@@ -142,6 +142,10 @@ async function start() {
   try {
     await connect();
 
+    // Iniciar tarea de sincronización de datos meteorológicos
+    const weatherSyncTask = require("./tasks/weatherSyncTask");
+    weatherSyncTask.start();
+
     app.listen(PORT, () => {
       logger.info(`Servidor ejecutándose en http://localhost:${PORT}`);
       logger.info(`Swagger UI:  http://localhost:${PORT}/docs`);

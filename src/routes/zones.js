@@ -68,6 +68,48 @@ router.get("/", (req, res, next) => zoneController.getZones(req, res, next));
 
 /**
  * @swagger
+ * /api/zones/weather:
+ *   get:
+ *     summary: Sincronizar datos meteorológicos de todas las zonas
+ *     description: Sincroniza datos meteorológicos actuales de todas las zonas activas desde Open-Meteo. Realiza una sola petición HTTP con todas las coordenadas. Esta operación actualiza el cache_meteo de todas las zonas.
+ *     tags: [Zones]
+ *     responses:
+ *       200:
+ *         description: Sincronización exitosa - todas o la mayoría de zonas actualizadas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 success:
+ *                   type: number
+ *                   description: Número de zonas actualizadas exitosamente
+ *                 failed:
+ *                   type: number
+ *                   description: Número de zonas que fallaron
+ *                 errors:
+ *                   type: array
+ *                   description: Array con detalles de errores por zona
+ *                 message:
+ *                   type: string
+ *                   description: Mensaje descriptivo del resultado
+ *                 timestamp:
+ *                   type: string
+ *                   description: Marca de tiempo de la ejecución (ISO 8601)
+ *       206:
+ *         description: Actualización parcial - algunas zonas fallaron
+ *       500:
+ *         description: Error crítico en la sincronización
+ */
+router.get("/weather", (req, res, next) =>
+  zoneController.syncWeatherData(req, res, next)
+);
+
+/**
+ * @swagger
  * /api/zones/{id}:
  *   get:
  *     summary: Obtener zona por ID
@@ -123,6 +165,8 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
 router.get("/:id/weather", [param("id").isMongoId()], validate, (req, res, next) =>
   zoneController.getWeatherData(req, res, next)
 );
+
+
 
 /**
  * @swagger

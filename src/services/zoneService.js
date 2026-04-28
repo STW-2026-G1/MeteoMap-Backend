@@ -100,7 +100,10 @@ class ZoneService {
       return {
         zona: zone.nombre,
         geolocalizacion: zone.geolocalizacion,
-        cache_meteo: zone.cache_meteo.current,
+        cache_meteo: {
+          current: zone.cache_meteo.current,
+          forecast: zone.cache_meteo.forecast,
+        },
         datos: datosMeteo,
         nota: "Datos meteorológicos actualizados desde Open-Meteo",
       };
@@ -170,7 +173,10 @@ class ZoneService {
       return {
         zona: zone.nombre,
         geolocalizacion: zone.geolocalizacion,
-        cache_meteo: zone.cache_meteo.forecast,
+        cache_meteo: {
+          current: zone.cache_meteo.current,
+          forecast: zone.cache_meteo.forecast,
+        },
         datos: datosMeteo,
         nota: "Predicción de temperatura actualizada desde Open-Meteo",
       };
