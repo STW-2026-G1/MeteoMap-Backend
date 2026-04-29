@@ -2,6 +2,7 @@ const logger = require("../config/logger");
 const tar = require("tar");
 const { Readable } = require("stream");
 const xml2js = require("xml2js");
+const AemetAlert = require("../models/AemetAlert");
 
 /**
  * Servicio para obtener alertas meteorológicas de AEMET
@@ -14,19 +15,30 @@ class aemetAlertsService {
     // URL de la API de AEMET para obtener avisos
     this.AEMET_ALERTS_URL = "https://opendata.aemet.es/opendata/api/avisos_cap/ultimoelaborado/area/esp";
     this.AEMET_API_KEY = process.env.AEMET_API_KEY;
+    
+    // Sistema de caché con TTL de 30 minutos
+    this.cache = null;
+    this.cacheTimestamp = null;
+    this.CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos en milisegundos
   }
 
   /**
-   * Obtener alertas meteorológicas de AEMET
+   * Obtener alertas meteorológicas de AEMET (con caché de 30 minutos)
    * @returns {Promise<Array>} Array de alertas procesadas con coordenadas
    */
   async fetchAlerts() {
     try {
+      // Verificar caché válido
+      if (this._isCacheValid()) {
+        logger.info(`Usando alertas en caché (edad: ${this._getCacheAge()}ms)`);
+        return this.cache;
+      }
+
       if (!this.AEMET_API_KEY) {
         logger.warn(
           "AEMET_API_KEY no configurada. Usando datos de demo para alertas."
         );
-        return 
+        return [];
       }
 
       logger.debug(
@@ -39,8 +51,7 @@ class aemetAlertsService {
       const response = await fetch(`${this.AEMET_ALERTS_URL}`, {
         signal: controller.signal,
         headers: {
-          "api_key":
-            this.AEMET_API_KEY,
+          "api_key": this.AEMET_API_KEY,
         },
       });
 
@@ -50,46 +61,91 @@ class aemetAlertsService {
         logger.error(
           `AEMET API error: ${response.status} ${response.statusText}`
         );
-        return ;
+        // Retornar caché antigua si existe
+        if (this.cache) {
+          logger.warn('Usando caché obsoleto por error en API');
+          return this.cache;
+        }
+        return [];
       }
 
       const data = await response.json();
       logger.debug(
-        `Datos recibidos de AEMET: ${ data.datos} `
+        `Datos recibidos de AEMET: ${data.datos}`
       );
 
       // Procesar y transformar alertas
-      return this._processAlerts(data);
+      const alerts = await this._processAlerts(data);
+      
+      // Filtrar alertas ya procesadas anteriormente
+      const newAlerts = await this._filterNewAlerts(alerts);
+      
+      // Guardar en BD las nuevas alertas
+      if (newAlerts.length > 0) {
+        await this._saveAlertsToDatabase(newAlerts);
+      }
+      
+      // Guardar en caché todas las alertas (nuevas + existentes)
+      this.cache = alerts;
+      this.cacheTimestamp = Date.now();
+      logger.info(`✅ Caché actualizado (${alerts.length} alertas, ${newAlerts.length} nuevas)`);
+      
+      return alerts;
     } catch (err) {
       logger.error(
         `Error obteniendo alertas de AEMET: ${err.name} - ${err.message}`
       );
       logger.debug(`Stack trace: ${err.stack}`);
 
-      // Retornar datos de demo si hay error
-      return ;
+      // Retornar caché si está disponible
+      if (this.cache) {
+        logger.warn('Usando caché por error en obtención');
+        return this.cache;
+      }
+      return [];
     }
+  }
+
+  /**
+   * Verifica si la caché es válida (menos de 30 minutos)
+   * @private
+   */
+  _isCacheValid() {
+    if (!this.cache || !this.cacheTimestamp) return false;
+    return (Date.now() - this.cacheTimestamp) < this.CACHE_TTL_MS;
+  }
+
+  /**
+   * Obtiene la antigüedad de la caché en milisegundos
+   * @private
+   */
+  _getCacheAge() {
+    if (!this.cacheTimestamp) return -1;
+    return Date.now() - this.cacheTimestamp;
   }
 
   /**
    * Procesar alertas crudas de AEMET a formato estándar
    * @private
    */
-async _processAlerts(data) {
+  async _processAlerts(data) {
     if (!data || !data.datos) {
       logger.error("No se recibió la URL de descarga en el campo 'datos'");
       return [];
     }
 
     try {
-      // 1. Descargar el archivo TAR (usando la lógica de buffer de tu ejemplo)
+      // 1. Descargar el archivo TAR
       const tarBuffer = await this._downloadTar(data.datos);
       
       // 2. Descomprimir y parsear los XMLs
       const rawAlerts = await this._unpackAndParse(tarBuffer);
       
-      // 3. Normalizar al formato de tu Swagger
-      return this._normalizeAlerts(rawAlerts);
+      // 3. Normalizar al formato de Swagger
+      const normalizedAlerts = this._normalizeAlerts(rawAlerts);
+      
+      // 4. Deduplicar alertas (mantener la más reciente por zona+tipo)
+      return this._deduplicateAlerts(normalizedAlerts);
     } catch (error) {
       logger.error(`Error en el pipeline de procesamiento: ${error.message}`);
       return [];
@@ -111,33 +167,254 @@ async _processAlerts(data) {
   }
   /**
    * Descomprime el TAR en memoria y parsea los XML (CAP)
+   * @param {Buffer} buffer - Buffer del archivo TAR
+   * @returns {Promise<Array>} Array de objetos parseados desde XMLs
    */
-async _unpackAndParse(buffer) {
-  
+  async _unpackAndParse(buffer) {
+    try {
+      const rawAlerts = [];
+      const xmlParser = new xml2js.Parser({
+        explicitArray: false,
+        charkey: 'value',
+        ignoreAttrs: false,
+      });
+
+      return new Promise((resolve, reject) => {
+        // Crear stream legible desde el buffer
+        const readableStream = Readable.from(buffer);
+
+        // Usar Parser de tar para procesar el stream
+        const tarParser = new tar.Parser();
+
+        tarParser.on('entry', async (entry) => {
+          // Solo procesar archivos .xml
+          if (entry.type !== 'File' || !entry.path.endsWith('.xml')) {
+            entry.resume();
+            return;
+          }
+
+          let xmlContent = '';
+
+          entry.on('data', (chunk) => {
+            xmlContent += chunk.toString('utf8');
+          });
+
+          entry.on('end', async () => {
+            try {
+              logger.debug(`Parseando XML: ${entry.path}`);
+              const parsed = await xmlParser.parseStringPromise(xmlContent);
+              rawAlerts.push(parsed);
+            } catch (xmlError) {
+              logger.error(
+                `Error parseando XML ${entry.path}: ${xmlError.message}`
+              );
+            }
+          });
+
+          entry.on('error', (error) => {
+            logger.error(`Error en entrada ${entry.path}: ${error.message}`);
+          });
+        });
+
+        tarParser.on('end', () => {
+          logger.info(`Total de XMLs procesados: ${rawAlerts.length}`);
+          resolve(rawAlerts);
+        });
+
+        tarParser.on('error', (error) => {
+          logger.error(`Error en stream TAR: ${error.message}`);
+          reject(error);
+        });
+
+        readableStream.pipe(tarParser);
+      });
+    } catch (error) {
+      logger.error(`Error en _unpackAndParse: ${error.message}`);
+      throw error;
+    }
   }
-/**
+
+  /**
    * Normalización específica para el formato CAP v1.2 de AEMET
+   * Mapea estructura XML CAP al esquema AemetAlert de Swagger
+   * @param {Array} rawAlerts - Array de objetos parseados desde XML
+   * @returns {Array} Array de alertas normalizadas
    */
-  _normalizeAlerts(rawAlerts) {
-    
+ _normalizeAlerts(rawAlerts) {
+    const normalizedAlerts = [];
+
+    for (const rawAlert of rawAlerts) {
+      try {
+        // Navegar por la estructura XML parseada
+        const alert = rawAlert.alert || {};
+
+        // info es un ARRAY con múltiples idiomas
+        const infoArray = Array.isArray(alert.info) ? alert.info : [alert.info];
+        
+        // Seleccionar el primer info (preferentemente es-ES)
+        const info = infoArray[0] || {};
+        const area = info.area || {};
+
+        // Extraer campos CAP base
+        const identifier = alert.identifier || 'unknown';
+        const sent = alert.sent || new Date().toISOString(); // <-- FECHA DE EMISIÓN
+        
+        // El tipo real está en eventCode.value (ej: "PR;Lluvias") o en event
+        let tipoReal = info.event || 'Evento desconocido';
+        if (info.eventCode && info.eventCode.value) {
+          const eventCodeValue = info.eventCode.value;
+          const partes = eventCodeValue.split(';');
+          if (partes.length > 1) {
+            tipoReal = partes[1]; // Ej: "Lluvias" de "PR;Lluvias"
+          }
+        }
+
+        // El nivel está en parameters con valueName "AEMET-Meteoalerta nivel"
+        let severityLevel = info.severity || 'Moderate';
+        const paramArray = Array.isArray(info.parameter) ? info.parameter : [info.parameter];
+        const nivelParam = paramArray.find(p => p.valueName === 'AEMET-Meteoalerta nivel');
+        if (nivelParam && nivelParam.value) {
+          // Convertir valor como "amarillo" → "Moderate"
+          const nivelSpanish = nivelParam.value.toLowerCase();
+          const nivelMap = {
+            'amarillo': 'Moderate',
+            'naranja': 'Severe',
+            'rojo': 'Extreme'
+          };
+          severityLevel = nivelMap[nivelSpanish] || 'Moderate';
+        }
+
+        const severity = severityLevel;
+        
+        // Extraer nuevos campos: Probabilidad, Instrucciones, Certidumbre, etc.
+        const probParam = paramArray.find(p => p.valueName === 'AEMET-Meteoalerta probabilidad');
+        const probabilidad = probParam && probParam.value ? probParam.value : null; // null si no existe
+        
+        const instruction = info.instruction || null;
+        const web = info.web || null;
+        const certainty = info.certainty || null;
+        const urgency = info.urgency || null;
+        
+        // La zona puede estar en area.geocode.value o area.areaDesc
+        let zonaId = 'unknown';
+        if (area.geocode && area.geocode.value) {
+          zonaId = area.geocode.value;
+        }
+        const areaDesc = area.areaDesc || `Zona ${zonaId}`;
+        const polygon = area.polygon || '';
+        
+        // No cortamos la descripción a 200 caracteres para tenerla completa en el popup
+        const description = info.description || info.headline || 'Sin descripción';
+        const onset = info.onset || info.effective || new Date().toISOString();
+        const expires = info.expires || new Date().toISOString();
+
+        // Mapear severity CAP a nivel de alerta español
+        const nivelMapEs = {
+          'Extreme': 'Rojo',
+          'Severe': 'Naranja',
+          'Moderate': 'Amarillo',
+          'Minor': 'Amarillo',
+          'Unknown': 'Amarillo'
+        };
+        const nivel = nivelMapEs[severity] || 'Amarillo';
+
+        // Extraer coordenadas del polígono
+        const coordenadas = this._parseAemetPolygon(polygon);
+
+        // Construir alerta normalizada con TODOS los campos
+        const normalizedAlert = {
+          id: identifier,
+          zona: areaDesc,
+          tipo: tipoReal,
+          nivel: nivel,
+          nivelNumerico: this._getNivelNumerico(nivel.toLowerCase()),
+          descripcion: description, 
+          instrucciones: instruction,
+          probabilidad: probabilidad,
+          certidumbre: certainty,
+          urgencia: urgency,
+          enlace: web,
+          emision: this._parseISO8601(sent),
+          validez_inicio: this._parseISO8601(onset),
+          validez_fin: this._parseISO8601(expires),
+          coordenadas: {
+            latitud: coordenadas.latitud,
+            longitud: coordenadas.longitud
+          },
+          color: this._mapColorByNivel(nivel.toLowerCase()),
+        };
+
+        logger.debug(
+          `Alerta normalizada: ${normalizedAlert.zona} - ${normalizedAlert.tipo} (${normalizedAlert.nivel})`
+        );
+        normalizedAlerts.push(normalizedAlert);
+      } catch (error) {
+        logger.error(
+          `Error normalizando alerta: ${error.message}. Saltando...`
+        );
+        logger.debug(`Error stack: ${error.stack}`);
+        continue;
+      }
+    }
+
+    logger.info(
+      `Total de alertas normalizadas: ${normalizedAlerts.length}`
+    );
+    return normalizedAlerts;
   }
 
   /**
    * Parsea el string "lat,long lat,long" y devuelve el primer punto como marcador
    */
   _parseAemetPolygon(polygonStr) {
-    if (!polygonStr) return { latitud: 40.41, longitud: -3.70 };
+    // Validar que polygonStr sea una cadena
+    if (!polygonStr || typeof polygonStr !== 'string') {
+      logger.debug(`Polígono inválido: ${JSON.stringify(polygonStr)}. Usando coordenada por defecto.`);
+      return { latitud: 40.41, longitud: -3.70 };
+    }
 
     // Separamos por espacios para obtener los pares "lat,long"
     const points = polygonStr.trim().split(" ");
     
     // Tomamos el primer punto para el marcador del mapa
-    const firstPoint = points[0].split(",");
+    const firstPoint = points[0]?.split(",");
+    
+    if (!firstPoint || firstPoint.length < 2) {
+      logger.debug(`Polígono no contiene puntos válidos: ${polygonStr}`);
+      return { latitud: 40.41, longitud: -3.70 };
+    }
     
     return {
       latitud: parseFloat(firstPoint[0]),
       longitud: parseFloat(firstPoint[1])
     };
+  }
+
+
+
+  /**
+   * Parsea una fecha ISO 8601 y la retorna como string ISO
+   * @param {string} dateString - Fecha en formato ISO 8601
+   * @returns {string} Fecha en formato ISO 8601 válido
+   */
+  _parseISO8601(dateString) {
+    try {
+      if (!dateString) {
+        return new Date().toISOString();
+      }
+      // Validar que sea ISO 8601 válido
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        logger.warn(`Fecha inválida: ${dateString}. Usando fecha actual.`);
+        return new Date().toISOString();
+      }
+      return date.toISOString();
+    } catch (error) {
+      logger.warn(
+        `Error parseando fecha ${dateString}: ${error.message}. Usando fecha actual.`
+      );
+      return new Date().toISOString();
+    }
   }
 
   _getNivelNumerico(nivel) {
@@ -152,6 +429,115 @@ async _unpackAndParse(buffer) {
       'rojo': '#e74c3c'
     };
     return colores[nivel] || '#95a5a6';
+  }
+
+  /**
+   * Deduplica alertas manteniendo la más reciente por zona + tipo
+   * @private
+   */
+  _deduplicateAlerts(alerts) {
+    const alertMap = new Map();
+
+    for (const alert of alerts) {
+      // Clave única: zona + tipo de evento
+      const key = `${alert.zona}|${alert.tipo}`;
+
+      // Si ya existe, comparar por fecha de inicio (más reciente gana)
+      if (alertMap.has(key)) {
+        const existing = alertMap.get(key);
+        const newDate = new Date(alert.validez_inicio);
+        const existingDate = new Date(existing.validez_inicio);
+
+        if (newDate > existingDate) {
+          logger.debug(
+            `Reemplazando alerta duplicada: ${key} ` +
+            `(${existingDate.toISOString()} → ${newDate.toISOString()})`
+          );
+          alertMap.set(key, alert);
+        }
+      } else {
+        alertMap.set(key, alert);
+      }
+    }
+
+    const deduped = Array.from(alertMap.values());
+    if (deduped.length < alerts.length) {
+      logger.info(
+        `Duplicados eliminados: ${alerts.length} → ${deduped.length} alertas`
+      );
+    }
+    return deduped;
+  }
+
+  /**
+   * Filtra alertas nuevas que no han sido procesadas anteriormente
+   * @private
+   */
+  async _filterNewAlerts(alerts) {
+    try {
+      const alertIds = alerts.map(a => a.id);
+      const existingAlerts = await AemetAlert.find(
+        { aemet_id: { $in: alertIds } },
+        { aemet_id: 1 }
+      );
+      
+      const existingIds = new Set(existingAlerts.map(a => a.aemet_id));
+      const newAlerts = alerts.filter(a => !existingIds.has(a.id));
+      
+      if (newAlerts.length > 0) {
+        logger.info(
+          `🆕 Alertas nuevas: ${newAlerts.length}/${alerts.length} ` +
+          `(${alerts.length - newAlerts.length} ya procesadas)`
+        );
+      } else {
+        logger.info(`ℹ️  Todas las alertas ya han sido procesadas anteriormente`);
+      }
+      
+      return newAlerts;
+    } catch (error) {
+      logger.error(`Error filtrando alertas nuevas: ${error.message}`);
+      // Si hay error en BD, procesar todas las alertas
+      return alerts;
+    }
+  }
+
+  /**
+   * Guarda alertas nuevas en la base de datos
+   * @private
+   */
+  async _saveAlertsToDatabase(alerts) {
+    try {
+      const alertsForDb = alerts.map(alert => ({
+        aemet_id: alert.id,
+        zona: alert.zona,
+        tipo: alert.tipo,
+        titular: alert.titular,
+        nivel: alert.nivel,
+        nivelNumerico: alert.nivelNumerico,
+        descripcion: alert.descripcion,
+        instrucciones: alert.instrucciones,
+        probabilidad: alert.probabilidad,
+        certidumbre: alert.certidumbre,
+        urgencia: alert.urgencia,
+        enlace: alert.enlace,
+        coordenadas: alert.coordenadas,
+        color: alert.color,
+        emision: new Date(alert.emision),
+        validez_inicio: new Date(alert.validez_inicio),
+        validez_fin: new Date(alert.validez_fin),
+        fecha_procesamiento: new Date()
+      }));
+      
+      const result = await AemetAlert.insertMany(alertsForDb, { ordered: false });
+      logger.info(`✅ ${result.length} alertas guardadas en BD`);
+    } catch (error) {
+      // Si algunos documentos duplicados existen, ignorar ese error
+      if (error.code === 11000) {
+        logger.debug('Algunos IDs de alertas ya existen en BD (esperado)');
+      } else {
+        logger.error(`Error guardando alertas en BD: ${error.message}`);
+      }
+    }
   }
 }
 module.exports = new aemetAlertsService();
