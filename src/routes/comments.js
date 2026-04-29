@@ -327,8 +327,6 @@ router.delete(
  *             properties:
  *               contenido:
  *                 type: string
- *               etiqueta:
- *                 type: string
  *     responses:
  *       200:
  *         description: Comentario editado exitosamente
