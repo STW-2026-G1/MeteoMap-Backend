@@ -133,6 +133,19 @@ class CommentController {
       } catch (err) { next(err); }
    }
 
+   async editComment(req, res, next) {
+       try {
+          const { id } = req.params;
+          const { userId, rol } = req.user;
+          const { contenido } = req.body;
+
+          const result = await commentService.editComment(id, userId, rol, {
+             contenido,
+          });
+          res.json(result);
+       } catch (err) { next(err); }
+    }
+
 }
 
 module.exports = new CommentController();
