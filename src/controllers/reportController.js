@@ -60,7 +60,7 @@ class ReportController {
   }
 
   /**
-   * PATCH /api/reports/:id/validate
+   * PUT /api/reports/:id/validate
    */
   async validateReport(req, res, next) {
     try {

@@ -2,6 +2,7 @@ const { Router } = require("express");
 const { body, param, validationResult } = require("express-validator");
 const categoryController = require("../controllers/categoryController");
 const isAuth = require("../middleware/auth");
+const requireAdmin = require("../middleware/requireAdmin");
 
 const router = Router();
 
@@ -89,6 +90,7 @@ router.get("/", async (req, res, next) => {
 router.post(
   "/",
   isAuth,
+  requireAdmin,
   [
     body("nombre").isString().trim().notEmpty(),
     body("descripcion").optional().isString().trim(),
@@ -133,6 +135,7 @@ router.post(
 router.put(
   "/:id",
   isAuth,
+  requireAdmin,
   [
     param("id").isMongoId(),
     body("nombre").optional().isString().trim().notEmpty(),
@@ -164,7 +167,7 @@ router.put(
  *       404:
  *         description: Categoría no encontrada
  */
-router.delete("/:id", isAuth, [param("id").isMongoId()], validate, (req, res, next) =>
+router.delete("/:id", isAuth, requireAdmin, [param("id").isMongoId()], validate, (req, res, next) =>
   categoryController.deleteCategory(req, res, next)
 );
 

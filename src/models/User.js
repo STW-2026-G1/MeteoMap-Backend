@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       ultimo_reset: { type: Date, default: Date.now },
     },
     // Estado de la cuenta
-    estado: { type: String, enum: ["ACTIVO", "BLOQUEADO", "ELIMINADO"], default: "ACTIVO" },
+    estado: { type: String, enum: ["ACTIVO", "ELIMINADO"], default: "ACTIVO" },
     fechaEliminacion: { type: Date, default: null }, // Timestamp cuando se elimina la cuenta
     
     // Recuperación de contraseña

@@ -171,6 +171,40 @@ class ZoneController {
   }
 
   /**
+   * PUT /api/zones/:id
+   */
+  async updateZone(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { nombre, descripcion, geolocalizacion, estado } = req.body;
+      const updatedZone = await zoneService.updateZone(id, {
+        nombre,
+        descripcion,
+        geolocalizacion,
+        estado,
+      });
+
+      res.json({
+        status: "success",
+        message: "Zona actualizada exitosamente",
+        data: {
+          _id: updatedZone._id,
+          nombre: updatedZone.nombre,
+          descripcion: updatedZone.descripcion,
+          estado: updatedZone.estado,
+          geolocalizacion: updatedZone.geolocalizacion,
+          cache_meteo: {
+            current: updatedZone.cache_meteo?.current || null,
+            forecast: updatedZone.cache_meteo?.forecast || null,
+          },
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * DELETE /api/zones/:id
    */
   async deleteZone(req, res, next) {
