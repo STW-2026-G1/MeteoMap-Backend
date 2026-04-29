@@ -301,6 +301,30 @@ class ZoneService {
       throw err;
     }
   }
+
+  /**
+   * Buscar zonas por nombre (búsqueda de texto)
+   */
+  async searchZones(query, estado = "ACTIVA", limit = 20) {
+    try {
+      const zones = await Zone.find({
+        nombre: { $regex: query, $options: "i" },
+        estado
+      })
+      .limit(limit);
+
+      logger.debug(`ZoneService.searchZones: Búsqueda por "${query}"`);
+
+      return {
+        count: zones.length,
+        query,
+        zones
+      };
+    } catch (err) {
+      logger.error(`Error en searchZones: ${err.message}`);
+      throw err;
+    }
+  }
 }
 
 module.exports = new ZoneService();

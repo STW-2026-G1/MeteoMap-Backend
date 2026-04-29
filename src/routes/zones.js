@@ -68,6 +68,43 @@ router.get("/", (req, res, next) => zoneController.getZones(req, res, next));
 
 /**
  * @swagger
+ * /api/zones/search:
+ *   get:
+ *     summary: Buscar zonas por nombre
+ *     description: Busca zonas filtrando por nombre utilizando búsqueda de texto (case-insensitive)
+ *     tags: [Zones]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda por nombre de zona
+ *         example: "Guadarrama"
+ *       - in: query
+ *         name: estado
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVA, INACTIVA]
+ *         description: Filtrar por estado (default ACTIVA)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Número máximo de resultados (default 20)
+ *     responses:
+ *       200:
+ *         description: Búsqueda completada exitosamente
+ *       400:
+ *         description: Query es requerido
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get("/search", (req, res, next) => zoneController.searchZones(req, res, next));
+
+/**
+ * @swagger
  * /api/zones/weather:
  *   get:
  *     summary: Sincronizar datos meteorológicos de todas las zonas

@@ -200,6 +200,47 @@ class ZoneController {
   }
 
   /**
+   * GET /api/zones/search
+   */
+  async searchZones(req, res, next) {
+    try {
+      const { query, estado, limit } = req.query;
+      
+      if (!query) {
+        return res.status(400).json({
+          status: "error",
+          message: "El parámetro 'query' es requerido"
+        });
+      }
+
+      const result = await zoneService.searchZones(
+        query,
+        estado || "ACTIVA",
+        limit ? parseInt(limit) : 20
+      );
+      
+      res.json({
+        status: "success",
+        count: result.count,
+        query: result.query,
+        data: result.zones.map((zone) => ({
+          _id: zone._id,
+          nombre: zone.nombre,
+          descripcion: zone.descripcion,
+          estado: zone.estado,
+          geolocalizacion: zone.geolocalizacion,
+          cache_meteo: {
+            current: zone.cache_meteo?.current || null,
+            forecast: zone.cache_meteo?.forecast || null,
+          },
+        })),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
    * GET /api/zones/weather
    * Sincronizar datos meteorológicos de todas las zonas activas
    */
