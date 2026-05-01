@@ -1,26 +1,26 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const OpenAI = require("openai");
 const logger = require("../config/logger");
-const Zone = require("../models/Zone");
-const Report = require("../models/Report");
-const User = require("../models/User");
 const zoneService = require("./zoneService");
 const reportService = require("./reportService");
 
 class ChatService {
   constructor() {
-    // Inicializar cliente de Gemini
-    this.apiKey = process.env.GEMINI_API_KEY;
+    // Inicializar cliente de Mistral (usando SDK de OpenAI por compatibilidad)
+    this.apiKey = process.env.MISTRAL_API_KEY;
     if (!this.apiKey) {
-      logger.warn("GEMINI_API_KEY no configurada - funcionará en modo degradado");
+      logger.warn("MISTRAL_API_KEY no configurada - funcionará en modo degradado");
     }
-    this.client = this.apiKey ? new GoogleGenerativeAI(this.apiKey) : null;
+    this.client = this.apiKey ? new OpenAI({
+      apiKey: this.apiKey,
+      baseURL: "https://api.mistral.ai/v1"
+    }) : null;
 
-    // Almacenamiento de historial por usuario (in-memory, en producción usar Redis/DB)
+    // Almacenamiento de historial por usuario
     this.conversationHistory = new Map();
-    this.MAX_HISTORY = 10; // Mantener últimos 10 mensajes por usuario
+    this.MAX_HISTORY = 10;
 
-    // Configuración del modelo
-    this.modelName = "gemini-3-flash-preview";
+    // Configuración del modelo (Mistral Small es excelente para herramientas)
+    this.modelName = "mistral-small-latest";
     this.temperature = 0.7;
     this.maxTokens = 1024;
   }
@@ -29,58 +29,69 @@ class ChatService {
   _getTools() {
     return [
       {
-        functionDeclarations: [
-          {
-            name: "list_zones",
-            description: "Obtiene la lista de todas las zonas de montaña activas en el sistema. Útil para conocer qué zonas existen y sus IDs.",
-            parameters: { type: "OBJECT", properties: {} }
-          },
-          {
-            name: "get_zone_weather",
-            description: "Obtiene los datos meteorológicos actuales (temperatura, viento, etc.) para una zona específica.",
-            parameters: {
-              type: "OBJECT",
-              properties: {
-                zoneId: { type: "STRING", description: "ID único de la zona (ej: 65f...)" }
-              },
-              required: ["zoneId"]
-            }
-          },
-          {
-            name: "get_zone_forecast",
-            description: "Obtiene la predicción meteorológica detallada para las próximas 12 horas en una zona.",
-            parameters: {
-              type: "OBJECT",
-              properties: {
-                zoneId: { type: "STRING", description: "ID único de la zona." }
-              },
-              required: ["zoneId"]
-            }
-          },
-          {
-            name: "get_zone_reports",
-            description: "Obtiene los reportes de seguridad, avisos y condiciones del terreno más recientes para una zona.",
-            parameters: {
-              type: "OBJECT",
-              properties: {
-                zoneId: { type: "STRING", description: "ID único de la zona." },
-                limit: { type: "NUMBER", description: "Límite de reportes a recuperar (por defecto 5)." }
-              },
-              required: ["zoneId"]
-            }
-          },
-          {
-            name: "get_zone_stats",
-            description: "Obtiene un resumen estadístico de la actividad y tipos de reportes en una zona.",
-            parameters: {
-              type: "OBJECT",
-              properties: {
-                zoneId: { type: "STRING", description: "ID único de la zona." }
-              },
-              required: ["zoneId"]
-            }
+        type: "function",
+        function: {
+          name: "list_zones",
+          description: "Obtiene la lista de todas las zonas de montaña activas en el sistema. Útil para conocer qué zonas existen y sus IDs.",
+          parameters: { type: "object", properties: {} }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_zone_weather",
+          description: "Obtiene los datos meteorológicos actuales para una zona específica. IMPORTANTE: Debes proporcionar el ID técnico (ObjectId) obtenido de list_zones.",
+          parameters: {
+            type: "object",
+            properties: {
+              zoneId: { type: "string", description: "El ID técnico (ObjectId) de la zona." }
+            },
+            required: ["zoneId"]
           }
-        ]
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_zone_forecast",
+          description: "Obtiene la predicción detallada para las próximas 12 horas. REQUIERE el ID técnico de la zona.",
+          parameters: {
+            type: "object",
+            properties: {
+              zoneId: { type: "string", description: "El ID técnico (ObjectId) de la zona." }
+            },
+            required: ["zoneId"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_zone_reports",
+          description: "Obtiene los reportes de seguridad, avisos y condiciones del terreno más recientes para una zona.",
+          parameters: {
+            type: "object",
+            properties: {
+              zoneId: { type: "string", description: "ID único de la zona." },
+              limit: { type: "number", description: "Límite de reportes a recuperar (por defecto 5)." }
+            },
+            required: ["zoneId"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_zone_stats",
+          description: "Obtiene un resumen estadístico de la actividad y tipos de reportes en una zona.",
+          parameters: {
+            type: "object",
+            properties: {
+              zoneId: { type: "string", description: "ID único de la zona." }
+            },
+            required: ["zoneId"]
+          }
+        }
       }
     ];
   }
@@ -133,41 +144,45 @@ class ChatService {
    */
   async _checkRelevance(pregunta, historial) {
     try {
-      const model = this.client.getGenerativeModel({ model: this.modelName });
-
       const prompt = `
-        Analiza si la siguiente pregunta del usuario es RELEVANTE para una aplicación de mapas meteorológicos de montaña y seguridad en el Pirineo (MeteoMap).
+        Analiza si la siguiente pregunta del usuario es RELEVANTE para una aplicación de meteorología y naturaleza (MeteoMap).
         
         Temas RELEVANTES:
-        - Clima, temperaturas, viento, nieve en montañas y zonas naturales.
-        - Seguridad en montaña, avisos de peligro, estado de senderos y rutas.
-        - Información sobre picos, valles, parques naturales o zonas de montaña en general.
-        - Uso de la propia aplicación MeteoMap (ver mapas, crear reportes, buscar zonas, etc.).
+        - Clima, temperaturas, viento, nieve en CUALQUIER lugar (ciudades, montañas, playas, etc.).
+        - Seguridad, avisos de peligro, senderismo, naturaleza y medio ambiente.
+        - Información sobre picos, valles, parques naturales o geografía en general.
+        - Uso de la propia aplicación MeteoMap.
         - Saludos y cortesía básica.
 
         Temas IRRELEVANTES:
         - Recetas de cocina, política, deportes generales (fútbol, etc.).
-        - Programación, historia universal no relacionada con la montaña.
-        - Consultas sobre ciudades urbanas que no tengan que ver con el senderismo o montañismo.
-        - Cualquier cosa que no tenga nada que ver con el ámbito de la app.
+        - Programación, historia universal no relacionada con la naturaleza.
+        - Temas que no tengan NADA que ver con el clima, la geografía o la aplicación.
 
         Responde SOLO con un JSON: {"relevante": true} o {"relevante": false}
-        
-        Pregunta: "${pregunta}"
       `;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
+      // Incluir historial reciente para dar contexto al guardián
+      const messagesForRelevance = [{ role: "system", content: prompt }];
+      
+      // Cogemos las últimas 2 interacciones (4 mensajes)
+      historial.slice(-2).forEach(h => {
+        messagesForRelevance.push({ role: "user", content: h.pregunta });
+        messagesForRelevance.push({ role: "assistant", content: h.respuesta });
+      });
+      
+      messagesForRelevance.push({ role: "user", content: pregunta });
 
-      try {
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return true; // Fallback a relevante si no hay JSON
-        const parsed = JSON.parse(jsonMatch[0]);
-        return parsed.relevante === true;
-      } catch (e) {
-        return true;
-      }
+      const response = await this.client.chat.completions.create({
+        model: this.modelName,
+        messages: messagesForRelevance,
+        response_format: { type: "json_object" },
+        temperature: 0
+      });
+
+      const text = response.choices[0].message.content.trim();
+      const parsed = JSON.parse(text);
+      return parsed.relevante === true;
     } catch (err) {
       logger.error(`Error en _checkRelevance: ${err.message}`);
       return true; // Fallback permisivo
@@ -179,92 +194,80 @@ class ChatService {
    * @private
    */
   async _runAgenticLoop(pregunta, historial, usuario_id) {
-    const model = this.client.getGenerativeModel({
-      model: this.modelName,
-      tools: this._getTools(),
-    });
-
-    // Construir historial de mensajes para Gemini
-    const contents = [];
-
-    // Agregar sistema (contexto inicial)
-    contents.push({
-      role: "user",
-      parts: [{
-        text: `Eres el asistente experto de MeteoMap. Tu misión es ayudar a usuarios con información meteorológica y de seguridad real de distintas zonas geográficas (mayoritariamente montañosas).
+    const messages = [
+      {
+        role: "system",
+        content: `Eres el asistente experto de MeteoMap. Tu misión es ayudar a usuarios con información meteorológica y de seguridad real de distintas zonas geográficas (mayoritariamente montañosas).
         INSTRUCCIONES:
         1. Utiliza las herramientas disponibles para obtener datos REALES. No inventes temperaturas ni estados de zonas.
-        2. Si el usuario pregunta por una zona que no conoces, usa 'list_zones' para ver qué tenemos disponible.
+        2. Si el usuario pregunta por una zona que no aparece en 'list_zones', usa las coordenadas (lat/lon) de las zonas disponibles para estimar cuál es la más cercana. Proporciona la información aclarando EXPLICITAMENTE que son datos de una zona cercana y menciona la distancia estimada si es posible. Si no hay nada a una distancia razonable (ej: más de 150km), informa de que no tienes datos para esa región.
         3. Sé conciso pero prioriza la seguridad. Si hay avisos de peligro, menciónalos claramente.
         4. El ID de usuario actual es ${usuario_id}.
-        5. En tu respuesta, no incluyas datos sensibles de la base de datos (como el id de los objetos almacenados).`
-      }]
-    });
-    contents.push({ role: "model", parts: [{ text: "Entendido. Estoy listo para ayudar con datos precisos de MeteoMap." }] });
+        5. En tu respuesta, no incluyas datos sensibles de la base de datos (como el id de los objetos almacenados).
+        6. NO inventes enlaces (URLs) que no aparezcan en los datos.
+        7. INTEGRIDAD GEOGRÁFICA: NUNCA inventes o cambies la ubicación de una zona. (Ejemplo: Sierra Nevada está en Granada/Andalucía, NUNCA digas que está cerca de Huesca/Aragón). Si no conoces la ubicación exacta de un lugar solicitado, admítelo.`
+      }
+    ];
 
     // Agregar historial previo
     historial.forEach(h => {
-      contents.push({ role: "user", parts: [{ text: h.pregunta }] });
-      contents.push({ role: "model", parts: [{ text: h.respuesta }] });
+      messages.push({ role: "user", content: h.pregunta });
+      messages.push({ role: "assistant", content: h.respuesta });
     });
 
     // Agregar pregunta actual
-    contents.push({ role: "user", parts: [{ text: pregunta }] });
+    messages.push({ role: "user", content: pregunta });
 
-    let chat = model.startChat({
-      history: contents.slice(0, -1), // El último mensaje se envía con sendMessage
-      generationConfig: {
-        temperature: this.temperature,
-        maxOutputTokens: this.maxTokens,
-      }
-    });
-
-    // Prompt inicial
-    let response = await chat.sendMessage(pregunta);
-    let responseText = "";
-
-    // Bucle para manejar múltiples llamadas a funciones si es necesario
-    // Limitamos a 5 iteraciones para evitar bucles infinitos
+    // Bucle para manejar llamadas a funciones
     for (let i = 0; i < 5; i++) {
-      const functionCalls = response.response.functionCalls();
+      const response = await this.client.chat.completions.create({
+        model: this.modelName,
+        messages: messages,
+        tools: this._getTools(),
+        tool_choice: "auto",
+        temperature: this.temperature,
+      });
 
-      if (!functionCalls || functionCalls.length === 0) {
-        responseText = response.response.text();
-        break;
+      const responseMessage = response.choices[0].message;
+
+      // Si no hay llamadas a funciones, hemos terminado
+      if (!responseMessage.tool_calls) {
+        return {
+          respuesta: responseMessage.content,
+          modelo: this.modelName,
+          datosUtilizados: ["tools_api"]
+        };
       }
 
-      const functionResponses = [];
+      // Procesar llamadas a funciones
+      messages.push(responseMessage);
 
-      for (const call of functionCalls) {
-        logger.debug(`Gemini solicita ejecutar herramienta: ${call.name} con args: ${JSON.stringify(call.args)}`);
+      for (const toolCall of responseMessage.tool_calls) {
+        const functionName = toolCall.function.name;
+        const functionArgs = JSON.parse(toolCall.function.arguments);
+
+        logger.debug(`Mistral solicita ejecutar herramienta: ${functionName} con args: ${toolCall.function.arguments}`);
 
         try {
-          const apiResult = await this._executeTool(call.name, call.args);
-          functionResponses.push({
-            functionResponse: {
-              name: call.name,
-              response: { content: apiResult }
-            }
+          const functionResponse = await this._executeTool(functionName, functionArgs);
+          messages.push({
+            tool_call_id: toolCall.id,
+            role: "tool",
+            name: functionName,
+            content: JSON.stringify(functionResponse),
           });
         } catch (toolErr) {
-          functionResponses.push({
-            functionResponse: {
-              name: call.name,
-              response: { error: toolErr.message }
-            }
+          messages.push({
+            tool_call_id: toolCall.id,
+            role: "tool",
+            name: functionName,
+            content: JSON.stringify({ error: toolErr.message }),
           });
         }
       }
-
-      // Enviar los resultados de las funciones de vuelta a Gemini
-      response = await chat.sendMessage(functionResponses);
     }
 
-    return {
-      respuesta: responseText || response.response.text(),
-      modelo: this.modelName,
-      datosUtilizados: ["tools_api"]
-    };
+    throw new Error("Demasiadas iteraciones en el bucle agentico");
   }
 
   /**
@@ -274,16 +277,38 @@ class ChatService {
   async _executeTool(name, args) {
     switch (name) {
       case "list_zones":
-        return await zoneService.getZones("ACTIVA");
+        const allZones = await zoneService.getZones("ACTIVA");
+        // Devolver nombre e id con coordenadas para que la IA pueda estimar cercanía
+        return allZones.zones.map(z => ({
+          id: z._id,
+          nombre: z.nombre,
+          lat: z.geolocalizacion?.coordinates[1],
+          lon: z.geolocalizacion?.coordinates[0]
+        }));
 
       case "get_zone_weather":
-        return await zoneService.getWeatherData(args.zoneId);
+        const weather = await zoneService.getWeatherData(args.zoneId);
+        // Filtrar datos meteorológicos para ser concisos
+        return {
+          temperatura: weather.current?.temperature,
+          viento: weather.current?.wind,
+          humedad: weather.current?.humidity,
+          estado: weather.current?.weather_descriptions
+        };
 
       case "get_zone_forecast":
-        return await zoneService.getWeatherForecast(args.zoneId);
+        const forecast = await zoneService.getWeatherForecast(args.zoneId);
+        return forecast; // Las predicciones suelen ser manejables
 
       case "get_zone_reports":
-        return await reportService.getReports({ zonaId: args.zoneId, limit: args.limit || 5 });
+        const reports = await reportService.getReports({ zonaId: args.zoneId, limit: args.limit || 5 });
+        // Solo lo relevante de los reportes
+        return reports.map(r => ({
+          categoria: r.categoria?.nombre,
+          comentario: r.comentario,
+          nivelRiesgo: r.nivelRiesgo,
+          fecha: r.createdAt
+        }));
 
       case "get_zone_stats":
         return await zoneService.getZoneDashboard(args.zoneId);

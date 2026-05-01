@@ -3,6 +3,7 @@ const googleAuthService = require("../services/googleAuthService");
 const tokenService = require("../services/tokenService");
 const { verifyGoogleToken } = require("../utils/oauthValidator");
 const logger = require("../config/logger");
+const chatService = require("../services/chatService");
 
 /**
  * Controlador de autenticación
@@ -47,6 +48,10 @@ class AuthController {
    */
   logout(req, res, next) {
     try {
+      const userId = req.user.userId;
+      // Limpiar historial de chat del usuario al cerrar sesión
+      chatService.limpiarHistorial(userId);
+      
       const result = authService.logout();
       res.json(result);
     } catch (err) {

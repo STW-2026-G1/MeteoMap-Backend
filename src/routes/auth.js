@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const { validateRequest, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } = require("../utils/validation");
 const authController = require("../controllers/authController");
+const isAuth = require("../middleware/auth");
 
 const router = Router();
 
@@ -86,7 +87,7 @@ router.post(
  *       200:
  *         description: Sesión cerrada exitosamente
  */
-router.post("/logout", authController.logout);
+router.post("/logout", isAuth, authController.logout);
 
 /**
  * @swagger

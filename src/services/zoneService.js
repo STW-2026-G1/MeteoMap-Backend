@@ -89,7 +89,7 @@ class ZoneService {
           datosMeteo = datosNuevos;
         } catch (weatherErr) {
           logger.error(`Error al obtener datos de Open-Meteo para zona ${zoneId}: ${weatherErr.message}`);
-          
+
           // Si hay datos en caché antiguo, usarlos como fallback
           if (zone.cache_meteo.current && zone.cache_meteo.current.datos_crudos) {
             logger.warn(`Usando caché antiguo para zona ${zoneId} debido a error de Open-Meteo`);
@@ -162,7 +162,7 @@ class ZoneService {
           datosMeteo = datosNuevos;
         } catch (weatherErr) {
           logger.error(`Error al obtener predicción de Open-Meteo para zona ${zoneId}: ${weatherErr.message}`);
-          
+
           // Si hay datos en caché antiguo, usarlos como fallback
           if (zone.cache_meteo.forecast && zone.cache_meteo.forecast.datos_crudos) {
             logger.warn(`Usando caché antiguo para zona ${zoneId} debido a error de Open-Meteo`);
@@ -221,19 +221,19 @@ class ZoneService {
 
       // Estadísticas de reportes para esta zona
       const reportStats = await Report.aggregate([
-          { $match: { zona_id: zone._id } },
-          {
-            $group: {
-              _id: "$tipo",
-              count: { $sum: 1 },
-              avg_confirmaciones: { $avg: { $size: { $ifNull: ["$validaciones.usuarios_confirmaron", []] } } },
-              avg_desmentidos: { $avg: { $size: { $ifNull: ["$validaciones.usuarios_desmintieron", []] } } },
-            },
+        { $match: { zona_id: zone._id } },
+        {
+          $group: {
+            _id: "$tipo",
+            count: { $sum: 1 },
+            avg_confirmaciones: { $avg: { $size: { $ifNull: ["$validaciones.usuarios_confirmaron", []] } } },
+            avg_desmentidos: { $avg: { $size: { $ifNull: ["$validaciones.usuarios_desmintieron", []] } } },
           },
-          { $sort: { count: -1 } },
-        ]);
+        },
+        { $sort: { count: -1 } },
+      ]);
 
-        logger.debug(`ZoneService.getZoneDashboard para zona: ${zoneId}`);
+      logger.debug(`ZoneService.getZoneDashboard para zona: ${zoneId}`);
 
       return {
         zona: zone.nombre,
@@ -398,7 +398,7 @@ class ZoneService {
         nombre: { $regex: query, $options: "i" },
         estado
       })
-      .limit(limit);
+        .limit(limit);
 
       logger.debug(`ZoneService.searchZones: Búsqueda por "${query}"`);
 
