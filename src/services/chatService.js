@@ -18,58 +18,274 @@ class ChatService {
     // Almacenamiento de historial por usuario (in-memory, en producción usar Redis/DB)
     this.conversationHistory = new Map();
     this.MAX_HISTORY = 10; // Mantener últimos 10 mensajes por usuario
+
+    // Configuración del modelo
+    this.modelName = "gemini-3-flash-preview"; 
+    this.temperature = 0.7;
+    this.maxTokens = 1024;
   }
 
-  Model = "gemini-3-flash-preview";
-  TEMPERATURE = 0.7;
-  MAX_TOKENS = 1024;
+  // Definición de herramientas (Function Calling)
+  _getTools() {
+    return [
+      {
+        functionDeclarations: [
+          {
+            name: "list_zones",
+            description: "Obtiene la lista de todas las zonas de montaña activas en el sistema. Útil para conocer qué zonas existen y sus IDs.",
+            parameters: { type: "OBJECT", properties: {} }
+          },
+          {
+            name: "get_zone_weather",
+            description: "Obtiene los datos meteorológicos actuales (temperatura, viento, etc.) para una zona específica.",
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                zoneId: { type: "STRING", description: "ID único de la zona (ej: 65f...)" }
+              },
+              required: ["zoneId"]
+            }
+          },
+          {
+            name: "get_zone_forecast",
+            description: "Obtiene la predicción meteorológica detallada para las próximas 12 horas en una zona.",
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                zoneId: { type: "STRING", description: "ID único de la zona." }
+              },
+              required: ["zoneId"]
+            }
+          },
+          {
+            name: "get_zone_reports",
+            description: "Obtiene los reportes de seguridad, avisos y condiciones del terreno más recientes para una zona.",
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                zoneId: { type: "STRING", description: "ID único de la zona." },
+                limit: { type: "NUMBER", description: "Límite de reportes a recuperar (por defecto 5)." }
+              },
+              required: ["zoneId"]
+            }
+          },
+          {
+            name: "get_zone_stats",
+            description: "Obtiene un resumen estadístico de la actividad y tipos de reportes en una zona.",
+            parameters: {
+              type: "OBJECT",
+              properties: {
+                zoneId: { type: "STRING", description: "ID único de la zona." }
+              },
+              required: ["zoneId"]
+            }
+          }
+        ]
+      }
+    ];
+  }
 
 
 
   /**
-   * Chatbot inteligente que accede a todos los endpoints
-   * Analiza la pregunta, obtiene datos contextuales y genera respuestas basadas en BD
+   * Punto de entrada principal para el chat
    */
-  async getResponse(pregunta, usuario_id, contextoAdicional = null) {
+  async getResponse(pregunta, usuario_id) {
     try {
       logger.debug(`ChatService.getResponse - Usuario: ${usuario_id}, Pregunta: ${pregunta}`);
 
-      // 1. Obtener historial de conversación del usuario
+      if (!this.client) {
+        return { respuesta: "El servicio de IA no está disponible en este momento." };
+      }
+
+      // 1. Obtener historial
       const historial = this._obtenerHistorial(usuario_id);
-      
-      // 2. Analizar intenciones y entidades de la pregunta
-      const analisis = await this._analizarPreguntaInteligente(pregunta, historial);
-      logger.debug(`Análisis: ${JSON.stringify(analisis)}`);
 
-      // 3. Obtener datos enriquecidos de la BD
-      const datosContexto = await this._obtenerDatosEnriquecidos(
-        analisis,
-        usuario_id,
-        historial
-      );
-      logger.debug(`Datos obtenidos: ${Object.keys(datosContexto).join(", ")}`);
+      // 2. Verificar relevancia (Guardrail)
+      const esRelevante = await this._checkRelevance(pregunta, historial);
+      if (!esRelevante) {
+        return {
+          respuesta: "Lo siento, solo puedo responder preguntas relacionadas con MeteoMap, el clima de montaña, seguridad en el Pirineo o el funcionamiento de esta aplicación. ¿En qué puedo ayudarte respecto a estos temas?",
+          analisis: { fueraDeAmbito: true }
+        };
+      }
 
-      // 4. Generar respuesta con prompts mejorados
-      const respuestaFinal = await this._generarRespuestaAvanzada(
-        pregunta,
-        analisis,
-        datosContexto,
-        historial,
-        usuario_id
-      );
+      // 3. Ejecutar bucle agentico con Tools
+      const resultado = await this._runAgenticLoop(pregunta, historial, usuario_id);
 
-      // 5. Guardar en historial
+      // 4. Guardar en historial
       this._guardarEnHistorial(usuario_id, {
         pregunta,
-        respuesta: respuestaFinal.respuesta,
-        timestamp: new Date(),
-        analisis: analisis.tipo,
+        respuesta: resultado.respuesta,
+        timestamp: new Date()
       });
 
-      return respuestaFinal;
+      return resultado;
     } catch (err) {
       logger.error(`Error en ChatService.getResponse: ${err.message}`);
       throw err;
+    }
+  }
+
+  /**
+   * Verifica si la pregunta es relevante para el sistema (MeteoMap)
+   * @private
+   */
+  async _checkRelevance(pregunta, historial) {
+    try {
+      const model = this.client.getGenerativeModel({ model: this.modelName });
+      
+      const prompt = `
+        Analiza si la siguiente pregunta del usuario es RELEVANTE para una aplicación de mapas meteorológicos de montaña y seguridad en el Pirineo (MeteoMap).
+        
+        Temas RELEVANTES:
+        - Clima, temperaturas, viento, nieve en montañas y zonas naturales.
+        - Seguridad en montaña, avisos de peligro, estado de senderos y rutas.
+        - Información sobre picos, valles, parques naturales o zonas de montaña en general.
+        - Uso de la propia aplicación MeteoMap (ver mapas, crear reportes, buscar zonas, etc.).
+        - Saludos y cortesía básica.
+
+        Temas IRRELEVANTES:
+        - Recetas de cocina, política, deportes generales (fútbol, etc.).
+        - Programación, historia universal no relacionada con la montaña.
+        - Consultas sobre ciudades urbanas que no tengan que ver con el senderismo o montañismo.
+        - Cualquier cosa que no tenga nada que ver con el ámbito de la app.
+
+        Responde SOLO con un JSON: {"relevante": true} o {"relevante": false}
+        
+        Pregunta: "${pregunta}"
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text().trim();
+      
+      try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return true; // Fallback a relevante si no hay JSON
+        const parsed = JSON.parse(jsonMatch[0]);
+        return parsed.relevante === true;
+      } catch (e) {
+        return true; 
+      }
+    } catch (err) {
+      logger.error(`Error en _checkRelevance: ${err.message}`);
+      return true; // Fallback permisivo
+    }
+  }
+
+  /**
+   * Bucle agentico que utiliza function calling para obtener datos y generar respuesta
+   * @private
+   */
+  async _runAgenticLoop(pregunta, historial, usuario_id) {
+    const model = this.client.getGenerativeModel({
+      model: this.modelName,
+      tools: this._getTools(),
+    });
+
+    // Construir historial de mensajes para Gemini
+    const contents = [];
+    
+    // Agregar sistema (contexto inicial)
+    contents.push({
+      role: "user",
+      parts: [{ text: `Eres el asistente experto de MeteoMap. Tu misión es ayudar a montañeros con información meteorológica y de seguridad real del Pirineo.
+        INSTRUCCIONES:
+        1. Utiliza las herramientas disponibles para obtener datos REALES. No inventes temperaturas ni estados de zonas.
+        2. Si el usuario pregunta por una zona que no conoces, usa 'list_zones' para ver qué tenemos disponible.
+        3. Sé conciso pero prioriza la seguridad. Si hay avisos de peligro, menciónalos claramente.
+        4. El ID de usuario actual es ${usuario_id}.` }]
+    });
+    contents.push({ role: "model", parts: [{ text: "Entendido. Estoy listo para ayudar con datos precisos de MeteoMap." }] });
+
+    // Agregar historial previo
+    historial.forEach(h => {
+      contents.push({ role: "user", parts: [{ text: h.pregunta }] });
+      contents.push({ role: "model", parts: [{ text: h.respuesta }] });
+    });
+
+    // Agregar pregunta actual
+    contents.push({ role: "user", parts: [{ text: pregunta }] });
+
+    let chat = model.startChat({
+      history: contents.slice(0, -1), // El último mensaje se envía con sendMessage
+      generationConfig: {
+        temperature: this.temperature,
+        maxOutputTokens: this.maxTokens,
+      }
+    });
+
+    let response = await chat.sendMessage(pregunta);
+    let responseText = "";
+
+    // Bucle para manejar múltiples llamadas a funciones si es necesario
+    // Limitamos a 5 iteraciones para evitar bucles infinitos
+    for (let i = 0; i < 5; i++) {
+      const functionCalls = response.response.functionCalls();
+      
+      if (!functionCalls || functionCalls.length === 0) {
+        responseText = response.response.text();
+        break;
+      }
+
+      const functionResponses = [];
+
+      for (const call of functionCalls) {
+        logger.debug(`Gemini solicita ejecutar herramienta: ${call.name} con args: ${JSON.stringify(call.args)}`);
+        
+        try {
+          const apiResult = await this._executeTool(call.name, call.args);
+          functionResponses.push({
+            functionResponse: {
+              name: call.name,
+              response: { content: apiResult }
+            }
+          });
+        } catch (toolErr) {
+          functionResponses.push({
+            functionResponse: {
+              name: call.name,
+              response: { error: toolErr.message }
+            }
+          });
+        }
+      }
+
+      // Enviar los resultados de las funciones de vuelta a Gemini
+      response = await chat.sendMessage(functionResponses);
+    }
+
+    return {
+      respuesta: responseText || response.response.text(),
+      modelo: this.modelName,
+      datosUtilizados: ["tools_api"]
+    };
+  }
+
+  /**
+   * Ejecutor de herramientas locales
+   * @private
+   */
+  async _executeTool(name, args) {
+    switch (name) {
+      case "list_zones":
+        return await zoneService.getZones("ACTIVA");
+      
+      case "get_zone_weather":
+        return await zoneService.getWeatherData(args.zoneId);
+      
+      case "get_zone_forecast":
+        return await zoneService.getWeatherForecast(args.zoneId);
+      
+      case "get_zone_reports":
+        return await reportService.getReports({ zonaId: args.zoneId, limit: args.limit || 5 });
+      
+      case "get_zone_stats":
+        return await zoneService.getZoneDashboard(args.zoneId);
+      
+      default:
+        throw new Error(`Herramienta '${name}' no implementada.`);
     }
   }
 
@@ -104,423 +320,6 @@ class ChatService {
   limpiarHistorial(usuario_id) {
     this.conversationHistory.delete(usuario_id);
     logger.info(`Historial de conversación limpiado para usuario: ${usuario_id}`);
-  }
-
-  /**
-   * Análisis inteligente de intenciones usando Gemini + análisis de historial
-   * @private
-   */
-  async _analizarPreguntaInteligente(pregunta, historial) {
-    try {
-      if (!this.client) {
-        return this._analizarPreguntaPorPalabrasClaves(pregunta);
-      }
-
-      // Construir contexto de historial para mejores resultados
-      let contextHistorial = "";
-      if (historial.length > 0) {
-        const ultimasPreguntas = historial.slice(-3).map(h => h.pregunta).join(" | ");
-        contextHistorial = `Preguntas anteriores del usuario: ${ultimasPreguntas}\n`;
-      }
-
-      const model = this.client.getGenerativeModel({ model: this.Model });
-
-      const prompt = `
-        Eres un analizador de intenciones para un sistema de información sobre montañismo.
-        Analiza esta pregunta y extrae la información exacta.
-        Responde SOLO con un JSON válido (sin markdown).
-        
-        ${contextHistorial}
-        Pregunta actual: "${pregunta}"
-        
-        Responde exactamente con este formato:
-        {
-          "intencion": "informacion|recomendacion|comparacion|analisis|ayuda|general",
-          "entidadPrincipal": "zona|clima|reporte|usuario|actividad",
-          "zonasRelevantes": ["nombre_zona_1", "nombre_zona_2"] o [],
-          "tiposReporte": ["tipo1", "tipo2"] o [],
-          "palabrasClave": ["clave1", "clave2"],
-          "requiereAnalisis": true|false,
-          "urgencia": "baja|normal|alta",
-          "dominio": "meteorologia|seguridad|experiencia|general"
-        }
-      `;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
-      
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        logger.warn("No se pudo extraer JSON del análisis de intenciones");
-        return this._analizarPreguntaPorPalabrasClaves(pregunta);
-      }
-
-      return JSON.parse(jsonMatch[0]);
-    } catch (err) {
-      logger.error(`Error en _analizarPreguntaInteligente: ${err.message}`);
-      return this._analizarPreguntaPorPalabrasClaves(pregunta);
-    }
-  }
-
-  /**
-   * Análisis robusto por palabras clave (fallback)
-   * @private
-   */
-  async _analizarPreguntaPorPalabrasClaves(pregunta) {
-    const lower = pregunta.toLowerCase();
-
-    // Detectar intención
-    let intencion = "general";
-    if (lower.includes("recomiend") || lower.includes("sugier")) intencion = "recomendacion";
-    else if (lower.includes("compar")) intencion = "comparacion";
-    else if (lower.includes("analiz") || lower.includes("estadístic")) intencion = "analisis";
-    else if (lower.includes("¿") || lower.includes("?")) intencion = "informacion";
-
-    // Detectar dominio
-    let dominio = "general";
-    if (lower.includes("clima") || lower.includes("tiempo") || lower.includes("temperatura")) dominio = "meteorologia";
-    if (lower.includes("peligr") || lower.includes("riesgo") || lower.includes("segur")) dominio = "seguridad";
-    if (lower.includes("experiencia") || lower.includes("opinión") || lower.includes("reseña")) dominio = "experiencia";
-
-    // Detectar entidad principal
-    let entidadPrincipal = "general";
-    if (lower.includes("zona") || lower.includes("montaña") || lower.includes("pico")) entidadPrincipal = "zona";
-    if (lower.includes("clima") || lower.includes("tiempo") || lower.includes("meteo")) entidadPrincipal = "clima";
-    if (lower.includes("reporte") || lower.includes("aviso") || lower.includes("alerta")) entidadPrincipal = "reporte";
-
-    return {
-      intencion,
-      entidadPrincipal,
-      zonasRelevantes: [],
-      tiposReporte: [],
-      palabrasClave: this._extraerPalabrasClave(pregunta),
-      requiereAnalisis: intencion === "analisis" || intencion === "comparacion",
-      urgencia: lower.includes("urgente") || lower.includes("ahora") ? "alta" : "normal",
-      dominio,
-    };
-  }
-
-  /**
-   * Extraer palabras clave de la pregunta
-   * @private
-   */
-  _extraerPalabrasClave(pregunta) {
-    const palabrasComunes = ["es", "el", "la", "en", "que", "de", "a", "y", "o", "pero", "como", "para", "por", "con"];
-    const palabras = pregunta.toLowerCase()
-      .split(/[\s,.:;!?]+/)
-      .filter(p => p.length > 3 && !palabrasComunes.includes(p));
-    
-    return [...new Set(palabras)].slice(0, 5);
-  }
-
-  /**
-   * Obtener datos enriquecidos de la BD con análisis y correlaciones
-   * @private
-   */
-  async _obtenerDatosEnriquecidos(analisis, usuario_id, historial) {
-    const datos = {
-      timestamp: new Date(),
-      fuentes: [],
-    };
-
-    try {
-      // Obtener zonas activas
-      if (analisis.entidadPrincipal === "zona" || analisis.intencion === "comparacion") {
-        try {
-          const resultado = await zoneService.getZones("ACTIVA");
-          
-          if (resultado && resultado.zones.length > 0) {
-            datos.zonas = resultado.zones.map((z) => ({
-              _id: z._id,
-              nombre: z.nombre,
-              descripcion: z.descripcion,
-              dificultad: z.dificultad,
-              altitud: z.altitud,
-              coordenadas: z.geolocalizacion?.coordinates,
-              estado: z.estado,
-            }));
-            datos.fuentes.push("zonas");
-          }
-        } catch (err) {
-          logger.error(`Error obteniendo zonas: ${err.message}`);
-        }
-      }
-
-      // Obtener clima y pronóstico si es relevante
-      if (analisis.entidadPrincipal === "clima" || analisis.dominio === "meteorologia") {
-        try {
-          const zonas = datos.zonas || (await zoneService.getZones("ACTIVA")).zones;
-          
-          // TODO Obtener clima de zonas nombradas
-          const climatData = [];
-         
-          
-          if (climatData.length > 0) {
-            datos.clima = climatData;
-            datos.fuentes.push("meteorologia");
-          }
-        } catch (err) {
-          logger.error(`Error obteniendo datos climáticos: ${err.message}`);
-        }
-      }
-
-      // Obtener reportes recientes con análisis
-      if (analisis.entidadPrincipal === "reporte" || analisis.dominio === "seguridad") {
-        try {
-        
-          
-          const resultado = await reportService.getReports(filtros);
-          datos.reportesRecientes = resultado.reports.map((r) => ({
-            tipo: r.tipo,
-            titulo: r.categoria?.nombre || "Reporte",
-            descripcion: r.contenido?.descripcion || "",
-            zona: r.zona_id?.nombre,
-            fecha: r.createdAt,
-            validaciones: {
-              confirmaciones: r.validaciones?.usuarios_confirmaron?.length || 0,
-              desmentidos: r.validaciones?.usuarios_desmintieron?.length || 0,
-            },
-          }));
-        } catch (err) {
-          logger.error(`Error obteniendo reportes: ${err.message}`);
-        }
-      }
-
-      // Obtener información del usuario si existe
-      if (usuario_id) {
-        try {
-          const user = await User.findById(usuario_id).lean();
-          if (user) {
-            datos.usuario = {
-              nombre: user.nombre,
-              email: user.email,
-              zonasFavoritas: user.zonas_favoritas || [],
-            };
-            datos.fuentes.push("usuario");
-          }
-        } catch (err) {
-          logger.warn(`No se pudo obtener información del usuario: ${err.message}`);
-        }
-      }
-
-      logger.debug(`Datos enriquecidos obtenidos de: ${datos.fuentes.join(", ")}`);
-      return datos;
-    } catch (err) {
-      logger.error(`Error en _obtenerDatosEnriquecidos: ${err.message}`);
-      return datos;
-    }
-  }
-
-  /**
-   * Analizar reportes y extraer insights
-   * @private
-   */
-  async _analizarReportes(reportes) {
-    const analisis = {
-      total: reportes.length,
-      porTipo: {},
-      recientes: [],
-      criticos: [],
-    };
-
-    for (const reporte of reportes) {
-      // Contar por tipo
-      const tipo = reporte.tipo || "general";
-      analisis.porTipo[tipo] = (analisis.porTipo[tipo] || 0) + 1;
-
-      // Últimos 5 reportes
-      if (analisis.recientes.length < 5) {
-        analisis.recientes.push({
-          tipo: reporte.tipo,
-          zona: reporte.zona_id?.nombre || "Desconocida",
-          titulo: reporte.categoria?.nombre || "Reporte",
-          descripcion: reporte.contenido?.descripcion || "",
-          fecha: reporte.createdAt,
-          validaciones: reporte.validaciones || {},
-        });
-      }
-
-      // Reportes críticos/validados
-      const validaciones = reporte.validaciones || {};
-      const ratio = validaciones.confirmaciones / Math.max(validaciones.confirmaciones + validaciones.desmentidos, 1);
-      if (ratio > 0.7 && validaciones.confirmaciones >= 2) {
-        analisis.criticos.push({
-          tipo: reporte.tipo,
-          zona: reporte.zona_id?.nombre || "Desconocida",
-          descripcion: reporte.contenido?.descripcion || "",
-          confirmaciones: validaciones.confirmaciones,
-        });
-      }
-    }
-
-    return analisis;
-  }
-
-  /**
-   * Generar respuesta avanzada usando Gemini con prompts contextuales
-   * @private
-   */
-  async _generarRespuestaAvanzada(pregunta, analisis, datosContexto, historial, usuario_id) {
-    try {
-      if (!this.client) {
-        return this._generarRespuestaFallback(pregunta, datosContexto, analisis);
-      }
-
-      const model = this.client.getGenerativeModel({
-        model: this.Model,
-        generationConfig: {
-          temperature: this.TEMPERATURE,
-          maxOutputTokens: this.MAX_TOKENS,
-        },
-      });
-
-      // Construir contexto enriquecido
-      const contextoDatos = this._construirContextoDatos(datosContexto);
-      const contextoHistorial = this._construirContextoHistorial(historial);
-
-      const prompt = `
-Eres un asistente experto en montañismo, seguridad en altura y meteorología.
-Tienes acceso a una base de datos con información real de zonas, reportes de seguridad y datos meteorológicos.
-
-**INSTRUCCIONES IMPORTANTES:**
-1. Basa SIEMPRE tu respuesta en los datos reales proporcionados, no en supuestos
-2. Si no tienes datos sobre algo, admítelo claramente
-3. Sé específico: menciona nombres reales de zonas, coordenadas, temperaturas exactas
-4. Destaca información crítica: alertas de seguridad, reportes validados, cambios de clima
-5. Proporciona recomendaciones prácticas y fundamentadas
-6. Sé conciso pero completo (máximo 3-4 párrafos)
-
-**CONTEXTO DEL USUARIO:**
-- ID: ${usuario_id}
-${contextoHistorial ? `- Historial: ${contextoHistorial}` : ""}
-
-**DATOS DISPONIBLES EN LA BASE DE DATOS:**
-${contextoDatos}
-
-**INTENCIÓN DEL USUARIO:**
-- Tipo: ${analisis.intencion}
-- Dominio: ${analisis.dominio}
-- Urgencia: ${analisis.urgencia}
-- Palabras clave: ${analisis.palabrasClave.join(", ")}
-
-**PREGUNTA:**
-${pregunta}
-
-**RESPUESTA:**
-Proporciona una respuesta natural, útil y basada ÚNICAMENTE en los datos disponibles.
-Si necesitas aclaraciones o hay información faltante, solicítala.
-`;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const respuesta = response.text();
-
-      // Extraer sugerencias de seguimiento
-      const sugerencias = this._generarSugerencias(analisis, datosContexto);
-
-      logger.debug("Respuesta generada exitosamente por Gemini");
-
-      return {
-        respuesta,
-        modelo: this.Model,
-        analisis: {
-          intencion: analisis.intencion,
-          dominio: analisis.dominio,
-          urgencia: analisis.urgencia,
-        },
-        datosUtilizados: datosContexto.fuentes || [],
-        sugerencias,
-      };
-    } catch (err) {
-      logger.error(`Error generando respuesta avanzada: ${err.message}`);
-      return `Error generando respuesta avanzada: ${err.message}`
-    }
-  }
-
-  /**
-   * Construir contexto de datos para el prompt
-   * @private
-   */
-  _construirContextoDatos(datosContexto) {
-    let contexto = "";
-
-    if (datosContexto.zonas && datosContexto.zonas.length > 0) {
-      contexto += "\n**ZONAS DISPONIBLES:**\n";
-      datosContexto.zonas.forEach((z) => {
-        contexto += `- ${z.nombre} (Dificultad: ${z.dificultad}, Altitud: ${z.altitud}m): ${z.descripcion}\n`;
-      });
-    }
-
-    if (datosContexto.clima && datosContexto.clima.length > 0) {
-      contexto += "\n**DATOS METEOROLÓGICOS ACTUALES:**\n";
-      datosContexto.clima.forEach((c) => {
-        contexto += `- ${c.zona}: ${JSON.stringify(c.clima).substring(0, 100)}...\n`;
-      });
-    }
-
-    if (datosContexto.reportes) {
-      contexto += "\n**REPORTES DE SEGURIDAD:**\n";
-      if (datosContexto.reportes.criticos.length > 0) {
-        contexto += "CRÍTICOS:\n";
-        datosContexto.reportes.criticos.forEach((r) => {
-          contexto += `- ${r.zona}: ${r.descripcion} (${r.confirmaciones} confirmaciones)\n`;
-        });
-      }
-      if (datosContexto.reportes.recientes.length > 0) {
-        contexto += "RECIENTES:\n";
-        datosContexto.reportes.recientes.forEach((r) => {
-          contexto += `- ${r.zona}: ${r.titulo} (${r.fecha})\n`;
-        });
-      }
-    }
-
-    if (datosContexto.usuario) {
-      contexto += `\n**USUARIO:** ${datosContexto.usuario.nombre}\n`;
-      if (datosContexto.usuario.zonasFavoritas.length > 0) {
-        contexto += `Zonas favoritas: ${datosContexto.usuario.zonasFavoritas.join(", ")}\n`;
-      }
-    }
-
-    return contexto || "No hay datos disponibles en la base de datos para esta consulta.";
-  }
-
-  /**
-   * Construir contexto del historial de conversación
-   * @private
-   */
-  _construirContextoHistorial(historial) {
-    if (!historial || historial.length === 0) return "";
-    
-    const ultimosMensajes = historial.slice(-3);
-    return ultimosMensajes
-      .map((m) => `${m.pregunta} → ${m.analisis}`)
-      .join(" | ");
-  }
-
-  /**
-   * Generar sugerencias de preguntas de seguimiento
-   * @private
-   */
-  _generarSugerencias(analisis, datosContexto) {
-    const sugerencias = [];
-
-    if (analisis.dominio === "meteorologia" && datosContexto.clima) {
-      sugerencias.push("¿Cuál es el pronóstico de lluvia para esta zona?");
-      sugerencias.push("¿A qué hora será el mejor momento para visitar?");
-    }
-
-    if (analisis.dominio === "seguridad" && datosContexto.reportes?.criticos.length > 0) {
-      sugerencias.push("¿Cuáles son las medidas de prevención recomendadas?");
-      sugerencias.push("¿Hay alternativas más seguras en otras zonas?");
-    }
-
-    if (datosContexto.zonas && datosContexto.zonas.length > 1) {
-      sugerencias.push("¿Cómo se comparan estas zonas en dificultad?");
-      sugerencias.push("¿Cuál es la mejor época para visitar?");
-    }
-
-    return sugerencias.slice(0, 2);
   }
 
  
