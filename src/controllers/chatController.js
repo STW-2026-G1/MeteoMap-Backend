@@ -8,14 +8,16 @@ class ChatController {
    */
   async getResponse(req, res, next) {
     try {
-      const { usuario_id, pregunta, contexto } = req.body;
+      const { pregunta, contexto } = req.body;
+      const { userId, rol } = req.user;
 
-      logger.info(`Chat request de usuario ${usuario_id}: ${pregunta}`);
+      logger.info(`Chat request de usuario ${userId} (${rol}): ${pregunta}`);
 
-      // Llamar al servicio que tiene acceso a todos los endpoints
+      // Llamar al servicio con el ID y ROL del usuario autenticado
       const resultado = await chatService.getResponse(
         pregunta,
-        usuario_id,
+        userId,
+        rol,
         contexto
       );
 
@@ -24,7 +26,7 @@ class ChatController {
         status: "success",
         data: {
           id: Math.random().toString(36).substr(2, 9),
-          usuario_id,
+          usuario_id: userId,
           pregunta,
           respuesta: resultado.respuesta,
           datos_utilizados: resultado.datosUtilizados,

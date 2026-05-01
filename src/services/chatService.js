@@ -4,6 +4,7 @@ const zoneService = require("./zoneService");
 const reportService = require("./reportService");
 const aemetAlertsService = require("./aemetAlertsService");
 const commentService = require("./commentService");
+const User = require("../models/User");
 
 class ChatService {
   constructor() {
@@ -126,9 +127,37 @@ class ChatService {
   /**
    * Punto de entrada principal para el chat
    */
-  async getResponse(pregunta, usuario_id) {
+  async getResponse(pregunta, usuario_id, rol, contexto) {
     try {
-      logger.debug(`ChatService.getResponse - Usuario: ${usuario_id}, Pregunta: ${pregunta}`);
+      logger.debug(`ChatService.getResponse - Usuario: ${usuario_id}, Rol: ${rol}, Pregunta: ${pregunta}`);
+
+      // 1. Verificar límites de IA si no es ADMIN
+      if (rol !== "ADMIN") {
+        const user = await User.findById(usuario_id);
+        if (!user) throw new Error("Usuario no encontrado");
+
+        const ahora = new Date();
+        const ultimoReset = user.limites_ia?.ultimo_reset || ahora;
+        
+        // ¿Ha pasado un día desde el último reset?
+        const esMismoDia = ahora.toDateString() === ultimoReset.toDateString();
+
+        if (!esMismoDia) {
+          // Resetear contador para el nuevo día
+          user.limites_ia.peticiones_hoy = 0;
+          user.limites_ia.ultimo_reset = ahora;
+        }
+
+        if (user.limites_ia.peticiones_hoy >= 10) {
+          const error = new Error("Has alcanzado el límite de 10 peticiones diarias al asistente de IA.");
+          error.status = 429; // Too Many Requests
+          throw error;
+        }
+
+        // Incrementar contador
+        user.limites_ia.peticiones_hoy += 1;
+        await user.save();
+      }
 
       if (!this.client) {
         return { respuesta: "El servicio de IA no está disponible en este momento." };

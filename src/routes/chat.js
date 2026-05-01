@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const { body, validationResult } = require("express-validator");
 const chatController = require("../controllers/chatController");
+const isAuth = require("../middleware/auth");
 const logger = require("../config/logger");
 
 const router = Router();
@@ -83,8 +84,8 @@ function validate(req, res, next) {
  */
 router.post(
   "/ask",
+  isAuth,
   [
-    body("usuario_id").isMongoId().withMessage("usuario_id debe ser un MongoDB ObjectId válido"),
     body("pregunta")
       .isString()
       .trim()
