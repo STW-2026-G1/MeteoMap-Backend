@@ -196,7 +196,8 @@ class ChatService {
         1. Utiliza las herramientas disponibles para obtener datos REALES. No inventes temperaturas ni estados de zonas.
         2. Si el usuario pregunta por una zona que no conoces, usa 'list_zones' para ver qué tenemos disponible.
         3. Sé conciso pero prioriza la seguridad. Si hay avisos de peligro, menciónalos claramente.
-        4. El ID de usuario actual es ${usuario_id}.`
+        4. El ID de usuario actual es ${usuario_id}.
+        5. En tu respuesta, no incluyas datos sensibles de la base de datos (como el id de los objetos almacenados).`
       }]
     });
     contents.push({ role: "model", parts: [{ text: "Entendido. Estoy listo para ayudar con datos precisos de MeteoMap." }] });
@@ -218,6 +219,7 @@ class ChatService {
       }
     });
 
+    // Prompt inicial
     let response = await chat.sendMessage(pregunta);
     let responseText = "";
 
