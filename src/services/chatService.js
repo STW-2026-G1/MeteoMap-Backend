@@ -2,6 +2,7 @@ const OpenAI = require("openai");
 const logger = require("../config/logger");
 const zoneService = require("./zoneService");
 const reportService = require("./reportService");
+const aemetAlertsService = require("./aemetAlertsService");
 
 class ChatService {
   constructor() {
@@ -91,6 +92,14 @@ class ChatService {
             },
             required: ["zoneId"]
           }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_active_alerts",
+          description: "Obtiene todas las alertas meteorológicas activas de AEMET (avisos de nieve, viento, lluvia, etc.). Útil para informar sobre avisos de seguridad actuales.",
+          parameters: { type: "object", properties: {} }
         }
       }
     ];
@@ -200,12 +209,12 @@ class ChatService {
         content: `Eres el asistente experto de MeteoMap. Tu misión es ayudar a usuarios con información meteorológica y de seguridad real de distintas zonas geográficas (mayoritariamente montañosas).
         INSTRUCCIONES:
         1. Utiliza las herramientas disponibles para obtener datos REALES. No inventes temperaturas ni estados de zonas.
-        2. Si el usuario pregunta por una zona que no aparece en 'list_zones', usa las coordenadas (lat/lon) de las zonas disponibles para estimar cuál es la más cercana. Proporciona la información aclarando EXPLICITAMENTE que son datos de una zona cercana y menciona la distancia estimada si es posible. Si no hay nada a una distancia razonable (ej: más de 150km), informa de que no tienes datos para esa región.
+        2. Si el usuario pregunta por una zona o ubicación que no aparece en 'list_zones', usa las coordenadas (lat/lon) de las zonas disponibles para estimar cuál es la más cercana. Si hay alguna a una distancia razonable (ej: menos de 150km), proporciona su información aclarando EXPLICITAMENTE que son datos de una zona cercana. SI NO HAY NADA cercano en el sistema para esa región o ubicación, informa de que no tienes datos disponibles en MeteoMap para ese lugar. NUNCA inventes pronósticos, temperaturas o estados del tiempo basados en tu conocimiento interno; la información meteorológica debe provenir exclusivamente de las herramientas.
         3. Sé conciso pero prioriza la seguridad. Si hay avisos de peligro, menciónalos claramente.
         4. El ID de usuario actual es ${usuario_id}.
         5. En tu respuesta, no incluyas datos sensibles de la base de datos (como el id de los objetos almacenados).
         6. NO inventes enlaces (URLs) que no aparezcan en los datos.
-        7. INTEGRIDAD GEOGRÁFICA: NUNCA inventes o cambies la ubicación de una zona. (Ejemplo: Sierra Nevada está en Granada/Andalucía, NUNCA digas que está cerca de Huesca/Aragón). Si no conoces la ubicación exacta de un lugar solicitado, admítelo.`
+        7. INTEGRIDAD GEOGRÁFICA: NUNCA inventes o cambies la ubicación de una zona. Si no conoces la ubicación EXACTA de un lugar solicitado (ej: "la EINA"), NO intentes adivinar su provincia o región. En esos casos, admite que no conoces la ubicación de ese lugar y pregunta al usuario dónde se encuentra.`
       }
     ];
 
@@ -312,6 +321,18 @@ class ChatService {
 
       case "get_zone_stats":
         return await zoneService.getZoneDashboard(args.zoneId);
+
+      case "get_active_alerts":
+        const alerts = await aemetAlertsService.fetchAlerts();
+        // Devolver solo lo esencial para no saturar de tokens
+        return alerts.map(a => ({
+          fenomeno: a.fenomeno,
+          nivel: a.nivel,
+          descripcion: a.descripcion,
+          comienzo: a.comienzo,
+          fin: a.fin,
+          provincias: a.provincias
+        }));
 
       default:
         throw new Error(`Herramienta '${name}' no implementada.`);
