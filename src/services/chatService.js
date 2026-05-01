@@ -14,13 +14,13 @@ class ChatService {
       logger.warn("GEMINI_API_KEY no configurada - funcionará en modo degradado");
     }
     this.client = this.apiKey ? new GoogleGenerativeAI(this.apiKey) : null;
-    
+
     // Almacenamiento de historial por usuario (in-memory, en producción usar Redis/DB)
     this.conversationHistory = new Map();
     this.MAX_HISTORY = 10; // Mantener últimos 10 mensajes por usuario
 
     // Configuración del modelo
-    this.modelName = "gemini-3-flash-preview"; 
+    this.modelName = "gemini-3-flash-preview";
     this.temperature = 0.7;
     this.maxTokens = 1024;
   }
@@ -134,7 +134,7 @@ class ChatService {
   async _checkRelevance(pregunta, historial) {
     try {
       const model = this.client.getGenerativeModel({ model: this.modelName });
-      
+
       const prompt = `
         Analiza si la siguiente pregunta del usuario es RELEVANTE para una aplicación de mapas meteorológicos de montaña y seguridad en el Pirineo (MeteoMap).
         
@@ -159,14 +159,14 @@ class ChatService {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text().trim();
-      
+
       try {
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return true; // Fallback a relevante si no hay JSON
         const parsed = JSON.parse(jsonMatch[0]);
         return parsed.relevante === true;
       } catch (e) {
-        return true; 
+        return true;
       }
     } catch (err) {
       logger.error(`Error en _checkRelevance: ${err.message}`);
@@ -186,16 +186,18 @@ class ChatService {
 
     // Construir historial de mensajes para Gemini
     const contents = [];
-    
+
     // Agregar sistema (contexto inicial)
     contents.push({
       role: "user",
-      parts: [{ text: `Eres el asistente experto de MeteoMap. Tu misión es ayudar a montañeros con información meteorológica y de seguridad real del Pirineo.
+      parts: [{
+        text: `Eres el asistente experto de MeteoMap. Tu misión es ayudar a usuarios con información meteorológica y de seguridad real de distintas zonas geográficas (mayoritariamente montañosas).
         INSTRUCCIONES:
         1. Utiliza las herramientas disponibles para obtener datos REALES. No inventes temperaturas ni estados de zonas.
         2. Si el usuario pregunta por una zona que no conoces, usa 'list_zones' para ver qué tenemos disponible.
         3. Sé conciso pero prioriza la seguridad. Si hay avisos de peligro, menciónalos claramente.
-        4. El ID de usuario actual es ${usuario_id}.` }]
+        4. El ID de usuario actual es ${usuario_id}.`
+      }]
     });
     contents.push({ role: "model", parts: [{ text: "Entendido. Estoy listo para ayudar con datos precisos de MeteoMap." }] });
 
@@ -223,7 +225,7 @@ class ChatService {
     // Limitamos a 5 iteraciones para evitar bucles infinitos
     for (let i = 0; i < 5; i++) {
       const functionCalls = response.response.functionCalls();
-      
+
       if (!functionCalls || functionCalls.length === 0) {
         responseText = response.response.text();
         break;
@@ -233,7 +235,7 @@ class ChatService {
 
       for (const call of functionCalls) {
         logger.debug(`Gemini solicita ejecutar herramienta: ${call.name} con args: ${JSON.stringify(call.args)}`);
-        
+
         try {
           const apiResult = await this._executeTool(call.name, call.args);
           functionResponses.push({
@@ -271,19 +273,19 @@ class ChatService {
     switch (name) {
       case "list_zones":
         return await zoneService.getZones("ACTIVA");
-      
+
       case "get_zone_weather":
         return await zoneService.getWeatherData(args.zoneId);
-      
+
       case "get_zone_forecast":
         return await zoneService.getWeatherForecast(args.zoneId);
-      
+
       case "get_zone_reports":
         return await reportService.getReports({ zonaId: args.zoneId, limit: args.limit || 5 });
-      
+
       case "get_zone_stats":
         return await zoneService.getZoneDashboard(args.zoneId);
-      
+
       default:
         throw new Error(`Herramienta '${name}' no implementada.`);
     }
@@ -307,7 +309,7 @@ class ChatService {
   _guardarEnHistorial(usuario_id, mensaje) {
     const historial = this._obtenerHistorial(usuario_id);
     historial.push(mensaje);
-    
+
     // Mantener solo los últimos MAX_HISTORY mensajes
     if (historial.length > this.MAX_HISTORY) {
       historial.shift();
@@ -322,7 +324,7 @@ class ChatService {
     logger.info(`Historial de conversación limpiado para usuario: ${usuario_id}`);
   }
 
- 
+
 }
 
 module.exports = new ChatService();
