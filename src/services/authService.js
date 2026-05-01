@@ -22,15 +22,37 @@ class AuthService {
    */
   async register(email, password, nombre, avatar_style = 'avataaars') {
     try {
-      // Verificar si el usuario ya existe
+      const emailLower = email.toLowerCase();
+
+      // Verificar si el usuario ya existe (activo o no)
       const existingUser = await User.findOne({
-        "datos_acceso.email": email.toLowerCase(),
+        "datos_acceso.email": emailLower,
       });
 
       if (existingUser) {
-        const error = new Error("El email ya está registrado");
-        error.status = 400;
-        throw error;
+        // Si existe y está ACTIVO, rechazar
+        if (existingUser.estado === "ACTIVO") {
+          const error = new Error("El email ya está registrado");
+          error.status = 400;
+          throw error;
+        }
+
+        // Si existe y está ELIMINADO, verificar grace period (30 días)
+        if (existingUser.estado === "ELIMINADO") {
+          const now = new Date();
+          const daysSinceDelete = (now - existingUser.fechaEliminacion) / (1000 * 60 * 60 * 24);
+          const GRACE_PERIOD_DAYS = 30;
+
+          if (daysSinceDelete < GRACE_PERIOD_DAYS) {
+            const daysRemaining = Math.ceil(GRACE_PERIOD_DAYS - daysSinceDelete);
+            const error = new Error(
+              `Este email fue eliminado hace poco. Intenta de nuevo en ${daysRemaining} días.`
+            );
+            error.status = 400;
+            throw error;
+          }
+          // Grace period pasó, reutilizar el usuario eliminado
+        }
       }
 
       // Hashear contraseña
@@ -44,20 +66,38 @@ class AuthService {
         throw new Error("Error en el proceso de registro");
       }
 
-      // Crear nuevo usuario
-      const newUser = new User({
-        datos_acceso: {
-          email: email.toLowerCase(),
-          password_hash: passwordHash,
-          rol: "USER",
-          provider: "local",
-        },
-        perfil: {
-          nombre: nombre || "",
-          avatar_seed: nombre || "",
-          avatar_style: avatar_style,
-        },
-      });
+      let newUser;
+      
+      // Si el usuario fue eliminado y pasó el grace period, reutilizarlo
+      if (existingUser && existingUser.estado === "ELIMINADO") {
+        existingUser.datos_acceso.password_hash = passwordHash;
+        existingUser.datos_acceso.provider = "local";
+        existingUser.perfil.nombre = nombre || "";
+        existingUser.perfil.avatar_seed = nombre || "";
+        existingUser.perfil.avatar_style = avatar_style;
+        existingUser.estado = "ACTIVO";
+        existingUser.fechaEliminacion = null;
+        newUser = existingUser;
+        logger.info(`Usuario reactivado después del grace period`, {
+          email: newUser.datos_acceso.email,
+          userId: newUser._id,
+        });
+      } else {
+        // Crear nuevo usuario
+        newUser = new User({
+          datos_acceso: {
+            email: emailLower,
+            password_hash: passwordHash,
+            rol: "USER",
+            provider: "local",
+          },
+          perfil: {
+            nombre: nombre || "",
+            avatar_seed: nombre || "",
+            avatar_style: avatar_style,
+          },
+        });
+      }
 
       await newUser.save();
       logger.info(`Usuario registrado exitosamente`, {
@@ -98,14 +138,6 @@ class AuthService {
       if (!user) {
         const error = new Error("Credenciales inválidas");
         error.status = 401;
-        throw error;
-      }
-
-      // Verificar que el usuario no esté bloqueado
-      if (user.estado === "BLOQUEADO") {
-        logger.warn(`Intento de login en cuenta bloqueada: ${email}`);
-        const error = new Error("Usuario bloqueado");
-        error.status = 403;
         throw error;
       }
 

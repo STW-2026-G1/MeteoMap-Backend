@@ -302,4 +302,48 @@ router.delete(
   (req, res, next) => commentController.deleteComment(req, res, next)
 );
 
+/**
+ * @swagger
+ * /api/comments/{id}:
+ *   put:
+ *     summary: Editar comentario
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID único del comentario a editar
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [contenido]
+ *             properties:
+ *               contenido:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Comentario editado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: No se encontró el comentario
+ */
+router.put(
+  "/:id",
+  isAuth,
+  [
+    param("id").isMongoId(),
+    body("contenido").optional().isString().trim().isLength({ min: 1, max: 5000 }),
+  ],
+  validate,
+  (req, res, next) => commentController.editComment(req, res, next)
+);
+
 module.exports = router;

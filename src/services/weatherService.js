@@ -99,8 +99,166 @@ class WeatherService {
     }
   }
 
+  /**
+   * Sincronizar datos meteorológicos de todas las zonas activas
+   * Realiza UNA sola petición a Open-Meteo con todas las coordenadas
+   * @returns {Promise<Object>} {success, failed, errors, timestamp}
+   */
+  async syncAllZonesWeather() {
+    const Zone = require("../models/Zone");
+    const SystemMetric = require("../models/SystemMetric");
+    
+    const startTime = Date.now();
+    let success = 0;
+    let failed = 0;
+    const errors = [];
 
+    try {
+      // 1. Obtener todas las zonas activas
+      const zones = await Zone.find({ estado: "ACTIVA" });
+      
+      if (zones.length === 0) {
+        logger.warn("No hay zonas activas para sincronizar");
+        return { success: 0, failed: 0, errors: [], message: "No hay zonas activas" };
+      }
 
+      logger.info(`Iniciando sincronización de ${zones.length} zonas`);
+
+      // 2. Construir arrays de latitudes y longitudes
+      const latitudes = zones.map(z => z.geolocalizacion.coordinates[1]).join(",");
+      const longitudes = zones.map(z => z.geolocalizacion.coordinates[0]).join(",");
+
+      // 3. Hacer UNA petición a Open-Meteo con todas las coordenadas (current + forecast)
+      const weatherData = await this._fetchWeatherDataBatch(latitudes, longitudes);
+
+      // 4. Actualizar cache de cada zona
+      for (let i = 0; i < zones.length; i++) {
+        try {
+          // Transformar datos current
+          const transformedData = this._transformOpenMeteoData(weatherData[i]);
+          
+          zones[i].cache_meteo.current = {
+            datos_crudos: transformedData,
+            ultima_actualizacion: new Date(),
+          };
+
+          // Transformar datos forecast (12 horas)
+          const forecastData = this._transformForecastData(weatherData[i]);
+          zones[i].cache_meteo.forecast = {
+            datos_crudos: forecastData,
+            ultima_actualizacion: new Date(),
+          };
+
+          await zones[i].save();
+          success++;
+
+          logger.debug(`Zona "${zones[i].nombre}" actualizada correctamente (current + forecast)`);
+        } catch (zoneErr) {
+          failed++;
+          const errorMsg = `Error actualizando zona ${zones[i].nombre}: ${zoneErr.message}`;
+          errors.push(errorMsg);
+          logger.error(errorMsg);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      const successRate = Math.round((success / zones.length) * 100);
+
+      // 5. Registrar métrica en SystemMetric ¿Necesario?
+      await SystemMetric.create({
+        origen: "API_METEO",
+        tipo: "LATENCIA",
+        valor: duration,
+        detalles: {
+          zonas_totales: zones.length,
+          zonas_actualizadas: success,
+          zonas_fallidas: failed,
+          tasa_exito: `${successRate}%`,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      logger.info(`Sincronización completada: ${success}/${zones.length} zonas actualizadas (current + forecast 12h) en ${duration}ms (${successRate}%)`);
+
+      return {
+        success,
+        failed,
+        errors,
+        message: `${success} de ${zones.length} zonas actualizadas correctamente (current + forecast)`,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (err) {
+      logger.error(`Error crítico en syncAllZonesWeather: ${err.message}`);
+      
+      // Registrar error en SystemMetric
+      await SystemMetric.create({
+        origen: "API_METEO",
+        tipo: "ERROR",
+        valor: 0,
+        detalles: {
+          error: err.message,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      throw err;
+    }
+  }
+
+  /**
+   * Obtener datos meteorológicos y forecast de múltiples ubicaciones en una sola petición
+   * @private
+   * @param {string} latitudes - Latitudes separadas por comas (ej: "40.1,41.5")
+   * @param {string} longitudes - Longitudes separadas por comas (ej: "-3.7,-2.3")
+   * @returns {Promise<Array>} Array de datos meteorológicos (uno por ubicación)
+   */
+  async _fetchWeatherDataBatch(latitudes, longitudes) {
+    try {
+      const url = new URL("https://api.open-meteo.com/v1/forecast");
+      url.searchParams.append("latitude", latitudes);
+      url.searchParams.append("longitude", longitudes);
+      url.searchParams.append("current", "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation,rain,showers,snowfall,visibility");
+      url.searchParams.append("hourly", "temperature_2m");
+      url.searchParams.append("forecast_hours", "12");
+      url.searchParams.append("timezone", "Europe/Madrid");
+
+      logger.debug(`Solicitando datos meteorológicos y forecast (12h) de Open-Meteo para ${latitudes.split(",").length} ubicaciones`);
+
+      // Timeout de 15 segundos para petición batch
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const response = await fetch(url.toString(), {
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        logger.error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Open-Meteo API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Cuando se envían múltiples coords separadas por comas, Open-Meteo retorna un array directo
+      // [{"latitude": ..., "current": {...}}, {"latitude": ..., "current": {...}}]
+      // Cuando es una sola coord, retorna un objeto directo
+      // {"latitude": ..., "current": {...}}
+      
+      if (Array.isArray(data)) {
+        logger.debug(`Datos de ${data.length} ubicaciones recibidos de Open-Meteo (array)`);
+        return data;
+      } else {
+        logger.debug("Dato de una única ubicación recibido de Open-Meteo (objeto)");
+        return [data];
+      }
+    } catch (err) {
+      logger.error(`Error en _fetchWeatherDataBatch: ${err.name} - ${err.message}`);
+      logger.debug(`Stack trace: ${err.stack}`);
+      throw new Error(`Error sincronizando datos meteorológicos: ${err.message}`);
+    }
+  }
 
   /**
    * Transformar datos de Open-Meteo a formato estándar
@@ -121,9 +279,23 @@ class WeatherService {
       lluvia: current.rain,
       nieve: current.snowfall,
       visibilidad: current.visibility,
-      zona_horaria: data.timezone,
-      ultima_actualizacion: new Date(current.time).toISOString(),
     };
+  }
+
+  /**
+   * Transformar datos de forecast (horarios) de Open-Meteo a formato estándar
+   * @private
+   */
+  _transformForecastData(data) {
+    if (!data.hourly || !data.hourly.time || !data.hourly.temperature_2m) {
+      logger.warn("Datos de forecast incompletos");
+      return [];
+    }
+
+    return data.hourly.time.map((time, index) => ({
+      hora: new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+      temperatura: Math.round(data.hourly.temperature_2m[index]),
+    }));
   }
 
   /**

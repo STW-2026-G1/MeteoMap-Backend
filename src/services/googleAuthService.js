@@ -28,6 +28,14 @@ class GoogleAuthService {
       });
 
       if (user) {
+        // Verificar que el usuario no esté eliminado
+        if (user.estado === "ELIMINADO") {
+          logger.warn(`Intento de login con Google en cuenta eliminada: ${email}`);
+          const error = new Error("La cuenta ha sido eliminada. Contacta con soporte para recuperarla");
+          error.status = 403;
+          throw error;
+        }
+
         // Usuario existe: verificar y actualizar datos de Google
         if (!user.datos_acceso.google_id) {
           // Usuario local que ahora usa Google

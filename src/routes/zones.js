@@ -1,6 +1,8 @@
 const { Router } = require("express");
 const { param, query, body, validationResult } = require("express-validator");
 const zoneController = require("../controllers/zoneController");
+const isAuth = require("../middleware/auth");
+const requireAdmin = require("../middleware/requireAdmin");
 
 const router = Router();
 
@@ -68,6 +70,85 @@ router.get("/", (req, res, next) => zoneController.getZones(req, res, next));
 
 /**
  * @swagger
+ * /api/zones/search:
+ *   get:
+ *     summary: Buscar zonas por nombre
+ *     description: Busca zonas filtrando por nombre utilizando búsqueda de texto (case-insensitive)
+ *     tags: [Zones]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda por nombre de zona
+ *         example: "Guadarrama"
+ *       - in: query
+ *         name: estado
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVA, INACTIVA]
+ *         description: Filtrar por estado (default ACTIVA)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Número máximo de resultados (default 20)
+ *     responses:
+ *       200:
+ *         description: Búsqueda completada exitosamente
+ *       400:
+ *         description: Query es requerido
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get("/search", (req, res, next) => zoneController.searchZones(req, res, next));
+
+/**
+ * @swagger
+ * /api/zones/weather:
+ *   get:
+ *     summary: Sincronizar datos meteorológicos de todas las zonas
+ *     description: Sincroniza datos meteorológicos actuales de todas las zonas activas desde Open-Meteo. Realiza una sola petición HTTP con todas las coordenadas. Esta operación actualiza el cache_meteo de todas las zonas.
+ *     tags: [Zones]
+ *     responses:
+ *       200:
+ *         description: Sincronización exitosa - todas o la mayoría de zonas actualizadas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 success:
+ *                   type: number
+ *                   description: Número de zonas actualizadas exitosamente
+ *                 failed:
+ *                   type: number
+ *                   description: Número de zonas que fallaron
+ *                 errors:
+ *                   type: array
+ *                   description: Array con detalles de errores por zona
+ *                 message:
+ *                   type: string
+ *                   description: Mensaje descriptivo del resultado
+ *                 timestamp:
+ *                   type: string
+ *                   description: Marca de tiempo de la ejecución (ISO 8601)
+ *       206:
+ *         description: Actualización parcial - algunas zonas fallaron
+ *       500:
+ *         description: Error crítico en la sincronización
+ */
+router.get("/weather", (req, res, next) =>
+  zoneController.syncWeatherData(req, res, next)
+);
+
+/**
+ * @swagger
  * /api/zones/{id}:
  *   get:
  *     summary: Obtener zona por ID
@@ -123,6 +204,8 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
 router.get("/:id/weather", [param("id").isMongoId()], validate, (req, res, next) =>
   zoneController.getWeatherData(req, res, next)
 );
+
+
 
 /**
  * @swagger
@@ -239,6 +322,8 @@ router.get("/:id/dashboard", [param("id").isMongoId()], validate, (req, res, nex
  */
 router.post(
   "/",
+  isAuth,
+  requireAdmin,
   [
     body("nombre")
       .trim()
@@ -248,9 +333,7 @@ router.post(
       .withMessage("El nombre debe tener al menos 3 caracteres"),
     body("descripcion")
       .optional({ checkFalsy: true })
-      .trim()
-      .isLength({ min: 10 })
-      .withMessage("La descripción debe tener al menos 10 caracteres"),
+      .trim(),
     body("geolocalizacion").notEmpty().withMessage("La geolocalización es requerida"),
     body("geolocalizacion.type")
       .notEmpty()
@@ -280,10 +363,91 @@ router.post(
 /**
  * @swagger
  * /api/zones/{id}:
+ *   put:
+ *     summary: Actualizar una zona
+ *     description: Actualiza una zona existente. Si cambian las coordenadas, se invalida la caché meteorológica.
+ *     tags: [Zones]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de MongoDB de la zona a actualizar
+ *         example: "69dd1aa7882082402ca106b2"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: "Sierra de Guadarrama"
+ *               descripcion:
+ *                 type: string
+ *                 example: "Cordillera montañosa en la región central de España"
+ *               geolocalizacion:
+ *                 type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [Point]
+ *                     example: "Point"
+ *                   coordinates:
+ *                     type: array
+ *                     minItems: 2
+ *                     maxItems: 2
+ *                     items:
+ *                       type: number
+ *                     example: [-3.8, 40.7]
+ *                     description: "[Longitud, Latitud]"
+ *               estado:
+ *                 type: string
+ *                 enum: [ACTIVA, INACTIVA]
+ *                 example: "ACTIVA"
+ *     responses:
+ *       200:
+ *         description: Zona actualizada exitosamente
+ *       400:
+ *         description: Datos inválidos o ID inválido
+ *       404:
+ *         description: Zona no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.put(
+  "/:id",
+  isAuth,
+  requireAdmin,
+  [
+    param("id").isMongoId(),
+    body("nombre").optional().isString().trim().isLength({ min: 3 }),
+    body("descripcion").optional({ checkFalsy: true }).isString().trim(),
+    body("geolocalizacion").optional().custom((value) => {
+      if (!value || typeof value !== "object") return false;
+      if (value.type && value.type !== "Point") return false;
+      if (!Array.isArray(value.coordinates) || value.coordinates.length !== 2) return false;
+      return value.coordinates.every((coord) => typeof coord === "number" && !Number.isNaN(coord));
+    }),
+    body("estado").optional().isIn(["ACTIVA", "INACTIVA"]),
+  ],
+  validate,
+  (req, res, next) => zoneController.updateZone(req, res, next)
+);
+
+/**
+ * @swagger
+ * /api/zones/{id}:
  *   delete:
  *     summary: Eliminar una zona
  *     description: Elimina una zona específica del sistema. Esta operación es permanente
  *     tags: [Zones]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -291,6 +455,7 @@ router.post(
  *         schema:
  *           type: string
  *         description: ID de MongoDB de la zona a eliminar
+ *         example: "69dd1aa7882082402ca106b2"
  *     responses:
  *       200:
  *         description: Zona eliminada exitosamente
@@ -302,6 +467,8 @@ router.post(
  *         description: Error interno del servidor
  */
 router.delete("/:id", 
+  isAuth,
+  requireAdmin,
   [param("id").isMongoId()],
   validate, (req, res, next) =>
   zoneController.deleteZone(req, res, next)

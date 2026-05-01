@@ -1,4 +1,5 @@
 const ReportCategory = require("../models/ReportCategory");
+const Report = require("../models/Report");
 const logger = require("../config/logger");
 
 class CategoryService {
@@ -7,7 +8,7 @@ class CategoryService {
    */
   async getCategories() {
     try {
-      const categories = await ReportCategory.find({});
+      const categories = await ReportCategory.find({}).sort({ nombre: 1 });
       return categories;
     } catch (err) {
       logger.error(`Error en getCategories: ${err.message}`);
@@ -58,12 +59,19 @@ class CategoryService {
    */
   async deleteCategory(id) {
     try {
+      const reportService = require("./reportService");
+      const reports = await Report.find({ categoria_id: id }).select("_id");
+
+      for (const report of reports) {
+        await reportService.deleteReport(report._id.toString());
+      }
+
       const category = await ReportCategory.findByIdAndDelete(id);
       if (!category) {
         throw new Error("Categoría no encontrada");
       }
-      logger.info(`Categoría eliminada: ${id}`);
-      return { message: "Categoría eliminada" };
+      logger.info(`Categoría eliminada: ${id} y ${reports.length} reporte(s) asociado(s) eliminados`);
+      return { message: "Categoría y reportes asociados eliminados", reportsDeleted: reports.length };
     } catch (err) {
       logger.error(`Error en deleteCategory: ${err.message}`);
       throw err;

@@ -158,6 +158,36 @@ class CommentService {
       }
    }
 
+   /**
+    * Editar comentario
+    */
+   async editComment(commentId, userId, rol, updateData) {
+      try {
+         const comment = await Comment.findById(commentId);
+         
+         if (!comment) {
+            throw new Error("Comentario no encontrado");
+         }
+
+         if (comment.usuario_id.toString() !== userId && rol !== "ADMIN") {
+            throw new Error("No tienes permiso para editar este comentario");
+         }
+
+         if (updateData.contenido) {
+            comment.contenido = updateData.contenido;
+         }
+
+         await comment.save();
+
+         return await Comment.findById(commentId)
+            .populate("usuario_id", "perfil.nombre perfil.avatar_seed perfil.avatar_style");
+
+      } catch (err) {
+         logger.error(`Error en editComment: ${err.message}`);
+         throw err;
+      }
+   }
+
 }
 
 module.exports = new CommentService();

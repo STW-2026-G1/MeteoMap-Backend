@@ -10,18 +10,23 @@ class ReportService {
    */
   async getReports(filters = {}) {
     try {
-      const { zonaId, estado, limit = 100, lat, lng, radius = 5000, usuarioId } = filters;
+      const { zonaId, estado, limit, lat, lng, radius = 5000, usuarioId } = filters;
       const query = {};
 
       if (zonaId) query.zona_id = zonaId;
       if (estado) query.estado = estado;
       if (usuarioId) query.usuario_id = usuarioId;
 
-      const reports = await Report.find(query)
+      let reportsQuery = Report.find(query)
         .populate("usuario_id", "_id perfil.nombre perfil.avatar_seed perfil.avatar_style")
         .populate("zona_id", "nombre")
-        .populate("categoria_id", "nombre icono_marcador")
-        .limit(limit);
+        .populate("categoria_id", "nombre icono_marcador");
+
+      if (Number.isFinite(limit) && limit > 0) {
+        reportsQuery = reportsQuery.limit(limit);
+      }
+
+      const reports = await reportsQuery;
 
       logger.debug("ReportService.getReports", { filter: query });
 

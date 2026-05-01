@@ -14,6 +14,7 @@ const { connect, disconnect } = require("./config/database");
 const httpLogger = require("./middleware/httpLogger");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const isAuth = require("./middleware/auth");
+const requireAdmin = require("./middleware/requireAdmin");
 
 // Import new routers
 const authRouter = require("./routes/auth");
@@ -123,9 +124,7 @@ app.use("/api/chat", chatRouter);
 app.use("/api/aemet-alerts", aemetAlertsRouter);
 
 // Admin panel endpoints (protegidas - requiere rol ADMIN)
-// Para proteger las rutas de admin, agregar el middleware isAuth:
-// app.use("/api/admin", isAuth, adminRouter);
-app.use("/api/admin", adminRouter);
+app.use("/api/admin", isAuth, requireAdmin, adminRouter);
 
 // ---------------------------------------------------------------------------
 // Error handling (must be LAST)
@@ -141,6 +140,10 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 async function start() {
   try {
     await connect();
+
+    // Iniciar tarea de sincronización de datos meteorológicos
+    const weatherSyncTask = require("./tasks/weatherSyncTask");
+    weatherSyncTask.start();
 
     app.listen(PORT, () => {
       logger.info(`Servidor ejecutándose en http://localhost:${PORT}`);
