@@ -94,6 +94,13 @@ class ReportService {
         throw new Error("Reporte no encontrado");
       }
 
+      // Impedir validar reporte propio
+      if (report.usuario_id.toString() === userId.toString()) {
+        const error = new Error("No puedes validar tu propio reporte");
+        error.status = 400;
+        throw error;
+      }
+
       // Arrays para registrar votos y prevenir votos múltiples
       const confirmaron = report.validaciones.usuarios_confirmaron || [];
       const desmintieron = report.validaciones.usuarios_desmintieron || [];
@@ -123,8 +130,19 @@ class ReportService {
         }
       }
 
+      // Actualizar estado basado en validaciones
+      const numConfirm = report.validaciones.usuarios_confirmaron.length;
+      const numDeny = report.validaciones.usuarios_desmintieron.length;
+
+      // Un reporte es LEGITIMO si tiene al menos 3 confirmaciones y más confirmaciones que desmentidos
+      if (numConfirm >= 3 && numConfirm > numDeny) {
+        report.estado = "LEGITIMO";
+      } else {
+        report.estado = "SOSPECHOSO";
+      }
+
       await report.save();
-      logger.info(`Reporte ${reportId} validado: ${accion}`);
+      logger.info(`Reporte ${reportId} validado: ${accion}. Nuevo estado: ${report.estado}`);
 
       return report;
     } catch (err) {
