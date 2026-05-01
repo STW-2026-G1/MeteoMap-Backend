@@ -148,7 +148,8 @@ class aemetAlertsService {
       return this._deduplicateAlerts(normalizedAlerts);
     } catch (error) {
       logger.error(`Error en el pipeline de procesamiento: ${error.message}`);
-      return [];
+      // Lanzar el error para que fetchAlerts pueda manejar el fallback a la caché
+      throw error;
     }
   }
 
@@ -158,12 +159,24 @@ class aemetAlertsService {
    */
   async _downloadTar(url) {
     logger.debug(`Descargando archivo comprimido desde: ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Falló la descarga: ${response.statusText}`);
     
-    // Lo bajamos como arrayBuffer (equivalente a los chunks de IMDb pero en memoria)
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos de timeout
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error(`Falló la descarga: ${response.status} ${response.statusText}`);
+      
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Timeout descargando el archivo de alertas de AEMET');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
   /**
    * Descomprime el TAR en memoria y parsea los XML (CAP)
