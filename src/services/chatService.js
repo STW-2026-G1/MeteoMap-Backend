@@ -3,6 +3,7 @@ const logger = require("../config/logger");
 const zoneService = require("./zoneService");
 const reportService = require("./reportService");
 const aemetAlertsService = require("./aemetAlertsService");
+const commentService = require("./commentService");
 
 class ChatService {
   constructor() {
@@ -101,6 +102,21 @@ class ChatService {
           description: "Obtiene todas las alertas meteorológicas activas de AEMET (avisos de nieve, viento, lluvia, etc.). Útil para informar sobre avisos de seguridad actuales.",
           parameters: { type: "object", properties: {} }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_zone_comments",
+          description: "Obtiene los comentarios y discusiones de la comunidad en el foro de una zona.",
+          parameters: {
+            type: "object",
+            properties: {
+              zoneId: { type: "string", description: "ID único de la zona." },
+              limit: { type: "number", description: "Límite de comentarios (por defecto 10)." }
+            },
+            required: ["zoneId"]
+          }
+        }
       }
     ];
   }
@@ -173,13 +189,13 @@ class ChatService {
 
       // Incluir historial reciente para dar contexto al guardián
       const messagesForRelevance = [{ role: "system", content: prompt }];
-      
+
       // Cogemos las últimas 2 interacciones (4 mensajes)
       historial.slice(-2).forEach(h => {
         messagesForRelevance.push({ role: "user", content: h.pregunta });
         messagesForRelevance.push({ role: "assistant", content: h.respuesta });
       });
-      
+
       messagesForRelevance.push({ role: "user", content: pregunta });
 
       const response = await this.client.chat.completions.create({
@@ -228,7 +244,7 @@ class ChatService {
     messages.push({ role: "user", content: pregunta });
 
     // Bucle para manejar llamadas a funciones
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: messages,
@@ -310,11 +326,12 @@ class ChatService {
         return forecast; // Las predicciones suelen ser manejables
 
       case "get_zone_reports":
-        const reports = await reportService.getReports({ zonaId: args.zoneId, limit: args.limit || 5 });
+        const reportsResult = await reportService.getReports({ zonaId: args.zoneId, limit: args.limit || 5 });
+        const reports = reportsResult.reports || [];
         // Solo lo relevante de los reportes
         return reports.map(r => ({
-          categoria: r.categoria?.nombre,
-          comentario: r.comentario,
+          categoria: r.categoria_id?.nombre,
+          comentario: r.contenido?.descripcion,
           nivelRiesgo: r.nivelRiesgo,
           fecha: r.createdAt
         }));
@@ -332,6 +349,15 @@ class ChatService {
           comienzo: a.comienzo,
           fin: a.fin,
           provincias: a.provincias
+        }));
+
+      case "get_zone_comments":
+        const commentsResult = await commentService.getCommentsByZone(args.zoneId, args.limit || 10);
+        const comments = commentsResult.comments || [];
+        return comments.map(c => ({
+          usuario: c.usuario_id?.perfil?.nombre || "Usuario",
+          texto: c.contenido,
+          fecha: c.createdAt
         }));
 
       default:

@@ -46,7 +46,7 @@ class AuthService {
           if (daysSinceDelete < GRACE_PERIOD_DAYS) {
             const daysRemaining = Math.ceil(GRACE_PERIOD_DAYS - daysSinceDelete);
             const error = new Error(
-              `Este email fue eliminado hace poco. Intenta de nuevo en ${daysRemaining} días.`
+              `Este email fue eliminado hace poco. Inténtalo de nuevo en ${daysRemaining} días.`
             );
             error.status = 400;
             throw error;
@@ -67,7 +67,7 @@ class AuthService {
       }
 
       let newUser;
-      
+
       // Si el usuario fue eliminado y pasó el grace period, reutilizarlo
       if (existingUser && existingUser.estado === "ELIMINADO") {
         existingUser.datos_acceso.password_hash = passwordHash;
