@@ -5,6 +5,7 @@ const reportService = require("./reportService");
 const aemetAlertsService = require("./aemetAlertsService");
 const commentService = require("./commentService");
 const User = require("../models/User");
+const { getHelp } = require("../config/appKnowledge");
 
 class ChatService {
   constructor() {
@@ -116,6 +117,20 @@ class ChatService {
               limit: { type: "number", description: "Límite de comentarios (por defecto 10)." }
             },
             required: ["zoneId"]
+          }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_app_help",
+          description: "Obtiene instrucciones detalladas sobre cómo realizar acciones en la aplicación MeteoMap (crear reportes, editar perfil, añadir comentarios, etc.).",
+          parameters: {
+            type: "object",
+            properties: {
+              tema: { type: "string", description: "El tema o funcionalidad sobre la que el usuario tiene dudas (ej: 'reportes', 'avatar', 'comentarios')." }
+            },
+            required: ["tema"]
           }
         }
       }
@@ -258,7 +273,8 @@ class ChatService {
         4. El ID de usuario actual es ${usuario_id}.
         5. En tu respuesta, no incluyas datos sensibles de la base de datos (como el id de los objetos almacenados).
         6. NO inventes enlaces (URLs) que no aparezcan en los datos.
-        7. INTEGRIDAD GEOGRÁFICA: NUNCA inventes o cambies la ubicación de una zona. Si no conoces la ubicación EXACTA de un lugar solicitado (ej: "la EINA"), NO intentes adivinar su provincia o región. En esos casos, admite que no conoces la ubicación de ese lugar y pregunta al usuario dónde se encuentra.`
+        7. INTEGRIDAD GEOGRÁFICA: NUNCA inventes o cambies la ubicación de una zona. Si no conoces la ubicación EXACTA de un lugar solicitado (ej: "la EINA"), NO intentes adivinar su provincia o región. En esos casos, admite que no conoces la ubicación de ese lugar y pregunta al usuario dónde se encuentra.
+        8. GUÍA DE LA APP: Si el usuario pregunta cómo hacer algo en MeteoMap (ej: '¿cómo creo un reporte?', '¿cómo cambio mi foto?'), utiliza SIEMPRE la herramienta 'get_app_help' para obtener las instrucciones oficiales. No asumas cómo funciona la interfaz por tu cuenta.`
       }
     ];
 
@@ -387,6 +403,9 @@ class ChatService {
           texto: c.contenido,
           fecha: c.createdAt
         }));
+
+      case "get_app_help":
+        return { helpText: getHelp(args.tema) };
 
       default:
         throw new Error(`Herramienta '${name}' no implementada.`);
