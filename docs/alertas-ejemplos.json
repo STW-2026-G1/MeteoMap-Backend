@@ -1,0 +1,101 @@
+[
+{
+  "_id": {
+    "$oid": "69f70a9fef2a21ec16e643f1"
+  },
+  "aemet_id": "PRUEBA_NARANJA_ZAR_001",
+  "zona": "Zaragoza pruebaColorNaranja",
+  "tipo": "Viento\n    ",
+  "nivel": "Naranja",
+  "nivelNumerico": 2,
+  "descripcion": "Rachas máximas de viento: 90 km/h. Esta es una alerta de prueba.",
+  "instrucciones": "Extreme las precauciones ante la caída de objetos. Evite zonas arboladas.",
+  "probabilidad": "\n      \n      ,40%-70%\n    ",
+  "certidumbre": "Likely",
+  "urgencia": "Future",
+  "enlace": "https://www.aemet.es/es/eltiempo/prediccion/avisos",
+  "coordenadas": {
+    "latitud": 41,
+    "longitud": -0.8
+  },
+  "color": "#f97316",
+  "emision": {
+    "$date": "2026-05-02T16:47:34.000Z"
+  },
+  "validez_inicio": {
+    "$date": "2026-05-03T12:00:00.000Z"
+  },
+  "validez_fin": {
+    "$date": "2026-05-05T21:59:59.000Z"
+  },
+  "fecha_procesamiento": {
+    "$date": "2026-05-02T16:59:50.288Z"
+  }
+}
+{
+  "_id": {
+    "$oid": "69f70c72ef2a21ec16e643f5"
+  },
+  "aemet_id": "PRUEBA_AMARILLA_ZAR_001",
+  "zona": "Zaragoza pruebaColorAmarillo",
+  "tipo": "Lluvias\n    ",
+  "nivel": "Amarillo",
+  "nivelNumerico": 1,
+  "descripcion": "Precipitación acumulada en una hora: 15 mm. Alerta de prueba visual para el color amarillo.",
+  "instrucciones": "Esté atento. Manténgase informado de la predicción meteorológica. Prueba de visualización.",
+  "probabilidad": "\n      \n      ,40%-70%\n    ",
+  "certidumbre": "Likely",
+  "urgencia": "Future",
+  "enlace": "https://www.aemet.es/es/eltiempo/prediccion/avisos",
+  "coordenadas": {
+    "latitud": 40.9,
+    "longitud": -0.8
+  },
+  "color": "#ffc869",
+  "emision": {
+    "$date": "2026-05-02T16:47:34.000Z"
+  },
+  "validez_inicio": {
+    "$date": "2026-05-03T12:00:00.000Z"
+  },
+  "validez_fin": {
+    "$date": "2026-05-05T21:59:59.000Z"
+  },
+  "fecha_procesamiento": {
+    "$date": "2026-05-02T16:59:50.288Z"
+  }
+}
+{
+  "_id": {
+    "$oid": "69f70ac2ef2a21ec16e643f3"
+  },
+  "aemet_id": "PRUEBA_ROJA_ZAR_001",
+  "zona": "Zaragoza pruebaColorRojo",
+  "tipo": "Nieve\n    ",
+  "nivel": "Rojo",
+  "nivelNumerico": 3,
+  "descripcion": "Acumulación de nieve en 24 horas: 30 cm. Alerta de prueba extrema.",
+  "instrucciones": "Evite cualquier desplazamiento. Riesgo muy elevado para la población.",
+  "probabilidad": "\n      \n      ,80%-100%\n    ",
+  "certidumbre": "Observed",
+  "urgencia": "Immediate",
+  "enlace": "https://www.aemet.es/es/eltiempo/prediccion/avisos",
+  "coordenadas": {
+    "latitud": 41.1,
+    "longitud": -0.8
+  },
+  "color": "#ef4444",
+  "emision": {
+    "$date": "2026-05-02T16:47:34.000Z"
+  },
+  "validez_inicio": {
+    "$date": "2026-05-03T12:00:00.000Z"
+  },
+  "validez_fin": {
+    "$date": "2026-05-05T21:59:59.000Z"
+  },
+  "fecha_procesamiento": {
+    "$date": "2026-05-02T16:59:50.288Z"
+  }
+}
+]

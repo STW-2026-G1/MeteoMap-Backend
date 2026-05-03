@@ -76,21 +76,37 @@ class aemetAlertsService {
 
       // Procesar y transformar alertas
       const alerts = await this._processAlerts(data);
-      
+      logger.info(`alertas procesadas: ${alerts.length}`);
       // Filtrar alertas ya procesadas anteriormente
       const newAlerts = await this._filterNewAlerts(alerts);
-      
+      logger.info(`alertas filtradas: ${newAlerts.length}`);
       // Guardar en BD las nuevas alertas
       if (newAlerts.length > 0) {
         await this._saveAlertsToDatabase(newAlerts);
+         logger.info(`alertas guardadas`);
       }
       
-      // Guardar en caché todas las alertas (nuevas + existentes)
-      this.cache = alerts;
+      // Consultar TODAS las alertas activas de la Base de Datos
+      // Filtramos por fecha de validez_fin para no enviar alertas caducadas
+      const activeAlertsFromDb = await AemetAlert.find({
+        validez_fin: { $gte: new Date() }
+      }).lean();
+
+      // 3. Importante: Mapear 'aemet_id' de vuelta a 'id' para que el frontend no rompa
+      const formattedAlerts = activeAlertsFromDb.map(doc => ({
+        ...doc,
+        id: doc.aemet_id,             // Id de la aemet
+        _id: doc._id.toString(),      // Mantenemos el ID de Mongo
+      }));
+
+      // 4. Actualizar caché con los datos reales de la BD
+      this.cache = formattedAlerts;
       this.cacheTimestamp = Date.now();
-      logger.info(`✅ Caché actualizado (${alerts.length} alertas, ${newAlerts.length} nuevas)`);
-      
-      return alerts;
+
+      logger.info(`Servicio: Devolviendo ${formattedAlerts.length} alertas desde la Base de Datos.`);
+      return formattedAlerts;
+
+return alertsFromDb;
     } catch (err) {
       logger.error(
         `Error obteniendo alertas de AEMET: ${err.name} - ${err.message}`
@@ -253,7 +269,7 @@ class aemetAlertsService {
    * @param {Array} rawAlerts - Array de objetos parseados desde XML
    * @returns {Array} Array de alertas normalizadas
    */
- _normalizeAlerts(rawAlerts) {
+_normalizeAlerts(rawAlerts) {
     const normalizedAlerts = [];
 
     for (const rawAlert of rawAlerts) {
@@ -266,11 +282,10 @@ class aemetAlertsService {
         
         // Seleccionar el primer info (preferentemente es-ES)
         const info = infoArray[0] || {};
-        const area = info.area || {};
 
         // Extraer campos CAP base
         const identifier = alert.identifier || 'unknown';
-        const sent = alert.sent || new Date().toISOString(); // <-- FECHA DE EMISIÓN
+        const sent = alert.sent || new Date().toISOString(); // FECHA DE EMISIÓN
         
         // El tipo real está en eventCode.value (ej: "PR;Lluvias") o en event
         let tipoReal = info.event || 'Evento desconocido';
@@ -281,6 +296,7 @@ class aemetAlertsService {
             tipoReal = partes[1]; // Ej: "Lluvias" de "PR;Lluvias"
           }
         }
+        tipoReal = this._cleanText(tipoReal);
 
         // El nivel está en parameters con valueName "AEMET-Meteoalerta nivel"
         let severityLevel = info.severity || 'Moderate';
@@ -301,43 +317,66 @@ class aemetAlertsService {
         
         // Extraer nuevos campos: Probabilidad, Instrucciones, Certidumbre, etc.
         const probParam = paramArray.find(p => p.valueName === 'AEMET-Meteoalerta probabilidad');
-        const probabilidad = probParam && probParam.value ? probParam.value : null; // null si no existe
-        
+        let probabilidad = probParam && probParam.value ? probParam.value : null; // null si no existe
+        probabilidad = this._cleanText(probabilidad);
+
         const instruction = info.instruction || null;
         const web = info.web || null;
         const certainty = info.certainty || null;
         const urgency = info.urgency || null;
         
-        // La zona puede estar en area.geocode.value o area.areaDesc
-        let zonaId = 'unknown';
-        if (area.geocode && area.geocode.value) {
-          zonaId = area.geocode.value;
-        }
-        const areaDesc = area.areaDesc || `Zona ${zonaId}`;
-        const polygon = area.polygon || '';
-        
         // No cortamos la descripción a 200 caracteres para tenerla completa en el popup
         const description = info.description || info.headline || 'Sin descripción';
         const onset = info.onset || info.effective || new Date().toISOString();
-        const expires = info.expires || new Date().toISOString();
+        let expires = info.expires;
+        if (!expires) {
+            // Si no hay expires, le sumamos 24 horas a la fecha actual
+            const tomorrow = new Date();
+            tomorrow.setHours(tomorrow.getHours() + 24);
+            expires = tomorrow.toISOString();
+        }
 
         // Mapear severity CAP a nivel de alerta español
-        const nivelMapEs = {
-          'Extreme': 'Rojo',
-          'Severe': 'Naranja',
-          'Moderate': 'Amarillo',
-          'Minor': 'Amarillo',
-          'Unknown': 'Amarillo'
-        };
-        const nivel = nivelMapEs[severity] || 'Amarillo';
+        let nivel = 'amarillo'; // Valor por defecto por precaución
+        if (nivelParam && nivelParam.value) {
+          nivel = nivelParam.value.toLowerCase(); // Extraemos el valor del XML (ej: "verde", "amarillo")
+        }
+        nivel = this._cleanText(nivel);
+
+        // =========================================================
+        //  Logica para recoger la primera zona afectada
+        // =========================================================
+        const rawAreas = info.area;
+        if (!rawAreas) {
+          logger.warn(`Sin área definida en alerta ${identifier}`);
+          continue; // Si el XML no tiene zonas, lo saltamos
+        }
+
+        // Si es un Array de varias zonas, cogemos la posición [0]. Si es un objeto único, lo usamos tal cual.
+        // No es viable coger todas porque se pasa de tener 100 a 1600 alertas
+        const primeraZona = Array.isArray(rawAreas) ? rawAreas[0] : rawAreas;
+
+        // Extraer zonaId
+        let zonaId = 'unknown';
+        if (primeraZona.geocode && primeraZona.geocode.value) {
+          zonaId = primeraZona.geocode.value;
+        }
+
+        // Extraer nombre de la primera zona (a veces xml2js mete los textos en arrays, por eso la comprobación)
+        let rawAreaDesc = primeraZona.areaDesc;
+        if (Array.isArray(rawAreaDesc)) rawAreaDesc = rawAreaDesc[0]; 
+        const areaDesc = rawAreaDesc || `Zona ${zonaId}`;
+
+        // Extraer el polígono de esta primera zona exclusivamente
+        const polygon = primeraZona.polygon || '';
 
         // Extraer coordenadas del polígono
-        const coordenadas = this._parseAemetPolygon(polygon);
+        const coordenadas = this._parseAemetPolygon(polygon, identifier, nivel);
 
         // Construir alerta normalizada con TODOS los campos
         const normalizedAlert = {
-          id: identifier,
-          zona: areaDesc,
+          id: identifier, // Se mantiene el ID de AEMET original (sin sub-versiones)
+          zona: this._cleanText(areaDesc), // Limpiamos el texto de la zona por si acaso
           tipo: tipoReal,
           nivel: nivel,
           nivelNumerico: this._getNivelNumerico(nivel.toLowerCase()),
@@ -375,32 +414,51 @@ class aemetAlertsService {
     );
     return normalizedAlerts;
   }
-
   /**
    * Parsea el string "lat,long lat,long" y devuelve el primer punto como marcador
    */
-  _parseAemetPolygon(polygonStr) {
-    // Validar que polygonStr sea una cadena
-    if (!polygonStr || typeof polygonStr !== 'string') {
-      logger.debug(`Polígono inválido: ${JSON.stringify(polygonStr)}. Usando coordenada por defecto.`);
-      return { latitud: 40.41, longitud: -3.70 };
+  _parseAemetPolygon(polygonData, id,nivel) {
+    // 1. Fallback seguro por si todo falla (Centro de la Península o puedes dejarlo en null/0 según prefieras)
+    const fallbackCoords = { latitud: null, longitud: null };
+
+    if (!polygonData) {
+      logger.debug(`No hay datos de polígono. ID:${id} Nivel:${nivel} Usando coordenadas por defecto.`);
+      return fallbackCoords;
     }
 
-    // Separamos por espacios para obtener los pares "lat,long"
-    const points = polygonStr.trim().split(" ");
-    
-    // Tomamos el primer punto para el marcador del mapa
-    const firstPoint = points[0]?.split(",");
-    
-    if (!firstPoint || firstPoint.length < 2) {
-      logger.debug(`Polígono no contiene puntos válidos: ${polygonStr}`);
-      return { latitud: 40.41, longitud: -3.70 };
+    // 2. Normalizar la entrada a un único String
+    let polygonStr = '';
+    if (Array.isArray(polygonData)) {
+      // Si hay múltiples polígonos, cogemos el primero para tener una aproximación
+      polygonStr = polygonData[0]; 
+    } else if (typeof polygonData === 'string') {
+      polygonStr = polygonData;
+    } else {
+      logger.debug(`Formato de polígono desconocido: ${typeof polygonData}`);
+      return fallbackCoords;
     }
-    
-    return {
-      latitud: parseFloat(firstPoint[0]),
-      longitud: parseFloat(firstPoint[1])
-    };
+
+    // 3. Extraer los puntos del polígono (separados por espacios)
+    const points = polygonStr.trim().split(/\s+/); // Usamos regex para evitar fallos si hay dobles espacios
+
+    // 4. Buscar el primer punto que sea realmente válido
+    for (const point of points) {
+      const coords = point.split(",");
+      
+      if (coords.length >= 2) {
+        const lat = parseFloat(coords[0]);
+        const lon = parseFloat(coords[1]);
+
+        // Si hemos conseguido parsear dos números válidos, ¡los devolvemos y terminamos!
+        if (!isNaN(lat) && !isNaN(lon)) {
+          return { latitud: lat, longitud: lon };
+        }
+      }
+    }
+
+    // 5. Si hemos recorrido todo y no hay nada válido, devolvemos el fallback
+    logger.debug(`No se encontraron coordenadas numéricas válidas en: ${polygonStr}`);
+    return fallbackCoords;
   }
 
 
@@ -435,13 +493,15 @@ class aemetAlertsService {
     return niveles[nivel] || 0;
   }
 
-  _mapColorByNivel(nivel) {
+ _mapColorByNivel(nivel) {
     const colores = {
-      'amarillo': '#f1c40f',
-      'naranja': '#e67e22',
-      'rojo': '#e74c3c'
+      'verde': '#26b94b', // Amarillo Tailwind (Moderado)
+      'amarillo': '#ffc869', // Amarillo Tailwind (Moderado)
+      'naranja': '#f97316',  // Naranja Tailwind (Importante)
+      'rojo': '#ef4444'      // Rojo Tailwind (Crítico)
     };
-    return colores[nivel] || '#95a5a6';
+    // Si no hay nivel reconocido, devolvemos el amarillo por precaución
+    return colores[nivel] || '#4e4a4d'; 
   }
 
   /**
@@ -515,6 +575,19 @@ class aemetAlertsService {
   }
 
   /**
+   * Limpia strings que vienen con saltos de línea, comas y espacios extra del XML
+   * @private
+   */
+  _cleanText(text) {
+    if (!text || typeof text !== 'string') return text;
+    return text
+      .replace(/[\n\r\t]/g, ' ')       // 1. Cambia saltos de línea y tabulaciones por espacios
+      .replace(/\s+/g, ' ')            // 2. Colapsa múltiples espacios en uno solo
+      .replace(/^[\s,]+|[\s,]+$/g, '') // 3. Elimina comas y espacios al principio y al final
+      .trim();                         // 4. Asegura que no queden espacios en los bordes
+  }
+
+  /**
    * Guarda alertas nuevas en la base de datos
    * @private
    */
@@ -524,7 +597,6 @@ class aemetAlertsService {
         aemet_id: alert.id,
         zona: alert.zona,
         tipo: alert.tipo,
-        titular: alert.titular,
         nivel: alert.nivel,
         nivelNumerico: alert.nivelNumerico,
         descripcion: alert.descripcion,
@@ -540,7 +612,7 @@ class aemetAlertsService {
         validez_fin: new Date(alert.validez_fin),
         fecha_procesamiento: new Date()
       }));
-      
+
       const result = await AemetAlert.insertMany(alertsForDb, { ordered: false });
       logger.info(`✅ ${result.length} alertas guardadas en BD`);
     } catch (error) {

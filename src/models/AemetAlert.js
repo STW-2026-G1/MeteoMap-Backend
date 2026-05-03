@@ -8,7 +8,7 @@ const aemetAlertSchema = new mongoose.Schema(
     // Información de la alerta
     zona: String,
     tipo: String,
-    nivel: { type: String, enum: ["Rojo", "Naranja", "Amarillo"] },
+    nivel: { type: String },
     nivelNumerico: Number,
     
     // Descripción y coordenadas
@@ -25,7 +25,7 @@ const aemetAlertSchema = new mongoose.Schema(
     },
     
     // Colores y validez
-    color: String,
+    color: String, //Color en hexa
     emision: Date,
     validez_inicio: Date,
     validez_fin: Date,
