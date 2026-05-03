@@ -50,6 +50,15 @@ class AdminController {
       next(err);
     }
   }
+
+  async getDashboard(req, res, next) {
+    try {
+      const result = await adminService.getDashboard();
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new AdminController();

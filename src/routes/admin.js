@@ -171,4 +171,9 @@ router.delete(
   validate,
   (req, res, next) => adminController.deleteReport(req, res, next)
 );
+
+/**
+ * Dashboard de administración con datos agregados reales
+ */
+router.get("/dashboard", (req, res, next) => adminController.getDashboard(req, res, next));
 module.exports = router;

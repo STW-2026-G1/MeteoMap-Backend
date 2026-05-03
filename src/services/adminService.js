@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const logger = require("../config/logger");
+const SystemMetric = require("../models/SystemMetric");
+const AemetAlert = require("../models/AemetAlert");
 
 class AdminService {
   serializeUser(user) {
@@ -185,6 +187,136 @@ class AdminService {
       };
     } catch (err) {
       logger.error(`Error en adminService.restoreUser: ${err.message}`);
+      throw err;
+    }
+  }
+
+  async getDashboard() {
+    try {
+      const [users, latestMetric, latency24h, aemetLatestAlert] = await Promise.all([
+        User.find({ "datos_acceso.rol": { $ne: "ADMIN" } }).lean(),
+        SystemMetric.findOne({ origen: "API_METEO" }).sort({ createdAt: -1 }).lean(),
+        SystemMetric.find({
+          origen: "API_METEO",
+          tipo: "LATENCIA",
+          createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        })
+          .sort({ createdAt: 1 })
+          .lean(),
+        AemetAlert.findOne().sort({ updatedAt: -1 }).lean(),
+      ]);
+
+      const activosNoAdmin = users.filter((u) => u.estado === "ACTIVO").length;
+      const eliminadosNoAdmin = users.filter((u) => u.estado === "ELIMINADO").length;
+
+      const iaUsageByUser = users
+        .map((u) => ({
+          id: u._id.toString(),
+          nombre: u.perfil?.nombre || "Sin nombre",
+          email: u.datos_acceso?.email || "",
+          peticionesHoy: u.limites_ia?.peticiones_hoy || 0,
+          estado: u.estado,
+        }))
+        .sort((a, b) => b.peticionesHoy - a.peticionesHoy);
+
+      const totalPeticionesHoy = iaUsageByUser.reduce((sum, u) => sum + u.peticionesHoy, 0);
+
+      const latestLatencyMetric = [...latency24h].reverse()[0] || null;
+
+      const mistralConfigured = Boolean(process.env.MISTRAL_API_KEY);
+      const aemetConfigured = Boolean(process.env.AEMET_API_KEY);
+      const emailRecoveryConfigured = Boolean(process.env.EMAIL_USER) && Boolean(process.env.EMAIL_PASSWORD);
+      const googleOauthConfigured = Boolean(process.env.GOOGLE_CLIENT_ID);
+
+      const now = Date.now();
+      const latestMetricAgeMs = latestMetric ? now - new Date(latestMetric.createdAt).getTime() : null;
+      const metricRecent = typeof latestMetricAgeMs === "number" && latestMetricAgeMs <= 6 * 60 * 60 * 1000;
+
+      const openMeteoStatus = !latestMetric
+        ? "warning"
+        : latestMetric.tipo === "ERROR"
+          ? "offline"
+          : metricRecent
+            ? "online"
+            : "warning";
+
+      const aemetAgeMs = aemetLatestAlert ? now - new Date(aemetLatestAlert.updatedAt).getTime() : null;
+      const aemetRecent = typeof aemetAgeMs === "number" && aemetAgeMs <= 24 * 60 * 60 * 1000;
+      const aemetStatus = !aemetConfigured ? "warning" : aemetRecent ? "online" : "warning";
+
+      return {
+        generatedAt: new Date().toISOString(),
+        users: {
+          totalNoAdmin: users.length,
+          activosNoAdmin,
+          eliminadosNoAdmin,
+        },
+        ia: {
+          totalPeticionesHoy,
+          usageByUser: iaUsageByUser,
+        },
+        weatherSync: {
+          latestMetricType: latestMetric?.tipo || null,
+          latestMetricAt: latestMetric?.createdAt || null,
+          latestLatencyMs: latestLatencyMetric?.valor ?? null,
+          latencySeries24h: latency24h.map((m) => ({
+            timestamp: m.createdAt,
+            value: m.valor,
+          })),
+        },
+        apiStatus: [
+          {
+            name: "Backend API",
+            status: "online",
+            source: "GET /health",
+            details: "Servicio Express en ejecución",
+          },
+          {
+            name: "Mistral IA",
+            status: mistralConfigured ? "online" : "warning",
+            source: "MISTRAL_API_KEY",
+            details: mistralConfigured
+              ? "Clave configurada en servidor"
+              : "Clave no configurada (chat en modo degradado)",
+          },
+          {
+            name: "Email recuperación",
+            status: emailRecoveryConfigured ? "online" : "warning",
+            source: "EMAIL_USER + EMAIL_PASSWORD",
+            details: emailRecoveryConfigured
+              ? "SMTP configurado para forgot/reset password"
+              : "Falta configuración SMTP para recuperación",
+          },
+          {
+            name: "Google OAuth",
+            status: googleOauthConfigured ? "online" : "warning",
+            source: "GOOGLE_CLIENT_ID",
+            details: googleOauthConfigured
+              ? "Login Google habilitado"
+              : "Google OAuth no configurado",
+          },
+          {
+            name: "Open-Meteo (sync)",
+            status: openMeteoStatus,
+            source: "SystemMetric (API_METEO)",
+            details: latestMetric
+              ? `Última métrica ${latestMetric.tipo} @ ${new Date(latestMetric.createdAt).toISOString()}`
+              : "Sin métricas registradas",
+          },
+          {
+            name: "AEMET Alerts",
+            status: aemetStatus,
+            source: "AEMET_API_KEY + última alerta persistida",
+            details: !aemetConfigured
+              ? "AEMET_API_KEY no configurada"
+              : aemetLatestAlert
+                ? `Última alerta actualizada @ ${new Date(aemetLatestAlert.updatedAt).toISOString()}`
+                : "Sin alertas persistidas aún",
+          },
+        ],
+      };
+    } catch (err) {
+      logger.error(`Error en adminService.getDashboard: ${err.message}`);
       throw err;
     }
   }
