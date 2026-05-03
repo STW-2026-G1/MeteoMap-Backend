@@ -11,9 +11,11 @@ class AemetAlertsController {
    */
   async getAlerts(req, res) {
     try {
+      // Leer el parámetro 'refresh' de la query string
+      const forceRefresh = req.query.refresh === 'true';
       logger.debug("AemetAlertsController.getAlerts - Solicitando alertas AEMET");
 
-      const alerts = await aemetAlertsService.fetchAlerts();
+      const alerts = await aemetAlertsService.fetchAlerts(forceRefresh);
 
       logger.info(`Alertas AEMET obtenidas: ${alerts.length} alertas activas`);
 

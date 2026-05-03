@@ -26,10 +26,10 @@ class aemetAlertsService {
    * Obtener alertas meteorológicas de AEMET (con caché de 30 minutos)
    * @returns {Promise<Array>} Array de alertas procesadas con coordenadas
    */
-  async fetchAlerts() {
+  async fetchAlerts(forceRefresh = false) {
     try {
       // Verificar caché válido
-      if (this._isCacheValid()) {
+      if (this._isCacheValid() && !forceRefresh) {
         logger.info(`Usando alertas en caché (edad: ${this._getCacheAge()}ms)`);
         return this.cache;
       }
