@@ -28,10 +28,27 @@ class aemetAlertsService {
    */
   async fetchAlerts(forceRefresh = false) {
     try {
-      // Verificar caché válido
+      // Verificar caché válido. Filtrar la caché para no devolver alertas ya caducadas
       if (this._isCacheValid() && !forceRefresh) {
         logger.info(`Usando alertas en caché (edad: ${this._getCacheAge()}ms)`);
-        return this.cache;
+        const now = new Date();
+        const filteredCache = Array.isArray(this.cache)
+          ? this.cache.filter(a => {
+              try {
+                return new Date(a.validez_fin) >= now;
+              } catch (e) {
+                return false;
+              }
+            })
+          : [];
+
+        if (filteredCache.length !== (this.cache ? this.cache.length : 0)) {
+          logger.info(`Caché: eliminadas ${ (this.cache ? this.cache.length - filteredCache.length : 0) } alertas expiradas`);
+          this.cache = filteredCache;
+          this.cacheTimestamp = Date.now();
+        }
+
+        return filteredCache;
       }
 
       if (!this.AEMET_API_KEY) {
@@ -61,12 +78,36 @@ class aemetAlertsService {
         logger.error(
           `AEMET API error: ${response.status} ${response.statusText}`
         );
-        // Retornar caché antigua si existe
+        // Si hay caché en memoria, devolverla (filtrada por validez)
         if (this.cache) {
           logger.warn('Usando caché obsoleto por error en API');
-          return this.cache;
+          const now = new Date();
+          const filteredCache = Array.isArray(this.cache)
+            ? this.cache.filter(a => {
+                try { return new Date(a.validez_fin) >= now; } catch (e) { return false; }
+              })
+            : [];
+          this.cache = filteredCache;
+          this.cacheTimestamp = Date.now();
+          return filteredCache;
         }
-        return [];
+
+        // Si no hay caché, recuperar alertas activas directamente desde la BD
+        try {
+          const activeAlertsFromDb = await AemetAlert.find({ validez_fin: { $gte: new Date() } }).lean();
+          const formattedAlerts = activeAlertsFromDb.map(doc => ({
+            ...doc,
+            id: doc.aemet_id,
+            _id: doc._id.toString(),
+          }));
+          // Actualizar caché con los datos de la BD
+          this.cache = formattedAlerts;
+          this.cacheTimestamp = Date.now();
+          return formattedAlerts;
+        } catch (dbErr) {
+          logger.error(`Error recuperando alertas desde BD tras fallo AEMET: ${dbErr.message}`);
+          return [];
+        }
       }
 
       const data = await response.json();
@@ -415,10 +456,10 @@ _normalizeAlerts(rawAlerts) {
     return normalizedAlerts;
   }
   /**
-   * Parsea el string "lat,long lat,long" y devuelve el primer punto como marcador
+   * Parsea el string "lat,long lat,long" y devuelve un punto medio estimado del polígono
    */
   _parseAemetPolygon(polygonData, id,nivel) {
-    // 1. Fallback seguro por si todo falla (Centro de la Península o puedes dejarlo en null/0 según prefieras)
+    // 1. Fallback seguro por si todo falla
     const fallbackCoords = { latitud: null, longitud: null };
 
     if (!polygonData) {
@@ -429,6 +470,9 @@ _normalizeAlerts(rawAlerts) {
     // 2. Normalizar la entrada a un único String
     let polygonStr = '';
     if (Array.isArray(polygonData)) {
+      if (polygonData.length > 1) {
+        logger.debug(`Se recibieron ${polygonData.length} polígonos para ID:${id}. Usando el primero.`);
+      }
       // Si hay múltiples polígonos, cogemos el primero para tener una aproximación
       polygonStr = polygonData[0]; 
     } else if (typeof polygonData === 'string') {
@@ -438,27 +482,75 @@ _normalizeAlerts(rawAlerts) {
       return fallbackCoords;
     }
 
-    // 3. Extraer los puntos del polígono (separados por espacios)
-    const points = polygonStr.trim().split(/\s+/); // Usamos regex para evitar fallos si hay dobles espacios
+    // 3. Extraer y validar todos los puntos del polígono (separados por espacios)
+    const points = polygonStr.trim().split(/\s+/); // Evita fallos con dobles espacios
+    const validPoints = [];
 
-    // 4. Buscar el primer punto que sea realmente válido
     for (const point of points) {
       const coords = point.split(",");
-      
-      if (coords.length >= 2) {
-        const lat = parseFloat(coords[0]);
-        const lon = parseFloat(coords[1]);
+      if (coords.length < 2) continue;
 
-        // Si hemos conseguido parsear dos números válidos, ¡los devolvemos y terminamos!
-        if (!isNaN(lat) && !isNaN(lon)) {
-          return { latitud: lat, longitud: lon };
-        }
+      const lat = parseFloat(coords[0]);
+      const lon = parseFloat(coords[1]);
+
+      if (this._isValidCoordinate(lat, lon)) {
+        validPoints.push({ lat, lon });
       }
     }
 
-    // 5. Si hemos recorrido todo y no hay nada válido, devolvemos el fallback
-    logger.debug(`No se encontraron coordenadas numéricas válidas en: ${polygonStr}`);
+    logger.debug(
+      `Polígono ID:${id} Nivel:${nivel} -> puntos válidos ${validPoints.length}/${points.length}`
+    );
+
+    // 4. Calcular centroide simple (punto medio estimado)
+    const centroid = this._calculatePolygonCentroid(validPoints);
+    if (centroid) {
+      return centroid;
+    }
+
+    // 5. Si no hay puntos válidos, devolvemos fallback
+    logger.debug(`No se pudo calcular centroide válido para ID:${id}.`);
     return fallbackCoords;
+  }
+
+  /**
+   * Valida que una coordenada sea numérica y esté en rangos geográficos válidos
+   * @private
+   */
+  _isValidCoordinate(lat, lon) {
+    return Number.isFinite(lat)
+      && Number.isFinite(lon)
+      && lat >= -90
+      && lat <= 90
+      && lon >= -180
+      && lon <= 180;
+  }
+
+  /**
+   * Calcula un centroide simple (media aritmética) de los vértices válidos
+   * @private
+   */
+  _calculatePolygonCentroid(points) {
+    if (!Array.isArray(points) || points.length === 0) {
+      return null;
+    }
+
+    let sumLat = 0;
+    let sumLon = 0;
+
+    for (const point of points) {
+      sumLat += point.lat;
+      sumLon += point.lon;
+    }
+
+    const latitud = sumLat / points.length;
+    const longitud = sumLon / points.length;
+
+    if (!this._isValidCoordinate(latitud, longitud)) {
+      return null;
+    }
+
+    return { latitud, longitud };
   }
 
 
