@@ -63,7 +63,7 @@ class WeatherService {
       const url = new URL("https://api.open-meteo.com/v1/forecast");
       url.searchParams.append("latitude", latitude);
       url.searchParams.append("longitude", longitude);
-      url.searchParams.append("hourly", "temperature_2m");
+      url.searchParams.set("hourly", "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation,rain,showers,snowfall,visibility");
       url.searchParams.append("forecast_hours", "12");
       url.searchParams.append("timezone", "Europe/Madrid");
 
@@ -87,11 +87,30 @@ class WeatherService {
 
       logger.debug("Predicción de temperatura recibida de Open-Meteo");
 
-      // Transformar respuesta a formato estándar
-      return data.hourly.time.map((time, index) => ({
-        hora: new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-        temperatura: Math.round(data.hourly.temperature_2m[index])
-      }));
+      // Transformar respuesta a formato estándar (incluye todas las métricas horarias)
+      return data.hourly.time.map((time, index) => {
+        const temp = data.hourly.temperature_2m?.[index];
+        const aparent = data.hourly.apparent_temperature?.[index];
+        const wind = data.hourly.wind_speed_10m?.[index];
+        const humidity = data.hourly.relative_humidity_2m?.[index];
+        const code = data.hourly.weather_code?.[index];
+
+        return {
+          hora: new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+          temperatura: temp != null ? Math.round(temp) : null,
+          temperatura_aparente: aparent != null ? Math.round(aparent) : null,
+          humedad: humidity != null ? Math.round(humidity) : null,
+          codigo_clima: code != null ? code : null,
+          descripcion: code != null ? this._getWeatherDescription(code) : null,
+          velocidad_viento: wind != null ? Math.round(wind) : null,
+          direccion_viento: data.hourly.wind_direction_10m?.[index] ?? null,
+          precipitacion: data.hourly.precipitation?.[index] ?? null,
+          lluvia: data.hourly.rain?.[index] ?? null,
+          chubascos: data.hourly.showers?.[index] ?? null,
+          nieve: data.hourly.snowfall?.[index] ?? null,
+          visibilidad: data.hourly.visibility?.[index] ?? null,
+        };
+      });
     } catch (err) {
       logger.error(`Error obteniendo predicción de Open-Meteo: ${err.name} - ${err.message}`);
       logger.debug(`Stack trace: ${err.stack}`);
@@ -218,7 +237,7 @@ class WeatherService {
       url.searchParams.append("latitude", latitudes);
       url.searchParams.append("longitude", longitudes);
       url.searchParams.append("current", "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation,rain,showers,snowfall,visibility");
-      url.searchParams.append("hourly", "temperature_2m");
+      url.searchParams.set("hourly", "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,precipitation,rain,showers,snowfall,visibility");
       url.searchParams.append("forecast_hours", "12");
       url.searchParams.append("timezone", "Europe/Madrid");
 
@@ -292,10 +311,29 @@ class WeatherService {
       return [];
     }
 
-    return data.hourly.time.map((time, index) => ({
-      hora: new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-      temperatura: Math.round(data.hourly.temperature_2m[index]),
-    }));
+    return data.hourly.time.map((time, index) => {
+      const temp = data.hourly.temperature_2m?.[index];
+      const aparent = data.hourly.apparent_temperature?.[index];
+      const wind = data.hourly.wind_speed_10m?.[index];
+      const humidity = data.hourly.relative_humidity_2m?.[index];
+      const code = data.hourly.weather_code?.[index];
+
+      return {
+        hora: new Date(time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        temperatura: temp != null ? Math.round(temp) : null,
+        temperatura_aparente: aparent != null ? Math.round(aparent) : null,
+        humedad: humidity != null ? Math.round(humidity) : null,
+        codigo_clima: code != null ? code : null,
+        descripcion: code != null ? this._getWeatherDescription(code) : null,
+        velocidad_viento: wind != null ? Math.round(wind) : null,
+        direccion_viento: data.hourly.wind_direction_10m?.[index] ?? null,
+        precipitacion: data.hourly.precipitation?.[index] ?? null,
+        lluvia: data.hourly.rain?.[index] ?? null,
+        chubascos: data.hourly.showers?.[index] ?? null,
+        nieve: data.hourly.snowfall?.[index] ?? null,
+        visibilidad: data.hourly.visibility?.[index] ?? null,
+      };
+    });
   }
 
   /**
