@@ -413,6 +413,9 @@ _normalizeAlerts(rawAlerts) {
 
         // Extraer coordenadas del polígono
         const coordenadas = this._parseAemetPolygon(polygon, identifier, nivel);
+        // Guardar raw polygon y convertir a GeoJSON si es posible
+        const poligono_raw = Array.isArray(polygon) ? polygon.join(' | ') : (typeof polygon === 'string' ? polygon : null);
+        const poligono_geojson = this._convertPolygonToGeoJSON(polygon);
 
         // Construir alerta normalizada con TODOS los campos
         const normalizedAlert = {
@@ -435,6 +438,8 @@ _normalizeAlerts(rawAlerts) {
             longitud: coordenadas.longitud
           },
           color: this._mapColorByNivel(nivel.toLowerCase()),
+          poligono_raw,
+          poligono_geojson,
         };
 
         logger.debug(
@@ -551,6 +556,58 @@ _normalizeAlerts(rawAlerts) {
     }
 
     return { latitud, longitud };
+  }
+
+
+  /**
+   * Convierte el polígono en formato AEMET ("lat,lon lat,lon ..." o array de esos strings)
+   * a GeoJSON Polygon o MultiPolygon. Retorna null si no es posible.
+   * @private
+   */
+  _convertPolygonToGeoJSON(polygonData) {
+    try {
+      if (!polygonData) return null;
+
+      const parseSingle = (polygonStr) => {
+        const points = polygonStr.trim().split(/\s+/);
+        const coords = [];
+        for (const p of points) {
+          const [latStr, lonStr] = p.split(',');
+          const lat = parseFloat(latStr);
+          const lon = parseFloat(lonStr);
+          if (!this._isValidCoordinate(lat, lon)) continue;
+          // GeoJSON espera [lon, lat]
+          coords.push([lon, lat]);
+        }
+        return coords.length >= 3 ? coords : null; // un polígono válido necesita al menos 3 vértices
+      };
+
+      // Si viene un array con varios polígonos, construir MultiPolygon
+      if (Array.isArray(polygonData)) {
+        const polygons = [];
+        for (const poly of polygonData) {
+          const coords = parseSingle(poly);
+          if (coords) polygons.push([coords]); // GeoJSON MultiPolygon: [ [ [lon,lat], ... ] ]
+        }
+        if (polygons.length === 0) return null;
+        if (polygons.length === 1) {
+          return { type: 'Polygon', coordinates: polygons[0] };
+        }
+        return { type: 'MultiPolygon', coordinates: polygons };
+      }
+
+      // Si es string
+      if (typeof polygonData === 'string') {
+        const coords = parseSingle(polygonData);
+        if (!coords) return null;
+        return { type: 'Polygon', coordinates: [coords] };
+      }
+
+      return null;
+    } catch (err) {
+      logger.debug(`Error convirtiendo polígono a GeoJSON: ${err.message}`);
+      return null;
+    }
   }
 
 
@@ -698,6 +755,8 @@ _normalizeAlerts(rawAlerts) {
         urgencia: alert.urgencia,
         enlace: alert.enlace,
         coordenadas: alert.coordenadas,
+        poligono_raw: alert.poligono_raw || null,
+        poligono_geojson: alert.poligono_geojson || null,
         color: alert.color,
         emision: new Date(alert.emision),
         validez_inicio: new Date(alert.validez_inicio),

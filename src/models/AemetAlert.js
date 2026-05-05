@@ -23,6 +23,12 @@ const aemetAlertSchema = new mongoose.Schema(
       latitud: Number,
       longitud: Number,
     },
+    // Polígono original (string tal como viene de AEMET) y su representación GeoJSON
+    poligono_raw: { type: String, default: null },
+    poligono_geojson: {
+      type: { type: String },
+      coordinates: { type: Array },
+    },
     
     // Colores y validez
     color: String, //Color en hexa
@@ -47,5 +53,8 @@ aemetAlertSchema.index(
   { validez_fin: 1 },
   { expireAfterSeconds: 0 } // TTL index: documento se elimina cuando validez_fin < ahora
 );
+
+// Índice geoespacial 2dsphere para consultar polígonos en GeoJSON
+aemetAlertSchema.index({ poligono_geojson: '2dsphere' });
 
 module.exports = mongoose.model("AemetAlert", aemetAlertSchema);
