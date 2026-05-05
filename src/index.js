@@ -141,9 +141,12 @@ async function start() {
   try {
     await connect();
 
-    // Iniciar tarea de sincronización de datos meteorológicos
+    // Iniciar tareas cron
     const weatherSyncTask = require("./tasks/weatherSyncTask");
     weatherSyncTask.start();
+
+    const quotaResetTask = require("./tasks/quotaResetTask");
+    quotaResetTask.start();
 
     app.listen(PORT, () => {
       logger.info(`Servidor ejecutándose en http://localhost:${PORT}`);

@@ -150,17 +150,6 @@ class ChatService {
       const user = await User.findById(usuario_id);
       if (!user) throw new Error("Usuario no encontrado");
 
-      const ahora = new Date();
-      const ultimoReset = user.limites_ia?.ultimo_reset || ahora;
-      
-      // ¿Ha pasado un día desde el último reset?
-      const esMismoDia = ahora.toDateString() === ultimoReset.toDateString();
-
-      if (!esMismoDia) {
-        user.limites_ia.peticiones_hoy = 0;
-        user.limites_ia.ultimo_reset = ahora;
-      }
-
       // Solo aplicar el bloqueo si NO es ADMIN
       const userRol = user.datos_acceso?.rol || rol;
       if (userRol !== "ADMIN" && user.limites_ia.peticiones_hoy >= 10) {

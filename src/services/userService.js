@@ -236,6 +236,60 @@ class UserService {
       throw err;
     }
   }
+
+  /**
+   * Obtener información de límites de IA del usuario
+   */
+  async getLimitesIA(userId) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        const error = new Error("Usuario no encontrado");
+        error.status = 404;
+        throw error;
+      }
+
+      const limitePorDia = 10;
+      const usoDia = user.limites_ia?.peticiones_hoy || 0;
+      const disponibles = Math.max(0, limitePorDia - usoDia);
+
+      return {
+        limite_diario: limitePorDia,
+        peticiones_usadas: usoDia,
+        peticiones_disponibles: disponibles,
+        ultimo_reset: user.limites_ia?.ultimo_reset,
+        reajuste_en: this._calcularTiempoReajuste(user.limites_ia?.ultimo_reset)
+      };
+    } catch (err) {
+      logger.error(`Error en getLimitesIA: ${err.message}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Calcular cuánto tiempo falta para el próximo reajuste de cuota
+   * @private
+   */
+  _calcularTiempoReajuste(ultimoReset) {
+    if (!ultimoReset) return null;
+
+    const ahora = new Date();
+    const proximoReset = new Date(ultimoReset.getTime() + 24 * 60 * 60 * 1000);
+    
+    if (proximoReset <= ahora) {
+      return 0; // Ya se puede resetear
+    }
+
+    const diferencia = proximoReset - ahora;
+    const horas = Math.floor(diferencia / (1000 * 60 * 60));
+    const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return {
+      horas,
+      minutos,
+      proxima_fecha: proximoReset
+    };
+  }
 }
 
 module.exports = new UserService();
