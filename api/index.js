@@ -4,7 +4,6 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const swaggerUi = require("swagger-ui-express");
 
 const logger = require("../src/config/logger");
 const swaggerSpec = require("../src/config/swagger");
@@ -45,15 +44,42 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime(), version: "1.0.0" });
 });
 
-// Swagger UI
-app.use(
-  "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customSiteTitle: "Mountain Safety Platform API Docs",
-    swaggerOptions: { persistAuthorization: true },
-  })
-);
+// Swagger UI served from CDN so Vercel does not need to proxy local assets.
+app.get("/docs", (req, res) => {
+  const specJson = JSON.stringify(swaggerSpec);
+
+  res.type("html").send(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mountain Safety Platform API Docs</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
+    <style>
+      body { margin: 0; background: #f7f7f9; }
+      #swagger-ui { max-width: 100vw; }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          spec: ${specJson},
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          persistAuthorization: true,
+          displayRequestDuration: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'StandaloneLayout'
+        });
+      };
+    </script>
+  </body>
+</html>`);
+});
 
 // Expose raw OpenAPI spec
 app.get("/docs.json", (req, res) => {
