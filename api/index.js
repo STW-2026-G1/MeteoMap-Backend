@@ -44,6 +44,11 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime(), version: "1.0.0" });
 });
 
+// Redirect root to API docs
+app.get("/", (req, res) => {
+  res.redirect(302, "/docs");
+});
+
 // Swagger UI served from CDN so Vercel does not need to proxy local assets.
 app.get("/docs", (req, res) => {
   const specJson = JSON.stringify(swaggerSpec);
