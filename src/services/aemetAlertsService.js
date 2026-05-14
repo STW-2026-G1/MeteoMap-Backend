@@ -66,35 +66,67 @@ class aemetAlertsService {
 
       logger.debug(`Obteniendo alertas de AEMET desde: ${this.AEMET_ALERTS_URL}`);
 
-      const controller = new AbortController();
-      const timeoutMs = 30000;
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      const requestStartedAt = Date.now();
+      // Reintentos configurables con backoff exponencial
+      const maxRetries = parseInt(process.env.AEMET_FETCH_RETRIES || '3', 10) || 3;
+      const baseDelayMs = parseInt(process.env.AEMET_FETCH_BASE_DELAY_MS || '300', 10) || 300;
+      const timeoutMs = parseInt(process.env.AEMET_FETCH_TIMEOUT_MS || '30000', 10) || 30000;
 
-      logger.debug(`AEMET request 1 iniciado con timeout=${timeoutMs}ms`);
+      let response = null;
+      let lastErr = null;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const requestStartedAt = Date.now();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      let response;
-      try {
-        response = await fetch(`${this.AEMET_ALERTS_URL}`, {
-          signal: controller.signal,
-          headers: {
-            "api_key": this.AEMET_API_KEY,
-          },
-        });
-      } catch (fetchErr) {
-        const duration = Date.now() - requestStartedAt;
-        logger.error(
-          `AEMET request 1 falló tras ${duration}ms: ${fetchErr.name} - ${fetchErr.message}`
-        );
-        logger.debug(`AEMET request 1 stack: ${fetchErr.stack}`);
-        throw fetchErr;
-      } finally {
-        clearTimeout(timeoutId);
+        logger.debug(`AEMET request ${attempt} iniciado con timeout=${timeoutMs}ms (attempt ${attempt}/${maxRetries})`);
+
+        try {
+          response = await fetch(this.AEMET_ALERTS_URL, {
+            signal: controller.signal,
+            headers: { api_key: this.AEMET_API_KEY },
+          });
+
+          logger.debug(
+            `AEMET request ${attempt} completado en ${Date.now() - requestStartedAt}ms con status=${response.status}`
+          );
+
+          // Si la respuesta es OK, salimos del bucle y la procesamos
+          if (response && response.ok) {
+            clearTimeout(timeoutId);
+            lastErr = null;
+            break;
+          }
+
+          // Si la respuesta no es OK, registremos y no reintentamos muchas veces
+          logger.error(`AEMET API returned non-ok status on attempt ${attempt}: ${response.status} ${response.statusText}`);
+          clearTimeout(timeoutId);
+          lastErr = new Error(`AEMET API status ${response.status}`);
+          break;
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          lastErr = fetchErr;
+          const duration = Date.now() - requestStartedAt;
+          logger.error(
+            `AEMET request ${attempt} falló tras ${duration}ms: ${fetchErr.name} - ${fetchErr.message} code=${fetchErr.code || 'n/a'} errno=${fetchErr.errno || 'n/a'}`
+          );
+          logger.debug(`AEMET request ${attempt} stack: ${fetchErr.stack}`);
+
+          if (attempt < maxRetries) {
+            const delay = Math.pow(2, attempt - 1) * baseDelayMs;
+            logger.info(`Reintentando en ${delay}ms (intento ${attempt + 1}/${maxRetries})`);
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+          }
+
+          // último intento falló
+          logger.error(`AEMET request failed after ${attempt} attempts`);
+        }
       }
 
-      logger.debug(
-        `AEMET request 1 completado en ${Date.now() - requestStartedAt}ms con status=${response.status}`
-      );
+      if (!response || lastErr) {
+        // Propagar el último error para que el fallback se active más abajo
+        throw lastErr || new Error('Unknown error fetching AEMET alerts');
+      }
 
       if (!response.ok) {
         logger.error(
@@ -238,30 +270,39 @@ class aemetAlertsService {
    */
   async _downloadTar(url) {
     logger.debug(`Descargando archivo comprimido desde: ${url}`);
-    
-    const controller = new AbortController();
-    const timeoutMs = 30000;
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    const startedAt = Date.now();
+    // Añadimos reintentos también para la descarga del TAR
+    const maxRetries = parseInt(process.env.AEMET_DOWNLOAD_RETRIES || '3', 10) || 3;
+    const baseDelayMs = parseInt(process.env.AEMET_FETCH_BASE_DELAY_MS || '300', 10) || 300;
+    const timeoutMs = parseInt(process.env.AEMET_DOWNLOAD_TIMEOUT_MS || '30000', 10) || 30000;
 
-    logger.debug(`AEMET download TAR iniciado con timeout=${timeoutMs}ms`);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const startedAt = Date.now();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      logger.debug(`AEMET download TAR intento ${attempt}/${maxRetries} iniciado con timeout=${timeoutMs}ms`);
 
-    try {
-      const response = await fetch(url, { signal: controller.signal });
-      logger.debug(
-        `AEMET download TAR completado en ${Date.now() - startedAt}ms con status=${response.status}`
-      );
-      if (!response.ok) throw new Error(`Falló la descarga: ${response.status} ${response.statusText}`);
-      
-      const arrayBuffer = await response.arrayBuffer();
-      return Buffer.from(arrayBuffer);
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        throw new Error(`Timeout descargando el archivo de alertas de AEMET tras ${timeoutMs}ms`);
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        logger.debug(`AEMET download TAR completado en ${Date.now() - startedAt}ms con status=${response.status}`);
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`Falló la descarga: ${response.status} ${response.statusText}`);
+        const arrayBuffer = await response.arrayBuffer();
+        return Buffer.from(arrayBuffer);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        logger.error(`AEMET download TAR intento ${attempt} falló: ${error.name} - ${error.message} code=${error.code || 'n/a'}`);
+        logger.debug(`AEMET download TAR stack: ${error.stack}`);
+        if (attempt < maxRetries) {
+          const delay = Math.pow(2, attempt - 1) * baseDelayMs;
+          logger.info(`Reintentando descarga en ${delay}ms (intento ${attempt + 1}/${maxRetries})`);
+          await new Promise((r) => setTimeout(r, delay));
+          continue;
+        }
+        if (error.name === 'AbortError') {
+          throw new Error(`Timeout descargando el archivo de alertas de AEMET tras ${timeoutMs}ms`);
+        }
+        throw error;
       }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
     }
   }
   /**
