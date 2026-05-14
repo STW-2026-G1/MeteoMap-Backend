@@ -14,36 +14,56 @@ jobs:
         node-version: [18.x, 20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Instalar dependencias 
-      run: npm ci               # Instala dependencias estrictamente 
-    - run: npm run build --if-present
-    # Activar cuando esten los test
-    # - name: Probar pruebas automaticas 
-    #   run: npm test             # Ejecuta test automatizados
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9 # O la versión que estés usando localmente
+
+      - name: Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm' # Cache de dependencias para acelerar futuros builds
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build --if-present
+
+
+deploy:
+    runs-on: ubuntu-latest
+    needs: build # Solo se ejecuta si el build pasa
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Solo despliega en push a main
     
+    steps:
+      - uses: actions/checkout@v4
 
-  ## TODO
-  # deploy:
-  #   permissions:
-  #     contents: none
-  #   runs-on: ubuntu-latest
-  #   needs: build
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
-  #   steps:
-  #     - name: Desplegar en Raspberry Pi
-  #       uses: appleboy/ssh-action@v1.0.3
-  #       with:
-  #         host: ${{ secrets.REMOTE_HOST }}        
-  #         username: ${{ secrets.REMOTE_USER }}   
-  #         key: ${{ secrets.DEPLOY_ACCESS }}      
-  #         script: |
-  #           cd MeteoMap-Backend/
-  #           npm install --production
-  #           pm2 restart meteomap-backend
+      - name: Instalar Vercel CLI
+        run: pnpm add -g vercel
 
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
