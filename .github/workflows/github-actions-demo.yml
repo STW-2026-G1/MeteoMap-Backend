@@ -34,7 +34,7 @@ jobs:
         run: pnpm run build --if-present
 
 
-deploy:
+  deploy:
     runs-on: ubuntu-latest
     needs: build # Solo se ejecuta si el build pasa
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Solo despliega en push a main
