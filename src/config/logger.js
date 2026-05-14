@@ -2,6 +2,7 @@ const { createLogger, format, transports } = require("winston");
 const path = require("path");
 
 const { combine, timestamp, printf, colorize, errors, splat, json } = format;
+const useFileTransports = !process.env.VERCEL;
 
 // Formato visual y limpio
 const devFormat = printf(({ level, message, timestamp, stack, ...meta }) => {
@@ -30,17 +31,20 @@ const logger = createLogger({
           ? combine(json())
           : combine(colorize(), devFormat),
     }),
-    
-    // Guarda un registro permanente en la carpeta "logs"
-    new transports.File({
-      filename: path.join("logs", "error.log"),
-      level: "error", // Archivo exclusivo para errores graves
-      format: combine(json()),
-    }),
-    new transports.File({
-      filename: path.join("logs", "combined.log"),
-      format: combine(json()), // Archivo general con absolutamente todo el historial
-    }),
+    ...(useFileTransports
+      ? [
+          // Guarda un registro permanente en la carpeta "logs"
+          new transports.File({
+            filename: path.join("logs", "error.log"),
+            level: "error",
+            format: combine(json()),
+          }),
+          new transports.File({
+            filename: path.join("logs", "combined.log"),
+            format: combine(json()),
+          }),
+        ]
+      : []),
   ],
 });
 

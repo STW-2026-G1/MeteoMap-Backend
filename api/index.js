@@ -5,8 +5,6 @@ const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const swaggerUi = require("swagger-ui-express");
-const fs = require("fs");
-const path = require("path");
 
 const logger = require("../src/config/logger");
 const swaggerSpec = require("../src/config/swagger");
@@ -26,9 +24,6 @@ const commentsRouter = require("../src/routes/comments");
 const chatRouter = require("../src/routes/chat");
 const adminRouter = require("../src/routes/admin");
 const aemetAlertsRouter = require("../src/routes/aemet-alerts");
-
-// Ensure log directory exists
-fs.mkdirSync(path.join(process.cwd(), "logs"), { recursive: true });
 
 // App setup
 const app = express();
