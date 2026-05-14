@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "pnpm install",
-  "env": {
-    "NODE_ENV": "production"
-  },
   "functions": {
     "api/index.js": {
       "memory": 1024,
@@ -15,5 +11,8 @@
       "src": "/(.*)",
       "dest": "api/index.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
