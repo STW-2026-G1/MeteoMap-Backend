@@ -92,6 +92,31 @@ app.get("/docs.json", (req, res) => {
   res.send(swaggerSpec);
 });
 
+// Connect MongoDB before any API route can execute a query.
+// This is skipped for /health, /, /docs and /docs.json so those stay fast.
+let dbConnectPromise;
+
+async function ensureDatabaseConnection() {
+  if (!dbConnectPromise) {
+    dbConnectPromise = connect().catch((err) => {
+      dbConnectPromise = undefined;
+      throw err;
+    });
+  }
+
+  return dbConnectPromise;
+}
+
+app.use("/api", async (req, res, next) => {
+  try {
+    await ensureDatabaseConnection();
+    next();
+  } catch (err) {
+    logger.error("Database connection failed", { error: err.message });
+    return res.status(500).json({ error: "Database connection failed" });
+  }
+});
+
 // API routes
 app.use("/api/auth", authRouter);
 app.use("/api/user", usersRouter);
@@ -106,20 +131,5 @@ app.use("/api/admin", isAuth, requireAdmin, adminRouter);
 // Error handling
 app.use(notFound);
 app.use(errorHandler);
-
-// Initialize database on first request
-let dbConnected = false;
-app.use(async (req, res, next) => {
-  if (!dbConnected) {
-    try {
-      await connect();
-      dbConnected = true;
-    } catch (err) {
-      logger.error("Database connection failed", { error: err.message });
-      return res.status(500).json({ error: "Database connection failed" });
-    }
-  }
-  next();
-});
 
 module.exports = app;
