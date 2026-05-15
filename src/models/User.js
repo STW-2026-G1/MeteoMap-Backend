@@ -7,7 +7,8 @@ const userSchema = new mongoose.Schema(
       email: { type: String, required: true, unique: true, lowercase: true },
       password_hash: { type: String, required: false }, // Opcional para OAuth
       google_id: { type: String, unique: true, sparse: true }, // Para OAuth con Google
-      provider: { type: String, enum: ["local", "google"], default: "local" },
+      github_id: { type: String, unique: true, sparse: true }, // Para OAuth con GitHub
+      provider: { type: String, enum: ["local", "google", "github"], default: "local" },
       rol: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
     },
     // Perfil

@@ -123,6 +123,38 @@ router.post("/login-google", authController.loginGoogle);
 
 /**
  * @swagger
+ * /api/auth/login-github:
+ *   post:
+ *     summary: Login con GitHub OAuth2
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code: { type: string, description: "Authorization code from GitHub" }
+ *     responses:
+ *       200:
+ *         description: Login exitoso con GitHub
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 accessToken: { type: string }
+ *                 user: { type: object }
+ *       400:
+ *         description: Código inválido o faltante
+ *       500:
+ *         description: Error en servidor
+ */
+router.post("/login-github", authController.loginGithub);
+
+/**
+ * @swagger
  * /api/auth/forgot-password:
  *   post:
  *     summary: Solicitar recuperación de contraseña

@@ -1,7 +1,8 @@
 const authService = require("../services/authService");
 const googleAuthService = require("../services/googleAuthService");
+const githubAuthService = require("../services/githubAuthService");
 const tokenService = require("../services/tokenService");
-const { verifyGoogleToken } = require("../utils/oauthValidator");
+const { verifyGoogleToken, verifyGithubCode } = require("../utils/oauthValidator");
 const logger = require("../config/logger");
 const chatService = require("../services/chatService");
 
@@ -98,6 +99,65 @@ class AuthController {
 
       res.json({
         message: "Login con Google exitoso",
+        accessToken,
+        user: {
+          id: user._id.toString(),
+          email: user.datos_acceso.email,
+          nombre: user.perfil.nombre,
+          avatar_style: user.perfil.avatar_style,
+          avatar_seed: user.perfil.avatar_seed,
+          biografia: user.perfil.biografia,
+          ubicacion: user.perfil.ubicacion,
+          avatar_url: user.perfil.avatar_url,
+          rol: user.datos_acceso.rol,
+          createdAt: user.createdAt,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/auth/login-github
+   * Iniciar sesión con GitHub OAuth2
+   */
+  async loginGithub(req, res, next) {
+    try {
+      const { code } = req.body;
+
+      if (!code) {
+        return res.status(400).json({
+          error: "código de autorización requerido",
+        });
+      }
+
+      const clientId = process.env.GITHUB_CLIENT_ID;
+      const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+      if (!clientId || !clientSecret) {
+        logger.error("GITHUB_CLIENT_ID o GITHUB_CLIENT_SECRET no configurado");
+        return res.status(500).json({
+          error: "Configuración de servidor incompleta",
+        });
+      }
+
+      // Intercambiar código por token y obtener datos de GitHub
+      const githubUser = await verifyGithubCode(code, clientId, clientSecret);
+
+      // Procesar login con GitHub (crear o actualizar usuario)
+      const { user } = await githubAuthService.handleGithubLogin(githubUser);
+
+      // Generar JWT
+      const accessToken = tokenService.generateSingleJWT({
+        userId: user._id.toString(),
+        email: user.datos_acceso.email,
+        rol: user.datos_acceso.rol,
+      });
+
+      logger.info(`Login exitoso con GitHub: ${user.datos_acceso.email}`);
+
+      res.json({
+        message: "Login con GitHub exitoso",
         accessToken,
         user: {
           id: user._id.toString(),
