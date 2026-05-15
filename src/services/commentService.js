@@ -3,9 +3,22 @@ const Report = require("../models/Report");
 const User = require("../models/User");
 const logger = require("../config/logger");
 
+/**
+ * @file Servicio de Comentarios
+ * @module services/commentService
+ * @description Implementa la lógica de negocio para gestión de comentarios:
+ * - Obtención de comentarios por zona o reporte
+ * - Creación de comentarios con soporte para respuestas (threaded)
+ * - Edición y eliminación de comentarios
+ * - Sistema de likes
+ * - Gestión de estado (ACTIVO)
+ */
 class CommentService {
   /**
    * Obtener comentarios por zona
+   * @param {string} zoneId - ID de la zona
+   * @param {number} limit - Límite de comentarios (por defecto 50)
+   * @returns {object} Conteo y array de comentarios principales (sin respuestas)
    */
   async getCommentsByZone(zoneId, limit = 50) {
     try {
@@ -28,6 +41,9 @@ class CommentService {
 
   /**
    * Obtener comentarios embebidos de un reporte
+   * @param {string} reportId - ID del reporte
+   * @param {number} limit - Límite de comentarios (por defecto 50)
+   * @returns {object} Conteo y array de comentarios principales
    */
   async getReportComments(reportId, limit = 50) {
     try {
@@ -50,6 +66,8 @@ class CommentService {
 
   /**
    * Crear comentario (híbrido: zona o reporte)
+   * @param {object} commentData - Datos del comentario (usuario_id, zona_id, reporte_id, contenido, etiqueta, parent_id)
+   * @returns {object} Comentario creado y poblado
    */
   async createComment(commentData) {
       try {
@@ -102,7 +120,9 @@ class CommentService {
    }
 
   /**
-   * Eliminar comentario 
+   * Eliminar comentario
+   * @param {string} commentId - ID del comentario
+   * @returns {object} Mensaje de confirmación
    */
   async deleteComment(commentId) {
   try {
@@ -121,6 +141,12 @@ class CommentService {
   }
 }
 
+  /**
+   * Dar "like" a un comentario
+   * @param {string} commentId - ID del comentario
+   * @param {string} userId - ID del usuario
+   * @returns {object} Comentario actualizado
+   */
   async likeComment(commentId, userId) {
    // $addToSet añade el ID al array solo si no existe ya
    return await Comment.findByIdAndUpdate(
@@ -130,6 +156,12 @@ class CommentService {
    );
    }
 
+  /**
+   * Quitar "like" a un comentario
+   * @param {string} commentId - ID del comentario
+   * @param {string} userId - ID del usuario
+   * @returns {object} Comentario actualizado
+   */
   async unlikeComment(commentId, userId) {
       // $pull elimina el ID del array
       return await Comment.findByIdAndUpdate(

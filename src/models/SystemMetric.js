@@ -1,3 +1,11 @@
+/**
+ * @file Modelo de Métrica del Sistema
+ * @module models/SystemMetric
+ * @description Modelo que registra métricas del sistema para monitoreo y análisis. Captura eventos como
+ * errores, latencias, uso de tokens en API de IA y nuevos reportes. Cada métrica incluye origen del evento,
+ * tipo específico, valor numérico y detalles adicionales en formato libre.
+ */
+
 const mongoose = require("mongoose");
 
 const metricSchema = new mongoose.Schema(

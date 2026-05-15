@@ -1,10 +1,25 @@
+/**
+ * @file Controlador de chat
+ * @module controllers/ChatController
+ * @description Maneja las solicitudes HTTP del chatbot inteligente y mapea hacia los servicios correspondientes.
+ * Gestiona las preguntas del usuario y proporciona respuestas inteligentes basadas en datos meteorológicos y de usuario.
+ */
+
 const chatService = require("../services/chatService");
 const logger = require("../config/logger");
 
 class ChatController {
   /**
-   * POST /api/chat/ask
-   * Endpoint principal del chatbot inteligente
+   * Procesa una pregunta del usuario y retorna una respuesta del chatbot inteligente
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.body.pregunta - Pregunta del usuario
+   * @param {Object} req.body.contexto - Contexto opcional para mejorar la respuesta
+   * @param {string} req.user.userId - ID del usuario autenticado
+   * @param {string} req.user.rol - Rol del usuario
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Respuesta con datos del chatbot, respuesta y datos utilizados
    */
   async getResponse(req, res, next) {
     try {

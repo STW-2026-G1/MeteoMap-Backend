@@ -1,3 +1,10 @@
+/**
+ * @file Controlador de autenticación
+ * @module controllers/AuthController
+ * @description Maneja las solicitudes HTTP de autenticación y mapea hacia los servicios correspondientes.
+ * Gestiona registro, login, OAuth (Google y GitHub), recuperación de contraseña, y logout.
+ */
+
 const authService = require("../services/authService");
 const googleAuthService = require("../services/googleAuthService");
 const githubAuthService = require("../services/githubAuthService");

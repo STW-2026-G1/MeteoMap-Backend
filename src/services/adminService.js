@@ -3,10 +3,25 @@ const logger = require("../config/logger");
 const SystemMetric = require("../models/SystemMetric");
 const AemetAlert = require("../models/AemetAlert");
 
+/**
+ * @file Servicio de Administración
+ * @module services/adminService
+ * @description Implementa la lógica de negocio para funciones administrativas:
+ * - Gestión de usuarios (obtener, actualizar, eliminar, restaurar)
+ * - Dashboard del sistema con estadísticas
+ * - Monitoreo del estado de APIs y servicios
+ * - Tracking de uso de IA y métricas del sistema
+ * - Serialización y validación de datos
+ */
 class AdminService {
+  /**
+   * Serializar usuario para respuestas API
+   * @param {object} user - Documento de usuario de MongoDB
+   * @returns {object} Objeto serializado del usuario
+   */
   serializeUser(user) {
     const plainUser = user.toObject({ virtuals: true });
-
+    
     return {
       id: plainUser._id.toString(),
       email: plainUser.datos_acceso?.email,
@@ -25,6 +40,10 @@ class AdminService {
     };
   }
 
+  /**
+   * Obtener lista de usuarios (sin administradores)
+   * @returns {object} Conteo total y array de usuarios
+   */
   async getUsers() {
     try {
       const users = await User.find({
@@ -41,6 +60,12 @@ class AdminService {
     }
   }
 
+  /**
+   * Actualizar usuario desde panel de administración
+   * @param {string} userId - ID del usuario
+   * @param {object} updateData - Datos a actualizar (nombre, email, estado, biografia, ubicacion, avatar_style)
+   * @returns {object} Mensaje y usuario actualizado
+   */
   async updateUser(userId, updateData) {
     try {
       const user = await User.findById(userId);
@@ -117,6 +142,11 @@ class AdminService {
     }
   }
 
+  /**
+   * Eliminar usuario desde panel de administración
+   * @param {string} userId - ID del usuario
+   * @returns {object} Mensaje de confirmación
+   */
   async deleteUser(userId) {
     try {
       const user = await User.findById(userId);
@@ -154,6 +184,11 @@ class AdminService {
     }
   }
 
+  /**
+   * Restaurar usuario eliminado
+   * @param {string} userId - ID del usuario
+   * @returns {object} Mensaje y usuario restaurado
+   */
   async restoreUser(userId) {
     try {
       const user = await User.findById(userId);
@@ -191,6 +226,10 @@ class AdminService {
     }
   }
 
+  /**
+   * Obtener dashboard del sistema con estadísticas y estado de servicios
+   * @returns {object} Dashboard completo con usuario, IA, weatherSync y apiStatus
+   */
   async getDashboard() {
     try {
       const [users, latestMetric, latency24h, aemetLatestAlert] = await Promise.all([

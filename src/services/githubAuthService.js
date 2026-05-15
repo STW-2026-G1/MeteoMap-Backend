@@ -2,13 +2,19 @@ const logger = require("../config/logger");
 const User = require("../models/User");
 
 /**
- * Servicio para autenticación con GitHub OAuth2
+ * @file Servicio de Autenticación con GitHub OAuth2
+ * @module services/githubAuthService
+ * @description Implementa la lógica de negocio para autenticación con GitHub:
+ * - Validación de datos de usuario de GitHub API
+ * - Creación automática de usuarios
+ * - Vinculación de cuentas existentes
+ * - Gestión de proveedores OAuth
  */
 class GithubAuthService {
   /**
    * Verifica y procesa login con GitHub
-   * @param {object} githubUser - Datos del usuario obtenidos de GitHub API
-   * @returns {object} Usuario autenticado o nuevo usuario creado
+   * @param {object} githubUser - Datos del usuario obtenidos de GitHub API (email, name, login, id, avatar_url)
+   * @returns {object} Objeto con isNewUser y usuario creado o existente
    */
   async handleGithubLogin(githubUser) {
     try {
@@ -91,6 +97,8 @@ class GithubAuthService {
 
   /**
    * Valida que un usuario tiene habilitado OAuth con GitHub
+   * @param {string} userId - ID del usuario
+   * @returns {object} Usuario validado
    */
   async validateGithubUser(userId) {
     try {

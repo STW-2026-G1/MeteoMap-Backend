@@ -4,9 +4,21 @@ const bcrypt = require("bcrypt");
 
 const BCRYPT_SALT_ROUNDS = 12;
 
+/**
+ * @file Servicio de Gestión de Usuarios
+ * @module services/userService
+ * @description Implementa la lógica de negocio para gestión de perfiles de usuario:
+ * - Obtención y actualización de perfiles
+ * - Gestión de zonas favoritas
+ * - Eliminación de usuarios (soft delete)
+ * - Cambio de contraseña
+ * - Gestión de límites de uso de IA
+ */
 class UserService {
   /**
    * Obtener perfil de usuario
+   * @param {string} userId - ID del usuario
+   * @returns {object} Datos del perfil completo del usuario
    */
   async getProfile(userId) {
     try {
@@ -42,6 +54,10 @@ class UserService {
 
   /**
    * Agregar o remover zona favorita
+   * @param {string} userId - ID del usuario
+   * @param {string} zonaId - ID de la zona
+   * @param {string} accion - Acción: "add" o "remove"
+   * @returns {object} Mensaje y lista actualizada de preferencias
    */
   async updateFavorites(userId, zonaId, accion) {
     try {
@@ -77,6 +93,8 @@ class UserService {
 
   /**
    * Eliminar usuario (soft delete)
+   * @param {string} userId - ID del usuario a eliminar
+   * @returns {object} Confirmación de eliminación y fecha
    */
   async deleteUser(userId) {
     try {
@@ -116,6 +134,9 @@ class UserService {
 
   /**
    * Actualizar perfil del usuario
+   * @param {string} userId - ID del usuario
+   * @param {object} updateData - Datos a actualizar (nombre, email, biografía, etc.)
+   * @returns {object} Perfil actualizado
    */
   async updateUser(userId, updateData) {
     try {
@@ -191,6 +212,10 @@ class UserService {
 
   /**
    * Actualizar contraseña del usuario
+   * @param {string} userId - ID del usuario
+   * @param {string} currentPassword - Contraseña actual en texto plano
+   * @param {string} newPassword - Nueva contraseña en texto plano
+   * @returns {object} Mensaje de confirmación
    */
   async updatePassword(userId, currentPassword, newPassword) {
     try {
@@ -239,6 +264,8 @@ class UserService {
 
   /**
    * Obtener información de límites de IA del usuario
+   * @param {string} userId - ID del usuario
+   * @returns {object} Información sobre límite diario, peticiones usadas y disponibles
    */
   async getLimitesIA(userId) {
     try {
@@ -269,6 +296,8 @@ class UserService {
   /**
    * Calcular cuánto tiempo falta para el próximo reajuste de cuota
    * @private
+   * @param {Date} ultimoReset - Fecha del último reset de cuota
+   * @returns {object|null} Objeto con horas, minutos y próxima fecha, o null
    */
   _calcularTiempoReajuste(ultimoReset) {
     if (!ultimoReset) return null;

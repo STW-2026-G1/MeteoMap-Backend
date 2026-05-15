@@ -2,14 +2,19 @@ const logger = require("../config/logger");
 const User = require("../models/User");
 
 /**
- * Servicio para autenticación con Google OAuth2
- * Valida tokens ID de Google y gestiona usuarios
+ * @file Servicio de Autenticación con Google OAuth2
+ * @module services/googleAuthService
+ * @description Implementa la lógica de negocio para autenticación con Google:
+ * - Validación de tokens ID de Google
+ * - Creación automática de usuarios
+ * - Vinculación de cuentas existentes
+ * - Gestión de proveedores OAuth
  */
 class GoogleAuthService {
   /**
    * Verifica y procesa login con Google
-   * @param {object} tokenPayload - Payload decodificado del token de Google
-   * @returns {object} Usuario autenticado o nuevo usuario creado
+   * @param {object} tokenPayload - Payload decodificado del token de Google (email, name, picture, sub)
+   * @returns {object} Objeto con isNewUser y usuario creado o existente
    */
   async handleGoogleLogin(tokenPayload) {
     try {
@@ -89,6 +94,8 @@ class GoogleAuthService {
 
   /**
    * Valida que un usuario tiene habilitado OAuth con Google
+   * @param {string} userId - ID del usuario
+   * @returns {object} Usuario validado
    */
   async validateGoogleUser(userId) {
     try {

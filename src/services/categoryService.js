@@ -2,9 +2,19 @@ const ReportCategory = require("../models/ReportCategory");
 const Report = require("../models/Report");
 const logger = require("../config/logger");
 
+/**
+ * @file Servicio de Categorías de Reportes
+ * @module services/categoryService
+ * @description Implementa la lógica de negocio para gestión de categorías:
+ * - Obtención de categorías activas
+ * - CRUD de categorías
+ * - Validación de existencia
+ * - Cascada de eliminación con reportes
+ */
 class CategoryService {
   /**
    * Obtener todas las categorías activas
+   * @returns {Array} Array de categorías
    */
   async getCategories() {
     try {
@@ -18,6 +28,8 @@ class CategoryService {
 
   /**
    * Crear nueva categoría
+   * @param {object} categoryData - Datos de la categoría (nombre, icono_marcador, etc.)
+   * @returns {object} Categoría creada
    */
   async createCategory(categoryData) {
     try {
@@ -36,6 +48,9 @@ class CategoryService {
 
   /**
    * Editar categoría
+   * @param {string} id - ID de la categoría
+   * @param {object} updateData - Datos a actualizar
+   * @returns {object} Categoría actualizada
    */
   async updateCategory(id, updateData) {
     try {
@@ -56,6 +71,8 @@ class CategoryService {
 
   /**
    * Eliminar categoría (Soft delete o desactivar)
+   * @param {string} id - ID de la categoría
+   * @returns {object} Mensaje con cantidad de reportes asociados eliminados
    */
   async deleteCategory(id) {
     try {
@@ -80,6 +97,8 @@ class CategoryService {
 
   /**
    * Obtener categoría por nombre
+   * @param {string} nombre - Nombre de la categoría
+   * @returns {object} Categoría encontrada o null
    */
   async getCategoryByName(nombre) {
     return await ReportCategory.findOne({ nombre });
@@ -87,6 +106,8 @@ class CategoryService {
 
   /**
    * Obtener categoría por ID
+   * @param {string} id - ID de la categoría
+   * @returns {object} Categoría encontrada o null
    */
   async getCategoryById(id) {
     return await ReportCategory.findById(id);
@@ -94,6 +115,8 @@ class CategoryService {
 
   /**
    * Validar si existe una categoría por nombre
+   * @param {string} nombre - Nombre de la categoría
+   * @returns {boolean} True si existe, false en caso contrario
    */
   async validateCategoryExists(nombre) {
     const category = await ReportCategory.findOne({ nombre });

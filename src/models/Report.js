@@ -1,3 +1,12 @@
+/**
+ * @file Modelo de Reporte
+ * @module models/Report
+ * @description Modelo que gestiona reportes meteorológicos colaborativos creados por usuarios sobre condiciones
+ * específicas en una zona. Incluye sistema de validación mediante confirmaciones/desmentidos de otros usuarios,
+ * y se elimina automáticamente después de 48 horas. Se relaciona con User (autor), Zone (ubicación) y 
+ * ReportCategory (clasificación del tipo de reporte).
+ */
+
 const mongoose = require("mongoose");
 
 const reportSchema = new mongoose.Schema(
@@ -24,6 +33,10 @@ const reportSchema = new mongoose.Schema(
 );
 
 // TTL Index - borra documentos después de 48 horas
+/**
+ * Índice TTL que elimina automáticamente los reportes 48 horas después de su creación.
+ * Esto evita que los reportes sospechosos o temporales se acumulen indefinidamente en la base de datos.
+ */
 reportSchema.index({ createdAt: 1 }, { expireAfterSeconds: 172800 });
 
 module.exports = mongoose.model("Report", reportSchema);

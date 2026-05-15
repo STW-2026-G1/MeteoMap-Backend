@@ -1,9 +1,22 @@
+/**
+ * @file Controlador de zonas
+ * @module controllers/ZoneController
+ * @description Maneja las solicitudes HTTP de zonas meteorológicas y mapea hacia los servicios correspondientes.
+ * Gestiona obtención, creación, actualización, eliminación, búsqueda de zonas y sincronización de datos meteorológicos.
+ */
+
 const zoneService = require("../services/zoneService");
 const logger = require("../config/logger");
 
 class ZoneController {
   /**
-   * GET /api/zones
+   * Obtiene todas las zonas con estado opcional
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.query.estado - Estado de las zonas a obtener (default: ACTIVA)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Objeto con array de zonas y conteo
    */
   async getZones(req, res, next) {
     try {
@@ -32,7 +45,13 @@ class ZoneController {
   }
 
   /**
-   * GET /api/zones/:id
+   * Obtiene una zona específica por su ID
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.id - ID de la zona
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Datos de la zona con información meteorológica
    */
   async getZoneById(req, res, next) {
     try {
@@ -60,7 +79,13 @@ class ZoneController {
   }
 
   /**
-   * GET /api/zones/:id/weather
+   * Obtiene datos meteorológicos actuales de una zona
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.id - ID de la zona
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Datos meteorológicos actuales y caché
    */
   async getWeatherData(req, res, next) {
     try {
@@ -114,7 +139,13 @@ class ZoneController {
 
 
   /**
-   * GET /api/zones/:id/dashboard
+   * Obtiene el panel de control de una zona con estadísticas
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.id - ID de la zona
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Estadísticas y datos del dashboard de la zona
    */
   async getZoneDashboard(req, res, next) {
     try {
@@ -137,7 +168,16 @@ class ZoneController {
   }
 
   /**
-   * POST /api/zones
+   * Crea una nueva zona
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.body.nombre - Nombre de la zona
+   * @param {string} req.body.descripcion - Descripción
+   * @param {Object} req.body.geolocalizacion - Coordenadas geográficas
+   * @param {string} req.body.estado - Estado de la zona
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Zona creada
    */
   async createZone(req, res, next) {
     try {
@@ -171,7 +211,17 @@ class ZoneController {
   }
 
   /**
-   * PUT /api/zones/:id
+   * Actualiza una zona existente
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.id - ID de la zona
+   * @param {string} req.body.nombre - Nuevo nombre
+   * @param {string} req.body.descripcion - Nueva descripción
+   * @param {Object} req.body.geolocalizacion - Nuevas coordenadas
+   * @param {string} req.body.estado - Nuevo estado
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Zona actualizada
    */
   async updateZone(req, res, next) {
     try {
@@ -205,7 +255,13 @@ class ZoneController {
   }
 
   /**
-   * DELETE /api/zones/:id
+   * Elimina una zona existente
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.id - ID de la zona a eliminar
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Resultado de la eliminación con datos de la zona eliminada
    */
   async deleteZone(req, res, next) {
     try {
@@ -234,7 +290,15 @@ class ZoneController {
   }
 
   /**
-   * GET /api/zones/search
+   * Busca zonas por query, estado y límite
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.query.query - Término de búsqueda (requerido)
+   * @param {string} req.query.estado - Estado a filtrar (default: ACTIVA)
+   * @param {number} req.query.limit - Límite de resultados (default: 20)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Array de zonas que coinciden con la búsqueda
    */
   async searchZones(req, res, next) {
     try {
@@ -275,8 +339,12 @@ class ZoneController {
   }
 
   /**
-   * GET /api/zones/weather
-   * Sincronizar datos meteorológicos de todas las zonas activas
+   * Sincroniza datos meteorológicos de todas las zonas activas
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Resultado de sincronización con estadísticas de éxito/error
    */
   async syncWeatherData(req, res, next) {
     try {

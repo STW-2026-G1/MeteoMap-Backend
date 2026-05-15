@@ -8,8 +8,14 @@ const logger = require("../config/logger");
 const BCRYPT_SALT_ROUNDS = 12;
 
 /**
- * Servicio de autenticación
- * Contiene lógica de negocio para registro y login
+ * @file Servicio de Autenticación
+ * @module services/authService
+ * @description Implementa la lógica de negocio para autenticación de usuarios:
+ * - Registro de nuevos usuarios con validaciones
+ * - Login con email y contraseña
+ * - Recuperación y restablecimiento de contraseña
+ * - Gestión de tokens y sesiones
+ * - Manejo de grace period para cuentas eliminadas
  */
 class AuthService {
   /**

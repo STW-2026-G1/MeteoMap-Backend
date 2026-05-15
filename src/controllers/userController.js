@@ -1,8 +1,21 @@
+/**
+ * @file Controlador de usuarios
+ * @module controllers/UserController
+ * @description Maneja las solicitudes HTTP relacionadas con perfiles de usuario y mapea hacia los servicios correspondientes.
+ * Gestiona obtención de perfil, actualización de datos, favoritos, y eliminación de cuenta.
+ */
+
 const userService = require("../services/userService");
 
 class UserController {
   /**
-   * GET /api/user/profile/:userId
+   * Obtiene el perfil público de un usuario por su ID
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.userId - ID del usuario
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Datos del perfil del usuario
    */
   async getProfile(req, res, next) {
     try {
@@ -15,8 +28,13 @@ class UserController {
   }
 
   /**
-   * GET /api/user/me
-   * Obtener el perfil del usuario autenticado
+   * Obtiene el perfil del usuario autenticado
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado (del token JWT)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Datos del perfil del usuario actual
    */
   async getMyProfile(req, res, next) {
     try {
@@ -29,8 +47,15 @@ class UserController {
   }
 
   /**
-   * PUT /api/user/me/favorites
-   * Añadir o quitar zona favorita del usuario autenticado
+   * Añade o quita una zona de los favoritos del usuario autenticado
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado (del token JWT)
+   * @param {string} req.body.zonaId - ID de la zona a agregar/quitar de favoritos
+   * @param {string} req.body.accion - Acción a realizar: "agregar" o "quitar"
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Resultado de la operación con preferencias actualizadas
    */
   async updateFavorites(req, res, next) {
     try {
@@ -49,8 +74,13 @@ class UserController {
     }
   }
   /**
-   * GET /api/user/me/favorites
-   * Obtener las zonas favoritas del usuario autenticado
+   * Obtiene las zonas favoritas del usuario autenticado
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado (del token JWT)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Objeto con array de zonas favoritas en preferencias
    */
   async getFavorites(req, res, next) {
     try {
@@ -63,8 +93,13 @@ class UserController {
   }
 
   /**
-   * DELETE /api/user/delete
-   * Eliminar usuario autenticado
+   * Elimina la cuenta del usuario autenticado
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado (del token JWT)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Resultado de la eliminación
    */
   async deleteUser(req, res, next) {
     try {
@@ -77,8 +112,18 @@ class UserController {
   }
 
   /**
-   * PUT /api/user/update
-   * Actualizar perfil del usuario autenticado
+   * Actualiza los datos de perfil del usuario autenticado
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado (del token JWT)
+   * @param {string} req.body.nombre - Nombre del usuario
+   * @param {string} req.body.email - Correo electrónico
+   * @param {string} req.body.biografia - Biografía del usuario
+   * @param {string} req.body.ubicacion - Ubicación geográfica
+   * @param {string} req.body.avatar_style - Estilo del avatar
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Datos del usuario actualizado
    */
   async updateUser(req, res, next) {
     try {
@@ -107,8 +152,15 @@ class UserController {
   }
 
   /**
-   * PUT /api/user/updatepassword
-   * Actualizar contraseña del usuario autenticado
+   * Actualiza la contraseña del usuario autenticado
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado (del token JWT)
+   * @param {string} req.body.currentPassword - Contraseña actual
+   * @param {string} req.body.newPassword - Nueva contraseña
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Resultado de la actualización
    */
   async updatePassword(req, res, next) {
     try {

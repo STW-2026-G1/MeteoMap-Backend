@@ -5,9 +5,15 @@ const xml2js = require("xml2js");
 const AemetAlert = require("../models/AemetAlert");
 
 /**
- * Servicio para obtener alertas meteorológicas de AEMET
- * API de AEMET - Avisos de Riesgo Meteorológico
- * Documentación: https://www.aemet.es/documentos_d/iantd/salud/Avisos_en_vigor_API_26022018.pdf
+ * @file Servicio de Alertas AEMET
+ * @module services/aemetAlertsService
+ * @description Implementa la lógica de negocio para alertas meteorológicas:
+ * - Obtención de avisos de AEMET (API oficial)
+ * - Parseo de formato TAR/XML
+ * - Sistema de caché con TTL de 30 minutos
+ * - Reintentos configurables con backoff exponencial
+ * - Persistencia en base de datos
+ * - Documentación: https://www.aemet.es/documentos_d/iantd/salud/Avisos_en_vigor_API_26022018.pdf
  */
 
 class aemetAlertsService {
@@ -24,6 +30,7 @@ class aemetAlertsService {
 
   /**
    * Obtener alertas meteorológicas de AEMET (con caché de 30 minutos)
+   * @param {boolean} forceRefresh - Forzar actualización sin usar caché
    * @returns {Promise<Array>} Array de alertas procesadas con coordenadas
    */
   async fetchAlerts(forceRefresh = false) {
@@ -220,6 +227,7 @@ class aemetAlertsService {
   /**
    * Verifica si la caché es válida (menos de 30 minutos)
    * @private
+   * @returns {boolean} True si la caché es válida
    */
   _isCacheValid() {
     if (!this.cache || !this.cacheTimestamp) return false;
@@ -229,6 +237,7 @@ class aemetAlertsService {
   /**
    * Obtiene la antigüedad de la caché en milisegundos
    * @private
+   * @returns {number} Edad de la caché en ms, o -1 si no existe
    */
   _getCacheAge() {
     if (!this.cacheTimestamp) return -1;
@@ -238,6 +247,8 @@ class aemetAlertsService {
   /**
    * Procesar alertas crudas de AEMET a formato estándar
    * @private
+   * @param {object} data - Datos con URL del archivo TAR
+   * @returns {Promise<Array>} Array de alertas procesadas
    */
   async _processAlerts(data) {
     if (!data || !data.datos) {
@@ -265,8 +276,10 @@ class aemetAlertsService {
   }
 
   /**
-   * Descarga el archivo binario (.tar)
-   * Adaptado de la función 'download' de tu script IMDb
+   * Descarga el archivo binario (.tar) desde URL
+   * @private
+   * @param {string} url - URL del archivo TAR
+   * @returns {Promise<Buffer>} Buffer con datos del archivo
    */
   async _downloadTar(url) {
     logger.debug(`Descargando archivo comprimido desde: ${url}`);
@@ -307,6 +320,7 @@ class aemetAlertsService {
   }
   /**
    * Descomprime el TAR en memoria y parsea los XML (CAP)
+   * @private
    * @param {Buffer} buffer - Buffer del archivo TAR
    * @returns {Promise<Array>} Array de objetos parseados desde XMLs
    */
@@ -377,10 +391,11 @@ class aemetAlertsService {
   /**
    * Normalización específica para el formato CAP v1.2 de AEMET
    * Mapea estructura XML CAP al esquema AemetAlert de Swagger
+   * @private
    * @param {Array} rawAlerts - Array de objetos parseados desde XML
    * @returns {Array} Array de alertas normalizadas
    */
-_normalizeAlerts(rawAlerts) {
+  _normalizeAlerts(rawAlerts) {
     const normalizedAlerts = [];
 
     for (const rawAlert of rawAlerts) {
@@ -532,6 +547,11 @@ _normalizeAlerts(rawAlerts) {
   }
   /**
    * Parsea el string "lat,long lat,long" y devuelve un punto medio estimado del polígono
+   * @private
+   * @param {string|Array} polygonData - Datos del polígono en formato AEMET
+   * @param {string} id - ID de la alerta
+   * @param {string} nivel - Nivel de alerta
+   * @returns {object} Objeto con latitud y longitud del centroide
    */
   _parseAemetPolygon(polygonData, id,nivel) {
     // 1. Fallback seguro por si todo falla
@@ -591,6 +611,9 @@ _normalizeAlerts(rawAlerts) {
   /**
    * Valida que una coordenada sea numérica y esté en rangos geográficos válidos
    * @private
+   * @param {number} lat - Latitud
+   * @param {number} lon - Longitud
+   * @returns {boolean} True si las coordenadas son válidas
    */
   _isValidCoordinate(lat, lon) {
     return Number.isFinite(lat)
@@ -604,6 +627,8 @@ _normalizeAlerts(rawAlerts) {
   /**
    * Calcula un centroide simple (media aritmética) de los vértices válidos
    * @private
+   * @param {Array} points - Array de puntos con lat y lon
+   * @returns {object|null} Objeto con latitud y longitud del centroide
    */
   _calculatePolygonCentroid(points) {
     if (!Array.isArray(points) || points.length === 0) {
@@ -633,6 +658,8 @@ _normalizeAlerts(rawAlerts) {
    * Convierte el polígono en formato AEMET ("lat,lon lat,lon ..." o array de esos strings)
    * a GeoJSON Polygon o MultiPolygon. Retorna null si no es posible.
    * @private
+   * @param {string|Array} polygonData - Datos del polígono
+   * @returns {object|null} Objeto GeoJSON o null
    */
   _convertPolygonToGeoJSON(polygonData) {
     try {
@@ -684,6 +711,7 @@ _normalizeAlerts(rawAlerts) {
 
   /**
    * Parsea una fecha ISO 8601 y la retorna como string ISO
+   * @private
    * @param {string} dateString - Fecha en formato ISO 8601
    * @returns {string} Fecha en formato ISO 8601 válido
    */
@@ -707,12 +735,24 @@ _normalizeAlerts(rawAlerts) {
     }
   }
 
+  /**
+   * Obtiene el nivel numérico de una alerta (amarillo=1, naranja=2, rojo=3)
+   * @private
+   * @param {string} nivel - Nivel de alerta en texto
+   * @returns {number} Número de nivel
+   */
   _getNivelNumerico(nivel) {
     const niveles = { 'amarillo': 1, 'naranja': 2, 'rojo': 3 };
     return niveles[nivel] || 0;
   }
 
- _mapColorByNivel(nivel) {
+  /**
+   * Mapea color hexadecimal según el nivel de alerta
+   * @private
+   * @param {string} nivel - Nivel de alerta
+   * @returns {string} Código hexadecimal del color
+   */
+  _mapColorByNivel(nivel) {
     const colores = {
       'verde': '#26b94b', // Amarillo Tailwind (Moderado)
       'amarillo': '#ffc869', // Amarillo Tailwind (Moderado)
@@ -726,6 +766,8 @@ _normalizeAlerts(rawAlerts) {
   /**
    * Deduplica alertas manteniendo la más reciente por zona + tipo
    * @private
+   * @param {Array} alerts - Array de alertas
+   * @returns {Array} Array de alertas sin duplicadas
    */
   _deduplicateAlerts(alerts) {
     const alertMap = new Map();
@@ -764,6 +806,8 @@ _normalizeAlerts(rawAlerts) {
   /**
    * Filtra alertas nuevas que no han sido procesadas anteriormente
    * @private
+   * @param {Array} alerts - Array de alertas a filtrar
+   * @returns {Promise<Array>} Array de alertas nuevas
    */
   async _filterNewAlerts(alerts) {
     try {
@@ -796,6 +840,8 @@ _normalizeAlerts(rawAlerts) {
   /**
    * Limpia strings que vienen con saltos de línea, comas y espacios extra del XML
    * @private
+   * @param {string} text - Texto a limpiar
+   * @returns {string} Texto limpiado
    */
   _cleanText(text) {
     if (!text || typeof text !== 'string') return text;
@@ -809,6 +855,8 @@ _normalizeAlerts(rawAlerts) {
   /**
    * Guarda alertas nuevas en la base de datos
    * @private
+   * @param {Array} alerts - Array de alertas a guardar
+   * @returns {Promise<void>}
    */
   async _saveAlertsToDatabase(alerts) {
     try {

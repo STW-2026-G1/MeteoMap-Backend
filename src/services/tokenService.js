@@ -3,7 +3,13 @@ const logger = require("../config/logger");
 const JWT_CONFIG = require("../config/jwt");
 
 /**
- * Servicio para generar y verificar tokens JWT
+ * @file Servicio de Tokens JWT
+ * @module services/tokenService
+ * @description Implementa la lógica de negocio para gestión de tokens JWT:
+ * - Generación de access tokens
+ * - Verificación y decodificación de tokens
+ * - Validación de algoritmos de seguridad
+ * - Manejo de payloads limpios
  */
 class TokenService {
   /**

@@ -1,3 +1,11 @@
+/**
+ * @file Modelo de Comentario
+ * @module models/Comment
+ * @description Modelo que gestiona comentarios en el sistema, permitiendo dos contextos: comentarios en zonas
+ * (zona_id) o comentarios en reportes específicos (reporte_id). Soporta respuestas anidadas mediante parent_id
+ * y un sistema de likes. Se relaciona con User (autor), Zone, y Report para contextualizar los comentarios.
+ */
+
 const mongoose = require("mongoose");
 
 const commentSchema = new mongoose.Schema(

@@ -1,9 +1,22 @@
+/**
+ * @file Controlador de reportes
+ * @module controllers/ReportController
+ * @description Maneja las solicitudes HTTP de reportes meteorológicos y mapea hacia los servicios correspondientes.
+ * Gestiona obtención, creación, validación, actualización y eliminación de reportes.
+ */
+
 const reportService = require("../services/reportService");
 const logger = require("../config/logger");
 
 class ReportController {
   /**
-   * GET /api/reports
+   * Obtiene reportes con filtros opcionales (zona, estado, ubicación, etc.)
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {Object} req.query - Parámetros de query: zonaId, estado, limit, lat, lng, radius, usuarioId
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Array} Array de reportes que coinciden con los filtros
    */
   async getReports(req, res, next) {
     try {
@@ -28,7 +41,13 @@ class ReportController {
   }
 
   /**
-   * GET /api/reports/:id
+   * Obtiene un reporte específico por su ID
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.id - ID del reporte
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Datos del reporte
    */
   async getReportById(req, res, next) {
     try {
@@ -41,7 +60,14 @@ class ReportController {
   }
 
   /**
-   * POST /api/reports
+   * Crea un nuevo reporte meteorológico
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.user.userId - ID del usuario autenticado
+   * @param {Object} req.body - Datos del reporte
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Reporte creado
    */
   async createReport(req, res, next) {
     try {
@@ -60,7 +86,15 @@ class ReportController {
   }
 
   /**
-   * PUT /api/reports/:id/validate
+   * Valida o rechaza un reporte específico
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.params.id - ID del reporte
+   * @param {string} req.body.accion - Acción de validación (aprobar/rechazar)
+   * @param {string} req.user.userId - ID del usuario que valida
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Reporte validado
    */
   async validateReport(req, res, next) {
     try {
@@ -79,7 +113,16 @@ class ReportController {
   }
 
   /**
-   * PUT /api/reports/:id
+   * Actualiza un reporte existente (solo por el propietario)
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.params.id - ID del reporte
+   * @param {string} req.body.descripcion - Nueva descripción
+   * @param {string} req.body.categoria_id - ID de la nueva categoría
+   * @param {string} req.user.userId - ID del usuario autenticado
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Reporte actualizado
    */
   async updateReport(req, res, next) {
     try {
@@ -109,7 +152,14 @@ class ReportController {
   }
 
   /**
-   * DELETE /api/reports/:id
+   * Elimina un reporte existente (solo por el propietario)
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP con usuario autenticado en req.user
+   * @param {string} req.params.id - ID del reporte a eliminar
+   * @param {string} req.user.userId - ID del usuario autenticado
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @param {Function} next - Función middleware para pasar al siguiente controlador
+   * @returns {Object} Resultado de la eliminación
    */
   async deleteReport(req, res, next) {
     try {

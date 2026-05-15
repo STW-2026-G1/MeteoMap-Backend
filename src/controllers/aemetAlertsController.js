@@ -1,3 +1,10 @@
+/**
+ * @file Controlador de alertas meteorológicas AEMET
+ * @module controllers/AemetAlertsController
+ * @description Maneja las solicitudes HTTP de alertas meteorológicas de la AEMET (Agencia Estatal de Meteorología).
+ * Gestiona obtención de alertas globales, filtrado por zona y por área geográfica con cálculo de distancias.
+ */
+
 const logger = require("../config/logger");
 const aemetAlertsService = require("../services/aemetAlertsService");
 
@@ -6,8 +13,13 @@ const aemetAlertsService = require("../services/aemetAlertsService");
  */
 class AemetAlertsController {
   /**
-   * Obtener todas las alertas activas
-   * GET /api/aemet-alerts
+   * Obtiene todas las alertas activas desde la AEMET
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {boolean} req.query.refresh - Fuerza actualización de datos (default: false)
+   * @param {boolean} req.query.withPolygons - Incluye polígonos GeoJSON en respuesta (default: false)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @returns {Object} Array de alertas con metadatos
    */
   async getAlerts(req, res) {
     try {
@@ -46,8 +58,12 @@ class AemetAlertsController {
   }
 
   /**
-   * Obtener alertas filtradas por zona
-   * GET /api/aemet-alerts/zone/:zoneId
+   * Obtiene alertas filtradas por zona específica
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {string} req.params.zoneId - ID de la zona
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @returns {Object} Array de alertas cercanas a la zona especificada
    */
   async getAlertsByZone(req, res) {
     try {
@@ -85,9 +101,14 @@ class AemetAlertsController {
   }
 
   /**
-   * Obtener alertas activas en área geográfica
-   * POST /api/aemet-alerts/area
-   * Body: { latitude, longitude, radiusKm }
+   * Obtiene alertas activas en un área geográfica específica
+   * @async
+   * @param {Object} req - Objeto de solicitud HTTP
+   * @param {number} req.body.latitude - Latitud del centro del área
+   * @param {number} req.body.longitude - Longitud del centro del área
+   * @param {number} req.body.radiusKm - Radio en kilómetros (default: 50)
+   * @param {Object} res - Objeto de respuesta HTTP
+   * @returns {Object} Array de alertas dentro del área especificada
    */
   async getAlertsByArea(req, res) {
     try {
@@ -136,8 +157,13 @@ class AemetAlertsController {
   }
 
   /**
-   * Calcular distancia entre dos puntos usando Haversine
+   * Calcula la distancia entre dos puntos geográficos usando la fórmula de Haversine
    * @private
+   * @param {number} lat1 - Latitud del primer punto
+   * @param {number} lon1 - Longitud del primer punto
+   * @param {number} lat2 - Latitud del segundo punto
+   * @param {number} lon2 - Longitud del segundo punto
+   * @returns {number} Distancia en kilómetros
    */
   _calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Radio de la Tierra en km

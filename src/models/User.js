@@ -1,3 +1,11 @@
+/**
+ * @file Modelo de Usuario
+ * @module models/User
+ * @description Modelo que gestiona la información de usuarios del sistema. Almacena datos de autenticación
+ * (credenciales locales y OAuth), perfil, zonas favoritas y límites de API. Se relaciona con Zone a través
+ * de preferencias y con Report y Comment como autor de estos documentos.
+ */
+
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -40,6 +48,11 @@ const userSchema = new mongoose.Schema(
 );
 
 // Virtual para generar avatar con DiceBear
+/**
+ * Virtual que genera la URL del avatar del usuario usando la API de DiceBear.
+ * Utiliza el avatar_seed o el nombre del usuario como entrada para la generación consistente.
+ * @returns {string} URL del avatar SVG generado por DiceBear
+ */
 userSchema.virtual('perfil.avatar_url').get(function() {
   const seed = this.perfil.avatar_seed || this.perfil.nombre || this._id.toString();
   const style = this.perfil.avatar_style || 'avataaars';
@@ -47,6 +60,10 @@ userSchema.virtual('perfil.avatar_url').get(function() {
 });
 
 // Incluir virtuales en JSON
+/**
+ * Configura el esquema para incluir virtuales al serializar a JSON y a Objeto.
+ * Esto permite que la URL del avatar esté disponible en las respuestas de API.
+ */
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 

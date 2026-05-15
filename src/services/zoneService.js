@@ -6,9 +6,21 @@ const logger = require("../config/logger");
 const weatherService = require("./weatherService");
 const reportService = require("./reportService");
 
+/**
+ * @file Servicio de Zonas
+ * @module services/zoneService
+ * @description Implementa la lógica de negocio para gestión de zonas geográficas:
+ * - Obtención de zonas activas con filtros
+ * - Gestión de datos meteorológicos en caché
+ * - Predicciones de clima para 12 horas
+ * - Dashboard de estadísticas por zona
+ * - Sincronización de datos con Open-Meteo
+ */
 class ZoneService {
   /**
    * Obtener todas las zonas activas
+   * @param {string} estado - Estado de zonas a filtrar ("ACTIVA", "INACTIVA", "ALL")
+   * @returns {object} Conteo y array de zonas
    */
   async getZones(estado = "ACTIVA") {
     try {
@@ -28,6 +40,8 @@ class ZoneService {
 
   /**
    * Obtener zona por ID
+   * @param {string} zoneId - ID de la zona
+   * @returns {object} Zona encontrada
    */
   async getZoneById(zoneId) {
     try {
@@ -48,6 +62,8 @@ class ZoneService {
   /**
    * Obtener datos meteorológicos de una zona
    * Verifica caché y actualiza si es necesario desde Open-Meteo
+   * @param {string} zoneId - ID de la zona
+   * @returns {object} Datos meteorológicos actuales
    */
   async getWeatherData(zoneId) {
     try {
@@ -121,6 +137,8 @@ class ZoneService {
   /**
    * Obtener predicción de temperatura de una zona
    * Verifica caché y actualiza si es necesario desde Open-Meteo
+   * @param {string} zoneId - ID de la zona
+   * @returns {object} Predicción de temperatura para las próximas 12 horas
    */
   async getWeatherForecast(zoneId) {
     try {
@@ -197,6 +215,7 @@ class ZoneService {
    * @private
    * @param {Object} cache - Objeto con datos_crudos y ultima_actualizacion
    * @param {number} tiempoValido - Minutos para considerar válido el caché
+   * @returns {boolean} True si el caché es válido
    */
   _isCacheValido(cache, tiempoValido) {
     if (!cache || !cache.ultima_actualizacion) {
@@ -211,6 +230,8 @@ class ZoneService {
 
   /**
    * Obtener dashboard de una zona con estadísticas
+   * @param {string} zoneId - ID de la zona
+   * @returns {object} Estadísticas de reportes agregados
    */
   async getZoneDashboard(zoneId) {
     try {
@@ -248,6 +269,8 @@ class ZoneService {
 
   /**
    * Crear una nueva zona
+   * @param {object} zoneData - Datos de la zona (nombre, descripcion, geolocalizacion, estado)
+   * @returns {object} Zona creada
    */
   async createZone(zoneData) {
     try {
@@ -288,6 +311,9 @@ class ZoneService {
 
   /**
    * Actualizar una zona existente
+   * @param {string} zoneId - ID de la zona
+   * @param {object} zoneData - Datos a actualizar (nombre, descripcion, estado, geolocalizacion)
+   * @returns {object} Zona actualizada
    */
   async updateZone(zoneId, zoneData) {
     try {

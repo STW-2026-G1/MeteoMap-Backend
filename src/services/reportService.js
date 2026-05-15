@@ -4,9 +4,20 @@ const Zone = require("../models/Zone");
 const categoryService = require("./categoryService");
 const logger = require("../config/logger");
 
+/**
+ * @file Servicio de Reportes
+ * @module services/reportService
+ * @description Implementa la lógica de negocio para gestión de reportes:
+ * - Crear, obtener, actualizar y eliminar reportes
+ * - Validación de reportes por comunidad (confirmar/desmentir)
+ * - Gestión de estado (LEGITIMO/SOSPECHOSO)
+ * - Integración con comentarios asociados
+ */
 class ReportService {
   /**
    * Obtener reportes con filtros
+   * @param {object} filters - Objeto con filtros: zonaId, estado, limit, usuarioId, lat, lng, radius
+   * @returns {object} Conteo y array de reportes poblados
    */
   async getReports(filters = {}) {
     try {
@@ -42,6 +53,8 @@ class ReportService {
 
   /**
    * Crear nuevo reporte
+   * @param {object} reportData - Datos del reporte (usuario_id, zona_id, categoria_id, descripcion)
+   * @returns {object} Reporte creado
    */
   async createReport(reportData) {
     try {
@@ -82,6 +95,10 @@ class ReportService {
 
   /**
    * Validar reporte (confirmar/desmentir)
+   * @param {string} reportId - ID del reporte
+   * @param {string} accion - Acción: "confirmar" o "desmentir"
+   * @param {string} userId - ID del usuario que valida
+   * @returns {object} Reporte actualizado con nuevo estado
    */
   async validateReport(reportId, accion, userId) {
     try {
@@ -153,6 +170,9 @@ class ReportService {
 
   /**
    * Actualizar reporte
+   * @param {string} reportId - ID del reporte
+   * @param {object} updateData - Datos a actualizar (descripcion, categoria_id)
+   * @returns {object} Reporte actualizado poblado
    */
   async updateReport(reportId, updateData) {
     try {
@@ -195,6 +215,8 @@ class ReportService {
 
   /**
    * Eliminar reporte (y sus comentarios asociados)
+   * @param {string} reportId - ID del reporte
+   * @returns {object} Mensaje de confirmación
    */
   async deleteReport(reportId) {
     try {
@@ -219,6 +241,8 @@ class ReportService {
 
   /**
    * Obtener reporte por ID
+   * @param {string} reportId - ID del reporte
+   * @returns {object} Reporte poblado
    */
   async getReportById(reportId) {
     try {

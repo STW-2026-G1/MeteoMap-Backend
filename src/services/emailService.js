@@ -2,8 +2,13 @@ const nodemailer = require("nodemailer");
 const logger = require("../config/logger");
 
 /**
- * Servicio de Email
- * Maneja envío de emails usando Gmail SMTP con nodemailer
+ * @file Servicio de Email
+ * @module services/emailService
+ * @description Implementa la lógica de negocio para envío de emails:
+ * - Configuración de transporte SMTP con Gmail
+ * - Envío de emails de recuperación de contraseña
+ * - Generación de templates HTML para emails
+ * - Manejo de errores y logging
  */
 class EmailService {
   constructor() {
@@ -60,7 +65,7 @@ class EmailService {
   /**
    * Generar HTML para el email de recuperación
    * @param {string} resetLink - Enlace para resetear contraseña
-   * @returns {string} HTML del email
+   * @returns {string} HTML del email formateado
    */
   generatePasswordResetEmailHTML(resetLink) {
     return `

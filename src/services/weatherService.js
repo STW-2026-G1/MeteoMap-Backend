@@ -1,9 +1,15 @@
 const logger = require("../config/logger");
 
 /**
- * Servicio para obtener datos meteorológicos de Open-Meteo
- * API gratuita, sin requiere API key
- * Documentación: https://open-meteo.com/
+ * @file Servicio de Datos Meteorológicos
+ * @module services/weatherService
+ * @description Implementa la lógica de negocio para obtención de datos meteorológicos:
+ * - Conexión con API Open-Meteo (gratuita, sin API key)
+ * - Datos meteorológicos actuales (temperatura, viento, precipitación, etc.)
+ * - Predicciones a 12 horas
+ * - Sincronización de múltiples zonas en una sola petición
+ * - Transformación y caché de datos
+ * - Documentación: https://open-meteo.com/
  */
 
 class WeatherService {
@@ -282,6 +288,8 @@ class WeatherService {
   /**
    * Transformar datos de Open-Meteo a formato estándar
    * @private
+   * @param {object} data - Datos crudos de Open-Meteo
+   * @returns {object} Datos transformados (temperatura, viento, humedad, etc.)
    */
   _transformOpenMeteoData(data) {
     const current = data.current;
@@ -304,6 +312,8 @@ class WeatherService {
   /**
    * Transformar datos de forecast (horarios) de Open-Meteo a formato estándar
    * @private
+   * @param {object} data - Datos crudos de Open-Meteo con forecast horario
+   * @returns {Array} Array de predicciones horarias transformadas
    */
   _transformForecastData(data) {
     if (!data.hourly || !data.hourly.time || !data.hourly.temperature_2m) {
@@ -339,6 +349,8 @@ class WeatherService {
   /**
    * Obtener descripción del clima basada en código WMO
    * @private
+   * @param {number} code - Código WMO del clima
+   * @returns {string} Descripción del clima en español
    */
   _getWeatherDescription(code) {
     const descriptions = {

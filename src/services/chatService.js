@@ -9,6 +9,16 @@ const { getHelp } = require("../config/appKnowledge");
 
 class ChatService {
   constructor() {
+    /**
+     * @file Servicio de Chat con IA
+     * @module services/chatService
+     * @description Implementa la lógica de negocio para conversaciones con asistente IA:
+     * - Gestión de historial de conversación por usuario
+     * - Relevancia de preguntas (guardrails)
+     * - Bucle agentico con function calling
+     * - Integración con herramientas (zonas, reportes, alertas, comentarios)
+     * - Control de límites de uso diario
+     */
     // Inicializar cliente de Mistral (usando SDK de OpenAI por compatibilidad)
     this.apiKey = process.env.MISTRAL_API_KEY;
     if (!this.apiKey) {
@@ -141,6 +151,11 @@ class ChatService {
 
   /**
    * Punto de entrada principal para el chat
+   * @param {string} pregunta - Pregunta del usuario
+   * @param {string} usuario_id - ID del usuario que pregunta
+   * @param {string} rol - Rol del usuario
+   * @param {object} contexto - Contexto adicional (opcional)
+   * @returns {object} Respuesta del asistente con datos utilizados
    */
   async getResponse(pregunta, usuario_id, rol, contexto) {
     try {
@@ -198,6 +213,9 @@ class ChatService {
   /**
    * Verifica si la pregunta es relevante para el sistema (MeteoMap)
    * @private
+   * @param {string} pregunta - Pregunta del usuario
+   * @param {Array} historial - Historial de conversación
+   * @returns {boolean} True si es relevante, false en caso contrario
    */
   async _checkRelevance(pregunta, historial) {
     try {
@@ -249,6 +267,10 @@ class ChatService {
   /**
    * Bucle agentico que utiliza function calling para obtener datos y generar respuesta
    * @private
+   * @param {string} pregunta - Pregunta del usuario
+   * @param {Array} historial - Historial de conversación
+   * @param {string} usuario_id - ID del usuario
+   * @returns {object} Respuesta con datos meteorológicos y información relevante
    */
   async _runAgenticLoop(pregunta, historial, usuario_id) {
     const messages = [
@@ -331,6 +353,9 @@ class ChatService {
   /**
    * Ejecutor de herramientas locales
    * @private
+   * @param {string} name - Nombre de la herramienta a ejecutar
+   * @param {object} args - Argumentos para la herramienta
+   * @returns {object} Resultado de la ejecución
    */
   async _executeTool(name, args) {
     switch (name) {
@@ -404,6 +429,8 @@ class ChatService {
   /**
    * Gestionar historial de conversación por usuario
    * @private
+   * @param {string} usuario_id - ID del usuario
+   * @returns {Array} Array del historial (últimos MAX_HISTORY mensajes)
    */
   _obtenerHistorial(usuario_id) {
     if (!this.conversationHistory.has(usuario_id)) {
@@ -415,6 +442,8 @@ class ChatService {
   /**
    * Guardar mensaje en historial
    * @private
+   * @param {string} usuario_id - ID del usuario
+   * @param {object} mensaje - Objeto con pregunta, respuesta y timestamp
    */
   _guardarEnHistorial(usuario_id, mensaje) {
     const historial = this._obtenerHistorial(usuario_id);
@@ -428,6 +457,7 @@ class ChatService {
 
   /**
    * Limpiar historial de un usuario
+   * @param {string} usuario_id - ID del usuario
    */
   limpiarHistorial(usuario_id) {
     this.conversationHistory.delete(usuario_id);
