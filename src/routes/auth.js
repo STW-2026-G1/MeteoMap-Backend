@@ -212,8 +212,8 @@ router.post(
  *         description: Token inválido/expirado o contraseña no cumple requisitos
  */
 router.post(
-  authLimiter,
   "/reset-password",
+  authLimiter,
   validateRequest(resetPasswordSchema),
   authController.resetPassword
 );
