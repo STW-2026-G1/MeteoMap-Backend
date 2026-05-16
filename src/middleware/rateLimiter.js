@@ -10,10 +10,13 @@ const MongoStore = require("rate-limit-mongo");
 const logger = require("../config/logger");
 
 // Configuración común del store para persistir límites a través de reinicios serverless
+const baseUri = (process.env.MONGODB_URI || "mongodb://localhost:27017/").replace(/\/[^/]*$/, "");
+const dbName = process.env.MONGODB_DB || "imdb";
 const storeConfig = {
-  uri: process.env.MONGODB_URI || "mongodb://localhost:27017/",
+  uri: `${baseUri}/${dbName}`,
   // El limitador compartirá cuotas si múltiples instancias lambda de Vercel acceden a la misma BD
   collectionName: "rate_limits",
+  expireTimeMs: 60 * 60 * 1000, // Tiempo de expiración por defecto (1 hora)
 };
 
 // 1. Limitador Global (para todas las rutas de la API)
@@ -34,9 +37,14 @@ const globalLimiter = rateLimit({
 
 // 2. Limitador Estricto para Autenticación (Login, Registro, Recuperación de contraseña)
 const authLimiter = rateLimit({
-  store: new MongoStore(storeConfig),
-  windowMs: 60 * 60 * 1000, // 1 hora
-  max: 5, // Máximo 100 intentos por IP cada hora
+  // No usamos MongoStore temporalmente para descartar problemas de persistencia/colisiones en Atlas
+  windowMs: 60 * 60 * 1000, 
+  max: 10,
+  skip: (req) => {
+    // No aplicar límite si es localhost durante desarrollo
+    return req.ip === "::1" || req.ip === "127.0.0.1";
+  },
+  validate: { trustProxy: false },
   standardHeaders: true,
   legacyHeaders: false,
   message: {
