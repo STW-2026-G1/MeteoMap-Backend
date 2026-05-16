@@ -1,20 +1,14 @@
-/**
- * @file Servicio de Alertas AEMET
- * @module services/aemetAlertsService
- * @description Implementa la lógica de negocio para alertas meteorológicas:
- * - Obtención de avisos de AEMET (API oficial)
- * - Parseo de formato TAR/XML
- * - Sistema de caché con TTL de 30 minutos
- * - Reintentos configurables con backoff exponencial
- * - Persistencia en base de datos
- * - Documentación: https://www.aemet.es/documentos_d/iantd/salud/Avisos_en_vigor_API_26022018.pdf
- */
-
 const logger = require("../config/logger");
 const tar = require("tar");
 const { Readable } = require("stream");
 const xml2js = require("xml2js");
 const AemetAlert = require("../models/AemetAlert");
+
+/**
+ * Servicio para obtener alertas meteorológicas de AEMET
+ * API de AEMET - Avisos de Riesgo Meteorológico
+ * Documentación: https://www.aemet.es/documentos_d/iantd/salud/Avisos_en_vigor_API_26022018.pdf
+ */
 
 class aemetAlertsService {
   constructor() {
@@ -28,86 +22,8 @@ class aemetAlertsService {
     this.CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos en milisegundos
   }
 
-  _createAemetError({ status, code, message, details = {}, cause = null }) {
-    const error = new Error(message);
-    error.status = status;
-    error.statusCode = status;
-    error.code = code;
-    error.details = details;
-    if (cause) {
-      error.cause = cause;
-    }
-    return error;
-  }
-
-  _normalizeFetchError(fetchErr, attempt, maxRetries, timeoutMs) {
-    const isTimeout = fetchErr?.name === "AbortError" || fetchErr?.code === "ABORT_ERR";
-
-    if (isTimeout) {
-      return this._createAemetError({
-        status: 504,
-        code: "AEMET_TIMEOUT",
-        message: `Timeout consultando AEMET en el intento ${attempt}/${maxRetries} tras ${timeoutMs}ms`,
-        details: {
-          attempt,
-          maxRetries,
-          timeoutMs,
-          errorName: fetchErr.name,
-        },
-        cause: fetchErr,
-      });
-    }
-
-    return this._createAemetError({
-      status: 502,
-      code: "AEMET_REQUEST_FAILED",
-      message: `Error consultando AEMET en el intento ${attempt}/${maxRetries}: ${fetchErr.message}`,
-      details: {
-        attempt,
-        maxRetries,
-        timeoutMs,
-        errorName: fetchErr.name,
-        errorCode: fetchErr.code || null,
-        errno: fetchErr.errno || null,
-      },
-      cause: fetchErr,
-    });
-  }
-
-  _normalizeHttpError(response, attempt, maxRetries) {
-    const status = response.status;
-    const statusText = response.statusText || "";
-
-    if (status === 429) {
-      return this._createAemetError({
-        status: 429,
-        code: "AEMET_RATE_LIMIT",
-        message: `AEMET ha limitado la petición (429) en el intento ${attempt}/${maxRetries}`,
-        details: {
-          attempt,
-          maxRetries,
-          status,
-          statusText,
-        },
-      });
-    }
-
-    return this._createAemetError({
-      status,
-      code: `AEMET_HTTP_${status}`,
-      message: `AEMET respondió con error HTTP ${status} ${statusText} en el intento ${attempt}/${maxRetries}`,
-      details: {
-        attempt,
-        maxRetries,
-        status,
-        statusText,
-      },
-    });
-  }
-
   /**
    * Obtener alertas meteorológicas de AEMET (con caché de 30 minutos)
-   * @param {boolean} forceRefresh - Forzar actualización sin usar caché
    * @returns {Promise<Array>} Array de alertas procesadas con coordenadas
    */
   async fetchAlerts(forceRefresh = false) {
@@ -150,86 +66,18 @@ class aemetAlertsService {
 
       logger.debug(`Obteniendo alertas de AEMET desde: ${this.AEMET_ALERTS_URL}`);
 
-      // Reintentos configurables con backoff exponencial
-      const maxRetries = parseInt(process.env.AEMET_FETCH_RETRIES || '3', 10) || 3;
-      const baseDelayMs = parseInt(process.env.AEMET_FETCH_BASE_DELAY_MS || '300', 10) || 300;
-      const timeoutMs = parseInt(process.env.AEMET_FETCH_TIMEOUT_MS || '30000', 10) || 30000;
+      const response = await fetch(`${this.AEMET_ALERTS_URL}`, {
+        headers: {
+          "api_key": this.AEMET_API_KEY,
+        },
+      });
 
-      let response = null;
-      let lastErr = null;
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        const requestStartedAt = Date.now();
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-        logger.debug(`AEMET request ${attempt} iniciado con timeout=${timeoutMs}ms (attempt ${attempt}/${maxRetries})`);
-
-        try {
-          response = await fetch(this.AEMET_ALERTS_URL, {
-            signal: controller.signal,
-            headers: { api_key: this.AEMET_API_KEY },
-          });
-
-          logger.debug(
-            `AEMET request ${attempt} completado en ${Date.now() - requestStartedAt}ms con status=${response.status}`
-          );
-
-          // Si la respuesta es OK, salimos del bucle y la procesamos
-          if (response && response.ok) {
-            clearTimeout(timeoutId);
-            lastErr = null;
-            break;
-          }
-
-          // Si la respuesta no es OK, registremos y no reintentamos muchas veces
-          const normalizedHttpError = this._normalizeHttpError(response, attempt, maxRetries);
-          logger.error(
-            `AEMET API returned non-ok status on attempt ${attempt}/${maxRetries}: ${normalizedHttpError.status} ${response.statusText} code=${normalizedHttpError.code}`
-          );
-          clearTimeout(timeoutId);
-          lastErr = normalizedHttpError;
-
-          if (response.status === 429 && attempt < maxRetries) {
-            const delay = Math.pow(2, attempt - 1) * baseDelayMs;
-            logger.info(`AEMET rate limit. Reintentando en ${delay}ms (intento ${attempt + 1}/${maxRetries})`);
-            await new Promise((r) => setTimeout(r, delay));
-            continue;
-          }
-
-          break;
-        } catch (fetchErr) {
-          clearTimeout(timeoutId);
-          lastErr = this._normalizeFetchError(fetchErr, attempt, maxRetries, timeoutMs);
-          const duration = Date.now() - requestStartedAt;
-          logger.error(
-            `AEMET request ${attempt}/${maxRetries} falló tras ${duration}ms: ${lastErr.code} - ${lastErr.message} status=${lastErr.status} codeOriginal=${fetchErr.code || 'n/a'} errno=${fetchErr.errno || 'n/a'}`
-          );
-          logger.debug(`AEMET request ${attempt} stack: ${fetchErr.stack}`);
-
-          if (attempt < maxRetries) {
-            const delay = Math.pow(2, attempt - 1) * baseDelayMs;
-            logger.info(`Reintentando en ${delay}ms (intento ${attempt + 1}/${maxRetries})`);
-            await new Promise((r) => setTimeout(r, delay));
-            continue;
-          }
-
-          // último intento falló
-          logger.error(`AEMET request failed after ${attempt} attempts`);
-        }
-      }
-
-      if (!response || lastErr) {
-        // Propagar el último error para que el controlador pueda devolver un código descriptivo
-        throw lastErr || this._createAemetError({
-          status: 502,
-          code: "AEMET_UNKNOWN_ERROR",
-          message: "Error desconocido obteniendo alertas de AEMET",
-        });
-      }
+      logger.debug(`AEMET response status=${response.status}`);
 
       if (!response.ok) {
-        const apiError = this._normalizeHttpError(response, maxRetries, maxRetries);
-        logger.error(`AEMET API error final: ${apiError.status} ${response.statusText} code=${apiError.code}`);
+        logger.error(
+          `AEMET API error: ${response.status} ${response.statusText}`
+        );
         // Si hay caché en memoria, devolverla (filtrada por validez)
         if (this.cache) {
           logger.warn('Usando caché obsoleto por error en API');
@@ -258,7 +106,7 @@ class aemetAlertsService {
           return formattedAlerts;
         } catch (dbErr) {
           logger.error(`Error recuperando alertas desde BD tras fallo AEMET: ${dbErr.message}`);
-          throw apiError;
+          return [];
         }
       }
 
@@ -300,7 +148,7 @@ class aemetAlertsService {
       logger.debug(`AEMET fetchAlerts completado en ${Date.now() - startedAt}ms`);
       return formattedAlerts;
     } catch (err) {
-      logger.error(`Error obteniendo alertas de AEMET: ${err.code || err.name} - ${err.message} status=${err.status || err.statusCode || 'n/a'}`);
+      logger.error(`Error obteniendo alertas de AEMET: ${err.name} - ${err.message}`);
       logger.error(
         `AEMET fetchAlerts fallback after ${Date.now() - startedAt}ms`
       );
@@ -311,14 +159,13 @@ class aemetAlertsService {
         logger.warn('Usando caché por error en obtención');
         return this.cache;
       }
-      throw err;
+      return [];
     }
   }
 
   /**
    * Verifica si la caché es válida (menos de 30 minutos)
    * @private
-   * @returns {boolean} True si la caché es válida
    */
   _isCacheValid() {
     if (!this.cache || !this.cacheTimestamp) return false;
@@ -328,7 +175,6 @@ class aemetAlertsService {
   /**
    * Obtiene la antigüedad de la caché en milisegundos
    * @private
-   * @returns {number} Edad de la caché en ms, o -1 si no existe
    */
   _getCacheAge() {
     if (!this.cacheTimestamp) return -1;
@@ -338,8 +184,6 @@ class aemetAlertsService {
   /**
    * Procesar alertas crudas de AEMET a formato estándar
    * @private
-   * @param {object} data - Datos con URL del archivo TAR
-   * @returns {Promise<Array>} Array de alertas procesadas
    */
   async _processAlerts(data) {
     if (!data || !data.datos) {
@@ -367,51 +211,21 @@ class aemetAlertsService {
   }
 
   /**
-   * Descarga el archivo binario (.tar) desde URL
-   * @private
-   * @param {string} url - URL del archivo TAR
-   * @returns {Promise<Buffer>} Buffer con datos del archivo
+   * Descarga el archivo binario (.tar)
+   * Adaptado de la función 'download' de tu script IMDb
    */
   async _downloadTar(url) {
     logger.debug(`Descargando archivo comprimido desde: ${url}`);
-    // Añadimos reintentos también para la descarga del TAR
-    const maxRetries = parseInt(process.env.AEMET_DOWNLOAD_RETRIES || '3', 10) || 3;
-    const baseDelayMs = parseInt(process.env.AEMET_FETCH_BASE_DELAY_MS || '300', 10) || 300;
-    const timeoutMs = parseInt(process.env.AEMET_DOWNLOAD_TIMEOUT_MS || '30000', 10) || 30000;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      const startedAt = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      logger.debug(`AEMET download TAR intento ${attempt}/${maxRetries} iniciado con timeout=${timeoutMs}ms`);
-
-      try {
-        const response = await fetch(url, { signal: controller.signal });
-        logger.debug(`AEMET download TAR completado en ${Date.now() - startedAt}ms con status=${response.status}`);
-        clearTimeout(timeoutId);
-        if (!response.ok) throw new Error(`Falló la descarga: ${response.status} ${response.statusText}`);
-        const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        logger.error(`AEMET download TAR intento ${attempt} falló: ${error.name} - ${error.message} code=${error.code || 'n/a'}`);
-        logger.debug(`AEMET download TAR stack: ${error.stack}`);
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt - 1) * baseDelayMs;
-          logger.info(`Reintentando descarga en ${delay}ms (intento ${attempt + 1}/${maxRetries})`);
-          await new Promise((r) => setTimeout(r, delay));
-          continue;
-        }
-        if (error.name === 'AbortError') {
-          throw new Error(`Timeout descargando el archivo de alertas de AEMET tras ${timeoutMs}ms`);
-        }
-        throw error;
-      }
-    }
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) throw new Error(`Falló la descarga: ${response.status} ${response.statusText}`);
+    
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   }
   /**
    * Descomprime el TAR en memoria y parsea los XML (CAP)
-   * @private
    * @param {Buffer} buffer - Buffer del archivo TAR
    * @returns {Promise<Array>} Array de objetos parseados desde XMLs
    */
@@ -482,11 +296,10 @@ class aemetAlertsService {
   /**
    * Normalización específica para el formato CAP v1.2 de AEMET
    * Mapea estructura XML CAP al esquema AemetAlert de Swagger
-   * @private
    * @param {Array} rawAlerts - Array de objetos parseados desde XML
    * @returns {Array} Array de alertas normalizadas
    */
-  _normalizeAlerts(rawAlerts) {
+_normalizeAlerts(rawAlerts) {
     const normalizedAlerts = [];
 
     for (const rawAlert of rawAlerts) {
@@ -638,11 +451,6 @@ class aemetAlertsService {
   }
   /**
    * Parsea el string "lat,long lat,long" y devuelve un punto medio estimado del polígono
-   * @private
-   * @param {string|Array} polygonData - Datos del polígono en formato AEMET
-   * @param {string} id - ID de la alerta
-   * @param {string} nivel - Nivel de alerta
-   * @returns {object} Objeto con latitud y longitud del centroide
    */
   _parseAemetPolygon(polygonData, id,nivel) {
     // 1. Fallback seguro por si todo falla
@@ -702,9 +510,6 @@ class aemetAlertsService {
   /**
    * Valida que una coordenada sea numérica y esté en rangos geográficos válidos
    * @private
-   * @param {number} lat - Latitud
-   * @param {number} lon - Longitud
-   * @returns {boolean} True si las coordenadas son válidas
    */
   _isValidCoordinate(lat, lon) {
     return Number.isFinite(lat)
@@ -718,8 +523,6 @@ class aemetAlertsService {
   /**
    * Calcula un centroide simple (media aritmética) de los vértices válidos
    * @private
-   * @param {Array} points - Array de puntos con lat y lon
-   * @returns {object|null} Objeto con latitud y longitud del centroide
    */
   _calculatePolygonCentroid(points) {
     if (!Array.isArray(points) || points.length === 0) {
@@ -749,8 +552,6 @@ class aemetAlertsService {
    * Convierte el polígono en formato AEMET ("lat,lon lat,lon ..." o array de esos strings)
    * a GeoJSON Polygon o MultiPolygon. Retorna null si no es posible.
    * @private
-   * @param {string|Array} polygonData - Datos del polígono
-   * @returns {object|null} Objeto GeoJSON o null
    */
   _convertPolygonToGeoJSON(polygonData) {
     try {
@@ -802,7 +603,6 @@ class aemetAlertsService {
 
   /**
    * Parsea una fecha ISO 8601 y la retorna como string ISO
-   * @private
    * @param {string} dateString - Fecha en formato ISO 8601
    * @returns {string} Fecha en formato ISO 8601 válido
    */
@@ -826,24 +626,12 @@ class aemetAlertsService {
     }
   }
 
-  /**
-   * Obtiene el nivel numérico de una alerta (amarillo=1, naranja=2, rojo=3)
-   * @private
-   * @param {string} nivel - Nivel de alerta en texto
-   * @returns {number} Número de nivel
-   */
   _getNivelNumerico(nivel) {
     const niveles = { 'amarillo': 1, 'naranja': 2, 'rojo': 3 };
     return niveles[nivel] || 0;
   }
 
-  /**
-   * Mapea color hexadecimal según el nivel de alerta
-   * @private
-   * @param {string} nivel - Nivel de alerta
-   * @returns {string} Código hexadecimal del color
-   */
-  _mapColorByNivel(nivel) {
+ _mapColorByNivel(nivel) {
     const colores = {
       'verde': '#26b94b', // Amarillo Tailwind (Moderado)
       'amarillo': '#ffc869', // Amarillo Tailwind (Moderado)
@@ -857,8 +645,6 @@ class aemetAlertsService {
   /**
    * Deduplica alertas manteniendo la más reciente por zona + tipo
    * @private
-   * @param {Array} alerts - Array de alertas
-   * @returns {Array} Array de alertas sin duplicadas
    */
   _deduplicateAlerts(alerts) {
     const alertMap = new Map();
@@ -897,8 +683,6 @@ class aemetAlertsService {
   /**
    * Filtra alertas nuevas que no han sido procesadas anteriormente
    * @private
-   * @param {Array} alerts - Array de alertas a filtrar
-   * @returns {Promise<Array>} Array de alertas nuevas
    */
   async _filterNewAlerts(alerts) {
     try {
@@ -931,8 +715,6 @@ class aemetAlertsService {
   /**
    * Limpia strings que vienen con saltos de línea, comas y espacios extra del XML
    * @private
-   * @param {string} text - Texto a limpiar
-   * @returns {string} Texto limpiado
    */
   _cleanText(text) {
     if (!text || typeof text !== 'string') return text;
@@ -946,8 +728,6 @@ class aemetAlertsService {
   /**
    * Guarda alertas nuevas en la base de datos
    * @private
-   * @param {Array} alerts - Array de alertas a guardar
-   * @returns {Promise<void>}
    */
   async _saveAlertsToDatabase(alerts) {
     try {
@@ -985,4 +765,5 @@ class aemetAlertsService {
     }
   }
 }
+
 module.exports = new aemetAlertsService();

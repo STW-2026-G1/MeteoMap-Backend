@@ -4,7 +4,7 @@
  * @description Maneja las solicitudes HTTP de alertas meteorológicas de la AEMET (Agencia Estatal de Meteorología).
  * Gestiona obtención de alertas globales, filtrado por zona y por área geográfica con cálculo de distancias.
  */
- 
+
 const logger = require("../config/logger");
 const aemetAlertsService = require("../services/aemetAlertsService");
 
@@ -48,14 +48,14 @@ class AemetAlertsController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      const status = error.status || error.statusCode || 500;
-      logger.error(`Error en getAlerts: ${error.code || error.name} - ${error.message} status=${status}`);
-      res.status(status).json({
+      logger.error(`Error en getAlerts: ${error.message}`);
+      res.status(500).json({
+
         status: "error",
-        error: error.code || error.name || "AEMET_ERROR",
+        error: "Error al obtener alertas",
         message: error.message,
-        code: error.code || null,
-        details: error.details || null,
+
+
       });
     }
   }
@@ -92,16 +92,16 @@ class AemetAlertsController {
         total: zoneAlerts.length,
       });
     } catch (error) {
-      const status = error.status || error.statusCode || 500;
+
       logger.error(
-        `Error en getAlertsByZone: ${error.code || error.name} - ${error.message} status=${status}`
+        `Error en getAlertsByZone: ${error.message}`
       );
-      res.status(status).json({
+      res.status(500).json({
         status: "error",
-        error: error.code || error.name || "AEMET_ERROR",
+        error: "Error al obtener alertas por zona",
         message: error.message,
-        code: error.code || null,
-        details: error.details || null,
+
+
       });
     }
   }
@@ -151,16 +151,16 @@ class AemetAlertsController {
         total: areaAlerts.length,
       });
     } catch (error) {
-      const status = error.status || error.statusCode || 500;
+
       logger.error(
-        `Error en getAlertsByArea: ${error.code || error.name} - ${error.message} status=${status}`
+        `Error en getAlertsByArea: ${error.message}`
       );
-      res.status(status).json({
+      res.status(500).json({
         status: "error",
-        error: error.code || error.name || "AEMET_ERROR",
+        error: "Error al obtener alertas por área",
         message: error.message,
-        code: error.code || null,
-        details: error.details || null,
+
+
       });
     }
   }
