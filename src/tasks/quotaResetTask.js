@@ -1,3 +1,10 @@
+/**
+ * @file Job programado de cuotas
+ * @module tasks/quotaResetTask
+ * @description Tarea cron programada para reiniciar periódicamente (cada 24 horas) la cuota límite del uso de IA de los usuarios.
+ * @author MeteoMap Team
+ */
+
 const cron = require("node-cron");
 const logger = require("../config/logger");
 const User = require("../models/User");

@@ -1,6 +1,3 @@
-const nodemailer = require("nodemailer");
-const logger = require("../config/logger");
-
 /**
  * @file Servicio de Email
  * @module services/emailService
@@ -10,6 +7,10 @@ const logger = require("../config/logger");
  * - Generación de templates HTML para emails
  * - Manejo de errores y logging
  */
+
+const nodemailer = require("nodemailer");
+const logger = require("../config/logger");
+
 class EmailService {
   constructor() {
     const emailUser = process.env.EMAIL_USER;

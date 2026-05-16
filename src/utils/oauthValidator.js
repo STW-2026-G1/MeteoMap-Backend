@@ -1,3 +1,10 @@
+/**
+ * @file Validador OAuth
+ * @module utils/oauthValidator
+ * @description Herramientas y métodos utilitarios para la verificación de tokens y credenciales de sesión en servicios de terceros (Google, GitHub, etc).
+ * @author MeteoMap Team
+ */
+
 const { OAuth2Client } = require("google-auth-library");
 const logger = require("../config/logger");
 

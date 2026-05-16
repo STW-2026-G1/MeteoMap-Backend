@@ -1,3 +1,10 @@
+/**
+ * @file Entry point local del servidor
+ * @module index
+ * @description Punto de entrada principal de la aplicación cuando se ejecuta el backend en un entorno no *serverless*.
+ * @author MeteoMap Team
+ */
+
 require("dotenv").config();
 
 const express = require("express");

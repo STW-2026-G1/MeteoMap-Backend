@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de reportes
+ * @module routes/reports
+ * @description Define los endpoints de creación, listado, actualización y gestión de reportes de usuarios.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { body, param, query, validationResult } = require("express-validator");
 const reportController = require("../controllers/reportController");

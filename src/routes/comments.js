@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de comentarios
+ * @module routes/comments
+ * @description Define los endpoints HTTP expuestos para interactuar, crear y listar los comentarios de reportes y zonas.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { body, param, validationResult } = require("express-validator");
 const commentController = require("../controllers/commentController");

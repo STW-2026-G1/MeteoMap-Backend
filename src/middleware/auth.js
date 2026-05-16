@@ -1,3 +1,10 @@
+/**
+ * @file Middleware de Autenticación
+ * @module middleware/auth
+ * @description Verifica la validez del Access Token JWT inyectado en las peticiones y decodifica la identidad del usuario.
+ * @author MeteoMap Team
+ */
+
 const logger = require("../config/logger");
 const tokenService = require("../services/tokenService");
 

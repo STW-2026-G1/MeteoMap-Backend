@@ -1,3 +1,10 @@
+/**
+ * @file Rutas del chat y asistente
+ * @module routes/chat
+ * @description Define los endpoints HTTP para interactuar con el asistente de inteligencia artificial.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { body, validationResult } = require("express-validator");
 const chatController = require("../controllers/chatController");

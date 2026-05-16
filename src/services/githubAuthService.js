@@ -1,6 +1,3 @@
-const logger = require("../config/logger");
-const User = require("../models/User");
-
 /**
  * @file Servicio de Autenticación con GitHub OAuth2
  * @module services/githubAuthService
@@ -10,6 +7,10 @@ const User = require("../models/User");
  * - Vinculación de cuentas existentes
  * - Gestión de proveedores OAuth
  */
+
+const logger = require("../config/logger");
+const User = require("../models/User");
+
 class GithubAuthService {
   /**
    * Verifica y procesa login con GitHub

@@ -1,9 +1,3 @@
-const logger = require("../config/logger");
-const tar = require("tar");
-const { Readable } = require("stream");
-const xml2js = require("xml2js");
-const AemetAlert = require("../models/AemetAlert");
-
 /**
  * @file Servicio de Alertas AEMET
  * @module services/aemetAlertsService
@@ -15,6 +9,12 @@ const AemetAlert = require("../models/AemetAlert");
  * - Persistencia en base de datos
  * - Documentación: https://www.aemet.es/documentos_d/iantd/salud/Avisos_en_vigor_API_26022018.pdf
  */
+
+const logger = require("../config/logger");
+const tar = require("tar");
+const { Readable } = require("stream");
+const xml2js = require("xml2js");
+const AemetAlert = require("../models/AemetAlert");
 
 class aemetAlertsService {
   constructor() {

@@ -1,3 +1,10 @@
+/**
+ * @file Middleware de log HTTP
+ * @module middleware/httpLogger
+ * @description Configura Morgan para registrar las peticiones HTTP entrantes e integra los logs mediante Winston.
+ * @author MeteoMap Team
+ */
+
 const morgan = require("morgan");
 const logger = require("../config/logger");
 

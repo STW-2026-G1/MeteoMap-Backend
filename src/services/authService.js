@@ -1,12 +1,3 @@
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-const User = require("../models/User");
-const tokenService = require("./tokenService");
-const emailService = require("./emailService");
-const logger = require("../config/logger");
-
-const BCRYPT_SALT_ROUNDS = 12;
-
 /**
  * @file Servicio de Autenticación
  * @module services/authService
@@ -17,6 +8,16 @@ const BCRYPT_SALT_ROUNDS = 12;
  * - Gestión de tokens y sesiones
  * - Manejo de grace period para cuentas eliminadas
  */
+
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const User = require("../models/User");
+const tokenService = require("./tokenService");
+const emailService = require("./emailService");
+const logger = require("../config/logger");
+
+const BCRYPT_SALT_ROUNDS = 12;
+
 class AuthService {
   /**
    * Registrar nuevo usuario

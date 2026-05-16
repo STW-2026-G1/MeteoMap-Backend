@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de administración
+ * @module routes/admin
+ * @description Define los endpoints HTTP expuestos para las tareas de gestión de los administradores.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { body, param, validationResult } = require("express-validator");
 const adminController = require("../controllers/adminController");

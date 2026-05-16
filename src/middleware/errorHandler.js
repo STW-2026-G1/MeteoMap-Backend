@@ -1,3 +1,10 @@
+/**
+ * @file Middleware de manejo de errores
+ * @module middleware/errorHandler
+ * @description Captura y formatea los errores detectados en la plataforma, y las rutas no encontradas.
+ * @author MeteoMap Team
+ */
+
 const logger = require("../config/logger");
 
 // Si una petición llega hasta aquí abajo sin ser contestada, es que la ruta no existe

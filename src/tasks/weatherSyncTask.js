@@ -1,3 +1,10 @@
+/**
+ * @file Job programado del clima
+ * @module tasks/weatherSyncTask
+ * @description Tarea cron para sincronizar recurrentemente la información meteorológica de AEMET o fuentes externas.
+ * @author MeteoMap Team
+ */
+
 const cron = require("node-cron");
 const logger = require("../config/logger");
 const weatherService = require("../services/weatherService");

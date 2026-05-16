@@ -1,8 +1,3 @@
-const User = require("../models/User");
-const logger = require("../config/logger");
-const SystemMetric = require("../models/SystemMetric");
-const AemetAlert = require("../models/AemetAlert");
-
 /**
  * @file Servicio de Administración
  * @module services/adminService
@@ -13,6 +8,12 @@ const AemetAlert = require("../models/AemetAlert");
  * - Tracking de uso de IA y métricas del sistema
  * - Serialización y validación de datos
  */
+
+const User = require("../models/User");
+const logger = require("../config/logger");
+const SystemMetric = require("../models/SystemMetric");
+const AemetAlert = require("../models/AemetAlert");
+
 class AdminService {
   /**
    * Serializar usuario para respuestas API

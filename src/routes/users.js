@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de usuarios
+ * @module routes/users
+ * @description Define los endpoints expuestos para gestionar perfiles, información personal y roles de los usuarios.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { param, body, validationResult } = require("express-validator");
 const userController = require("../controllers/userController");

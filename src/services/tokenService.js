@@ -1,7 +1,3 @@
-const jwt = require("jsonwebtoken");
-const logger = require("../config/logger");
-const JWT_CONFIG = require("../config/jwt");
-
 /**
  * @file Servicio de Tokens JWT
  * @module services/tokenService
@@ -11,6 +7,11 @@ const JWT_CONFIG = require("../config/jwt");
  * - Validación de algoritmos de seguridad
  * - Manejo de payloads limpios
  */
+
+const jwt = require("jsonwebtoken");
+const logger = require("../config/logger");
+const JWT_CONFIG = require("../config/jwt");
+
 class TokenService {
   /**
    * Genera un Access Token

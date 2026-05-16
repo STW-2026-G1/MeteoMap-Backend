@@ -1,3 +1,14 @@
+/**
+  * @file Servicio de Chat con IA
+  * @module services/chatService
+  * @description Implementa la lógica de negocio para conversaciones con asistente IA:
+  * - Gestión de historial de conversación por usuario
+  * - Relevancia de preguntas (guardrails)
+  * - Bucle agentico con function calling
+  * - Integración con herramientas (zonas, reportes, alertas, comentarios)
+  * - Control de límites de uso diario
+  */
+
 const OpenAI = require("openai");
 const logger = require("../config/logger");
 const zoneService = require("./zoneService");
@@ -9,16 +20,6 @@ const { getHelp } = require("../config/appKnowledge");
 
 class ChatService {
   constructor() {
-    /**
-     * @file Servicio de Chat con IA
-     * @module services/chatService
-     * @description Implementa la lógica de negocio para conversaciones con asistente IA:
-     * - Gestión de historial de conversación por usuario
-     * - Relevancia de preguntas (guardrails)
-     * - Bucle agentico con function calling
-     * - Integración con herramientas (zonas, reportes, alertas, comentarios)
-     * - Control de límites de uso diario
-     */
     // Inicializar cliente de Mistral (usando SDK de OpenAI por compatibilidad)
     this.apiKey = process.env.MISTRAL_API_KEY;
     if (!this.apiKey) {

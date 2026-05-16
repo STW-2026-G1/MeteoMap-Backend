@@ -1,3 +1,10 @@
+/**
+ * @file Entry point (Serverless/Vercel)
+ * @module api/index
+ * @description Punto de entrada principal configurado para funcionar como Serverless Function en Vercel.
+ * @author MeteoMap Team
+ */
+
 require("dotenv").config();
 
 const express = require("express");

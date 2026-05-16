@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de autenticación
+ * @module routes/auth
+ * @description Define los endpoints de registro, login y gestión de credenciales, así como SSO.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { validateRequest, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } = require("../utils/validation");
 const authController = require("../controllers/authController");

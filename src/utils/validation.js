@@ -1,3 +1,10 @@
+/**
+ * @file Esquemas de validación
+ * @module utils/validation
+ * @description Esquemas Zod para validar payloads en las peticiones HTTP y asegurar la integridad de los datos recibidos.
+ * @author MeteoMap Team
+ */
+
 const { z } = require("zod");
 
 /**

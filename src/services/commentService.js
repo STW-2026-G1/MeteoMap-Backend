@@ -1,8 +1,3 @@
-const Comment = require("../models/Comment");
-const Report = require("../models/Report");
-const User = require("../models/User");
-const logger = require("../config/logger");
-
 /**
  * @file Servicio de Comentarios
  * @module services/commentService
@@ -13,6 +8,12 @@ const logger = require("../config/logger");
  * - Sistema de likes
  * - Gestión de estado (ACTIVO)
  */
+
+const Comment = require("../models/Comment");
+const Report = require("../models/Report");
+const User = require("../models/User");
+const logger = require("../config/logger");
+
 class CommentService {
   /**
    * Obtener comentarios por zona

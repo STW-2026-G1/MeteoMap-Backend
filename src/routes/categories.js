@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de categorías
+ * @module routes/categories
+ * @description Define los endpoints para consultar y gestionar las categorías de los reportes.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { body, param, validationResult } = require("express-validator");
 const categoryController = require("../controllers/categoryController");

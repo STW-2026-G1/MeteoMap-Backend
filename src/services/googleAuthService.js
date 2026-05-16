@@ -1,6 +1,3 @@
-const logger = require("../config/logger");
-const User = require("../models/User");
-
 /**
  * @file Servicio de Autenticación con Google OAuth2
  * @module services/googleAuthService
@@ -10,6 +7,10 @@ const User = require("../models/User");
  * - Vinculación de cuentas existentes
  * - Gestión de proveedores OAuth
  */
+
+const logger = require("../config/logger");
+const User = require("../models/User");
+
 class GoogleAuthService {
   /**
    * Verifica y procesa login con Google

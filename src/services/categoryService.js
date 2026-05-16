@@ -1,7 +1,3 @@
-const ReportCategory = require("../models/ReportCategory");
-const Report = require("../models/Report");
-const logger = require("../config/logger");
-
 /**
  * @file Servicio de Categorías de Reportes
  * @module services/categoryService
@@ -11,6 +7,11 @@ const logger = require("../config/logger");
  * - Validación de existencia
  * - Cascada de eliminación con reportes
  */
+
+const ReportCategory = require("../models/ReportCategory");
+const Report = require("../models/Report");
+const logger = require("../config/logger");
+
 class CategoryService {
   /**
    * Obtener todas las categorías activas

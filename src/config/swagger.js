@@ -1,3 +1,10 @@
+/**
+ * @file Configuración de Swagger
+ * @module config/swagger
+ * @description Configuración principal para la generación y especificación OpenAPI de Swagger.
+ * @author MeteoMap Team
+ */
+
 const swaggerJsdoc = require("swagger-jsdoc");
 
 const options = {

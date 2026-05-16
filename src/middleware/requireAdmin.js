@@ -1,3 +1,10 @@
+/**
+ * @file Middleware de control de acceso de administrador
+ * @module middleware/requireAdmin
+ * @description Verifica que el usuario autenticado tiene rol de ADMIN y una cuenta activa para acceder a recursos protegidos.
+ * @author MeteoMap Team
+ */
+
 const logger = require("../config/logger");
 const User = require("../models/User");
 

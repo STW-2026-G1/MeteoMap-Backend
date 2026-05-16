@@ -1,11 +1,3 @@
-const Zone = require("../models/Zone");
-const Report = require("../models/Report");
-const Comment = require("../models/Comment");
-const User = require("../models/User");
-const logger = require("../config/logger");
-const weatherService = require("./weatherService");
-const reportService = require("./reportService");
-
 /**
  * @file Servicio de Zonas
  * @module services/zoneService
@@ -16,6 +8,15 @@ const reportService = require("./reportService");
  * - Dashboard de estadísticas por zona
  * - Sincronización de datos con Open-Meteo
  */
+
+const Zone = require("../models/Zone");
+const Report = require("../models/Report");
+const Comment = require("../models/Comment");
+const User = require("../models/User");
+const logger = require("../config/logger");
+const weatherService = require("./weatherService");
+const reportService = require("./reportService");
+
 class ZoneService {
   /**
    * Obtener todas las zonas activas

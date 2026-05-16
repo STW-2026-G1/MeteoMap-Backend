@@ -1,9 +1,3 @@
-const Report = require("../models/Report");
-const User = require("../models/User");
-const Zone = require("../models/Zone");
-const categoryService = require("./categoryService");
-const logger = require("../config/logger");
-
 /**
  * @file Servicio de Reportes
  * @module services/reportService
@@ -13,6 +7,13 @@ const logger = require("../config/logger");
  * - Gestión de estado (LEGITIMO/SOSPECHOSO)
  * - Integración con comentarios asociados
  */
+
+const Report = require("../models/Report");
+const User = require("../models/User");
+const Zone = require("../models/Zone");
+const categoryService = require("./categoryService");
+const logger = require("../config/logger");
+
 class ReportService {
   /**
    * Obtener reportes con filtros

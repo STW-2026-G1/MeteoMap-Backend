@@ -1,3 +1,10 @@
+/**
+ * @file Logger del sistema
+ * @module config/logger
+ * @description Define la configuración de Winston para el registro de eventos, errores y peticiones en la aplicación.
+ * @author MeteoMap Team
+ */
+
 const { createLogger, format, transports } = require("winston");
 const path = require("path");
 

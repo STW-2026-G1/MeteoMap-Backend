@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de zonas
+ * @module routes/zones
+ * @description Define los endpoints encargados de listar geografías, obtener el clima de cada área y sus estadísticas.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const { param, query, body, validationResult } = require("express-validator");
 const zoneController = require("../controllers/zoneController");

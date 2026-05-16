@@ -1,3 +1,10 @@
+/**
+ * @file Rutas de alertas AEMET
+ * @module routes/aemet-alerts
+ * @description Define los endpoints para la obtención de avisos y alertas meteorológicas desde AEMET.
+ * @author MeteoMap Team
+ */
+
 const { Router } = require("express");
 const aemetAlertsController = require("../controllers/aemetAlertsController");
 const logger = require("../config/logger");

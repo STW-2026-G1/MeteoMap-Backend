@@ -1,3 +1,10 @@
+/**
+ * @file Configuración de la base de datos
+ * @module config/database
+ * @description Gestiona la conexión y desconexión a la base de datos MongoDB utilizando Mongoose. Integración con logger.
+ * @author MeteoMap Team
+ */
+
 const mongoose = require("mongoose"); 
 const logger = require("./logger");
 

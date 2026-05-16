@@ -1,5 +1,3 @@
-const logger = require("../config/logger");
-
 /**
  * @file Servicio de Datos Meteorológicos
  * @module services/weatherService
@@ -11,6 +9,8 @@ const logger = require("../config/logger");
  * - Transformación y caché de datos
  * - Documentación: https://open-meteo.com/
  */
+
+const logger = require("../config/logger");
 
 class WeatherService {
   /**

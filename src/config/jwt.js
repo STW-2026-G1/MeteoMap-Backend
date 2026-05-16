@@ -1,3 +1,10 @@
+/**
+ * @file Configuración JWT
+ * @module config/jwt
+ * @description Configuración centralizada de JSON Web Tokens (JWT). Asegura que los secretos y los algoritmos sean consistentes en toda la aplicación.
+ * @author MeteoMap Team
+ */
+
 const logger = require("./logger");
 
 /**

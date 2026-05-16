@@ -1,9 +1,3 @@
-const User = require("../models/User");
-const logger = require("../config/logger");
-const bcrypt = require("bcrypt");
-
-const BCRYPT_SALT_ROUNDS = 12;
-
 /**
  * @file Servicio de Gestión de Usuarios
  * @module services/userService
@@ -14,6 +8,13 @@ const BCRYPT_SALT_ROUNDS = 12;
  * - Cambio de contraseña
  * - Gestión de límites de uso de IA
  */
+
+const User = require("../models/User");
+const logger = require("../config/logger");
+const bcrypt = require("bcrypt");
+
+const BCRYPT_SALT_ROUNDS = 12;
+
 class UserService {
   /**
    * Obtener perfil de usuario

@@ -1,4 +1,11 @@
 /**
+ * @file Base de conocimiento de la app (IA)
+ * @module config/appKnowledge
+ * @description Base de conocimiento de MeteoMap para el asistente de IA, que le indica las funcionalidades de la App.
+ * @author MeteoMap Team
+ */
+
+/**
  * Base de conocimientos de MeteoMap para el asistente de IA.
  * Contiene instrucciones paso a paso sobre cómo utilizar las funcionalidades de la aplicación.
  */

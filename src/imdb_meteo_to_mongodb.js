@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 /**
+ * @file Script de importación IMDb a MongoDB
+ * @module scripts/imdb_meteo_to_mongodb
+ * @description Descarga, descomprime e importa subsets de datasets en formato TSV a MongoDB.
+ * @author MeteoMap Team
+ */
+
+/**
  * IMDb → MongoDB  (Course Subset: Movies + Ratings)
  * ===================================================
  * Downloads IMDb datasets and imports a curated subset into MongoDB:
