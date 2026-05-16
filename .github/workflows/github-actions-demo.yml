@@ -28,7 +28,7 @@ jobs:
           cache: 'pnpm' # Cache de dependencias para acelerar futuros builds
 
       - name: Instalar dependencias
-        run: pnpm install --frozen-lockfile
+        run: pnpm install 
 
 
   deploy:
