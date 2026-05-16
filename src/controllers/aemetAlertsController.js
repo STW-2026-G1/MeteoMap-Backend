@@ -48,11 +48,14 @@ class AemetAlertsController {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error(`Error en getAlerts: ${error.message}`);
-      res.status(500).json({
+      const status = error.status || error.statusCode || 500;
+      logger.error(`Error en getAlerts: ${error.code || error.name} - ${error.message} status=${status}`);
+      res.status(status).json({
         status: "error",
-        error: "Error al obtener alertas",
+        error: error.code || error.name || "AEMET_ERROR",
         message: error.message,
+        code: error.code || null,
+        details: error.details || null,
       });
     }
   }
@@ -89,13 +92,16 @@ class AemetAlertsController {
         total: zoneAlerts.length,
       });
     } catch (error) {
+      const status = error.status || error.statusCode || 500;
       logger.error(
-        `Error en getAlertsByZone: ${error.message}`
+        `Error en getAlertsByZone: ${error.code || error.name} - ${error.message} status=${status}`
       );
-      res.status(500).json({
+      res.status(status).json({
         status: "error",
-        error: "Error al obtener alertas por zona",
+        error: error.code || error.name || "AEMET_ERROR",
         message: error.message,
+        code: error.code || null,
+        details: error.details || null,
       });
     }
   }
@@ -145,13 +151,16 @@ class AemetAlertsController {
         total: areaAlerts.length,
       });
     } catch (error) {
+      const status = error.status || error.statusCode || 500;
       logger.error(
-        `Error en getAlertsByArea: ${error.message}`
+        `Error en getAlertsByArea: ${error.code || error.name} - ${error.message} status=${status}`
       );
-      res.status(500).json({
+      res.status(status).json({
         status: "error",
-        error: "Error al obtener alertas por área",
+        error: error.code || error.name || "AEMET_ERROR",
         message: error.message,
+        code: error.code || null,
+        details: error.details || null,
       });
     }
   }

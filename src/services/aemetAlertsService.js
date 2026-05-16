@@ -28,6 +28,83 @@ class aemetAlertsService {
     this.CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutos en milisegundos
   }
 
+  _createAemetError({ status, code, message, details = {}, cause = null }) {
+    const error = new Error(message);
+    error.status = status;
+    error.statusCode = status;
+    error.code = code;
+    error.details = details;
+    if (cause) {
+      error.cause = cause;
+    }
+    return error;
+  }
+
+  _normalizeFetchError(fetchErr, attempt, maxRetries, timeoutMs) {
+    const isTimeout = fetchErr?.name === "AbortError" || fetchErr?.code === "ABORT_ERR";
+
+    if (isTimeout) {
+      return this._createAemetError({
+        status: 504,
+        code: "AEMET_TIMEOUT",
+        message: `Timeout consultando AEMET en el intento ${attempt}/${maxRetries} tras ${timeoutMs}ms`,
+        details: {
+          attempt,
+          maxRetries,
+          timeoutMs,
+          errorName: fetchErr.name,
+        },
+        cause: fetchErr,
+      });
+    }
+
+    return this._createAemetError({
+      status: 502,
+      code: "AEMET_REQUEST_FAILED",
+      message: `Error consultando AEMET en el intento ${attempt}/${maxRetries}: ${fetchErr.message}`,
+      details: {
+        attempt,
+        maxRetries,
+        timeoutMs,
+        errorName: fetchErr.name,
+        errorCode: fetchErr.code || null,
+        errno: fetchErr.errno || null,
+      },
+      cause: fetchErr,
+    });
+  }
+
+  _normalizeHttpError(response, attempt, maxRetries) {
+    const status = response.status;
+    const statusText = response.statusText || "";
+
+    if (status === 429) {
+      return this._createAemetError({
+        status: 429,
+        code: "AEMET_RATE_LIMIT",
+        message: `AEMET ha limitado la petición (429) en el intento ${attempt}/${maxRetries}`,
+        details: {
+          attempt,
+          maxRetries,
+          status,
+          statusText,
+        },
+      });
+    }
+
+    return this._createAemetError({
+      status,
+      code: `AEMET_HTTP_${status}`,
+      message: `AEMET respondió con error HTTP ${status} ${statusText} en el intento ${attempt}/${maxRetries}`,
+      details: {
+        attempt,
+        maxRetries,
+        status,
+        statusText,
+      },
+    });
+  }
+
   /**
    * Obtener alertas meteorológicas de AEMET (con caché de 30 minutos)
    * @param {boolean} forceRefresh - Forzar actualización sin usar caché
@@ -105,16 +182,27 @@ class aemetAlertsService {
           }
 
           // Si la respuesta no es OK, registremos y no reintentamos muchas veces
-          logger.error(`AEMET API returned non-ok status on attempt ${attempt}: ${response.status} ${response.statusText}`);
+          const normalizedHttpError = this._normalizeHttpError(response, attempt, maxRetries);
+          logger.error(
+            `AEMET API returned non-ok status on attempt ${attempt}/${maxRetries}: ${normalizedHttpError.status} ${response.statusText} code=${normalizedHttpError.code}`
+          );
           clearTimeout(timeoutId);
-          lastErr = new Error(`AEMET API status ${response.status}`);
+          lastErr = normalizedHttpError;
+
+          if (response.status === 429 && attempt < maxRetries) {
+            const delay = Math.pow(2, attempt - 1) * baseDelayMs;
+            logger.info(`AEMET rate limit. Reintentando en ${delay}ms (intento ${attempt + 1}/${maxRetries})`);
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+          }
+
           break;
         } catch (fetchErr) {
           clearTimeout(timeoutId);
-          lastErr = fetchErr;
+          lastErr = this._normalizeFetchError(fetchErr, attempt, maxRetries, timeoutMs);
           const duration = Date.now() - requestStartedAt;
           logger.error(
-            `AEMET request ${attempt} falló tras ${duration}ms: ${fetchErr.name} - ${fetchErr.message} code=${fetchErr.code || 'n/a'} errno=${fetchErr.errno || 'n/a'}`
+            `AEMET request ${attempt}/${maxRetries} falló tras ${duration}ms: ${lastErr.code} - ${lastErr.message} status=${lastErr.status} codeOriginal=${fetchErr.code || 'n/a'} errno=${fetchErr.errno || 'n/a'}`
           );
           logger.debug(`AEMET request ${attempt} stack: ${fetchErr.stack}`);
 
@@ -131,14 +219,17 @@ class aemetAlertsService {
       }
 
       if (!response || lastErr) {
-        // Propagar el último error para que el fallback se active más abajo
-        throw lastErr || new Error('Unknown error fetching AEMET alerts');
+        // Propagar el último error para que el controlador pueda devolver un código descriptivo
+        throw lastErr || this._createAemetError({
+          status: 502,
+          code: "AEMET_UNKNOWN_ERROR",
+          message: "Error desconocido obteniendo alertas de AEMET",
+        });
       }
 
       if (!response.ok) {
-        logger.error(
-          `AEMET API error: ${response.status} ${response.statusText}`
-        );
+        const apiError = this._normalizeHttpError(response, maxRetries, maxRetries);
+        logger.error(`AEMET API error final: ${apiError.status} ${response.statusText} code=${apiError.code}`);
         // Si hay caché en memoria, devolverla (filtrada por validez)
         if (this.cache) {
           logger.warn('Usando caché obsoleto por error en API');
@@ -167,7 +258,7 @@ class aemetAlertsService {
           return formattedAlerts;
         } catch (dbErr) {
           logger.error(`Error recuperando alertas desde BD tras fallo AEMET: ${dbErr.message}`);
-          return [];
+          throw apiError;
         }
       }
 
@@ -209,7 +300,7 @@ class aemetAlertsService {
       logger.debug(`AEMET fetchAlerts completado en ${Date.now() - startedAt}ms`);
       return formattedAlerts;
     } catch (err) {
-      logger.error(`Error obteniendo alertas de AEMET: ${err.name} - ${err.message}`);
+      logger.error(`Error obteniendo alertas de AEMET: ${err.code || err.name} - ${err.message} status=${err.status || err.statusCode || 'n/a'}`);
       logger.error(
         `AEMET fetchAlerts fallback after ${Date.now() - startedAt}ms`
       );
@@ -220,7 +311,7 @@ class aemetAlertsService {
         logger.warn('Usando caché por error en obtención');
         return this.cache;
       }
-      return [];
+      throw err;
     }
   }
 
