@@ -22,7 +22,6 @@ const httpLogger = require("./middleware/httpLogger");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const isAuth = require("./middleware/auth");
 const requireAdmin = require("./middleware/requireAdmin");
-const { globalLimiter } = require("./middleware/rateLimiter");
 
 // Import new routers
 const authRouter = require("./routes/auth");
@@ -61,27 +60,6 @@ app.use(httpLogger.errorLogger);
 
 // HTTP request logging (Morgan)
 app.use(httpLogger);
-
-// Aplicar Rate Limit global a todas las peticiones (excluyendo auth, reports y comments que tienen los suyos propios)
-app.use((req, res, next) => {
-  // Ignorar localhost (::1 o 127.0.0.1) para evitar bloqueos durante el desarrollo local
-  if (req.ip === "::1" || req.ip === "127.0.0.1" || req.ip === "localhost") {
-    return next();
-  }
-
-  // Evitar doble conteo en rutas que tienen limitadores específicos
-  // El path que recibe el middleware aquí suele ser la ruta completa /api/auth/...
-  console.log(`[RateLimit DEBUG] ${req.method} ${req.originalUrl} - IP: ${req.ip}`);
-  
-  const specificRoutes = ["/api/auth", "/api/reports", "/api/comments"];
-  const isSpecificRoute = specificRoutes.some(path => req.originalUrl.startsWith(path));
-  
-  if (isSpecificRoute && req.method === "POST") {
-    console.log(`[RateLimit DEBUG] SALTANDO globalLimiter para ${req.originalUrl}`);
-    return next();
-  }
-  return globalLimiter(req, res, next);
-});
 
 // ---------------------------------------------------------------------------
 // Health check (before API prefix so load balancers can hit it easily)

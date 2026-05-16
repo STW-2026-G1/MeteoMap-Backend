@@ -9,7 +9,6 @@ const { Router } = require("express");
 const { body, param, validationResult } = require("express-validator");
 const commentController = require("../controllers/commentController");
 const isAuth = require("../middleware/auth");
-const { contentLimiter } = require("../middleware/rateLimiter");
 
 const router = Router();
 
@@ -112,7 +111,6 @@ router.get(
 router.post(
   "/zone/:zoneId",
    isAuth,
-  contentLimiter,
   [
     param("zoneId").isMongoId(),
     body("contenido").isString().trim().isLength({ min: 1, max: 5000 }),
@@ -154,7 +152,6 @@ router.post(
  */
 router.post(
   "/report/:reportId",
-  contentLimiter,
   isAuth,
   [
     param("reportId").isMongoId(),
@@ -196,7 +193,6 @@ router.post(
  */
 router.post(
   "/:id/reply",
-  contentLimiter,
   isAuth,
   [
     param("id").isMongoId(),

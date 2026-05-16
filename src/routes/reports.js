@@ -9,7 +9,6 @@ const { Router } = require("express");
 const { body, param, query, validationResult } = require("express-validator");
 const reportController = require("../controllers/reportController");
 const isAuth = require("../middleware/auth");
-const { contentLimiter } = require("../middleware/rateLimiter");
 
 const router = Router();
 
@@ -141,7 +140,7 @@ router.get("/:id", [param("id").isMongoId()], validate, (req, res, next) =>
 router.post(
   "/",
   isAuth,
-  contentLimiter,
+
   [
     body("zona_id").isMongoId(),
     body("categoria_id").isMongoId(),

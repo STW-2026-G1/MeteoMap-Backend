@@ -19,7 +19,6 @@ const httpLogger = require("../src/middleware/httpLogger");
 const { notFound, errorHandler } = require("../src/middleware/errorHandler");
 const isAuth = require("../src/middleware/auth");
 const requireAdmin = require("../src/middleware/requireAdmin");
-const { globalLimiter } = require("../src/middleware/rateLimiter");
 
 // Import routers
 const authRouter = require("../src/routes/auth");
@@ -50,9 +49,6 @@ app.use(httpLogger.errorLogger);
 
 // HTTP request logging
 app.use(httpLogger);
-
-// Aplicar Rate Limit global a todas las peticiones (excluyendo estáticos)
-app.use(globalLimiter);
 
 // Health check
 app.get("/health", (req, res) => {
