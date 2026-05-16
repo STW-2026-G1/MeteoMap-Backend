@@ -15,6 +15,26 @@ const SystemMetric = require("../models/SystemMetric");
 const AemetAlert = require("../models/AemetAlert");
 
 class AdminService {
+  formatElapsedTime(dateValue) {
+    const timestamp = new Date(dateValue).getTime();
+    if (Number.isNaN(timestamp)) return null;
+
+    const elapsedMs = Date.now() - timestamp;
+    const elapsedMinutes = Math.max(1, Math.round(elapsedMs / (60 * 1000)));
+
+    if (elapsedMinutes < 60) {
+      return `hace ${elapsedMinutes} min`;
+    }
+
+    const elapsedHours = Math.round(elapsedMinutes / 60);
+    if (elapsedHours < 24) {
+      return `hace ${elapsedHours} h`;
+    }
+
+    const elapsedDays = Math.round(elapsedHours / 24);
+    return `hace ${elapsedDays} d`;
+  }
+
   /**
    * Serializar usuario para respuestas API
    * @param {object} user - Documento de usuario de MongoDB
@@ -233,7 +253,7 @@ class AdminService {
    */
   async getDashboard() {
     try {
-      const [users, latestMetric, latency24h, aemetLatestAlert] = await Promise.all([
+      const [users, latestMetric, latency24h, aemetLatestAlert, latestWeatherZone] = await Promise.all([
         User.find({ "datos_acceso.rol": { $ne: "ADMIN" } }).lean(),
         SystemMetric.findOne({ origen: "API_METEO" }).sort({ createdAt: -1 }).lean(),
         SystemMetric.find({
@@ -244,6 +264,10 @@ class AdminService {
           .sort({ createdAt: 1 })
           .lean(),
         AemetAlert.findOne().sort({ updatedAt: -1 }).lean(),
+        require("../models/Zone")
+          .findOne({ "cache_meteo.current.ultima_actualizacion": { $exists: true, $ne: null } })
+          .sort({ "cache_meteo.current.ultima_actualizacion": -1 })
+          .lean(),
       ]);
 
       const activosNoAdmin = users.filter((u) => u.estado === "ACTIVO").length;
@@ -270,19 +294,32 @@ class AdminService {
 
       const now = Date.now();
       const latestMetricAgeMs = latestMetric ? now - new Date(latestMetric.createdAt).getTime() : null;
-      const metricRecent = typeof latestMetricAgeMs === "number" && latestMetricAgeMs <= 6 * 60 * 60 * 1000;
 
-      const openMeteoStatus = !latestMetric
+      const latestWeatherUpdateAt = latestWeatherZone?.cache_meteo?.current?.ultima_actualizacion || null;
+      const latestWeatherUpdateAgeMs = latestWeatherUpdateAt
+        ? now - new Date(latestWeatherUpdateAt).getTime()
+        : null;
+      const localWeatherRecent =
+        typeof latestWeatherUpdateAgeMs === "number" && latestWeatherUpdateAgeMs <= 6 * 60 * 60 * 1000;
+
+      const openMeteoStatus = !latestWeatherUpdateAt
         ? "warning"
-        : latestMetric.tipo === "ERROR"
-          ? "offline"
-          : metricRecent
-            ? "online"
-            : "warning";
+        : localWeatherRecent
+          ? "online"
+          : "warning";
 
       const aemetAgeMs = aemetLatestAlert ? now - new Date(aemetLatestAlert.updatedAt).getTime() : null;
       const aemetRecent = typeof aemetAgeMs === "number" && aemetAgeMs <= 24 * 60 * 60 * 1000;
       const aemetStatus = !aemetConfigured ? "warning" : aemetRecent ? "online" : "warning";
+      const openMeteoStatusLabel = !latestWeatherUpdateAt
+        ? "Sin datos"
+        : localWeatherRecent
+          ? "Activo"
+          : "Desactualizado";
+      const aemetStatusLabel = !aemetConfigured ? "Sin configuración" : aemetStatus === "online" ? "Activo" : "Pendiente";
+      const latestMetricAgeLabel = latestMetric ? this.formatElapsedTime(latestMetric.createdAt) : null;
+      const latestWeatherUpdateAgeLabel = latestWeatherUpdateAt ? this.formatElapsedTime(latestWeatherUpdateAt) : null;
+      const latestAlertAgeLabel = aemetLatestAlert ? this.formatElapsedTime(aemetLatestAlert.updatedAt) : null;
 
       return {
         generatedAt: new Date().toISOString(),
@@ -336,21 +373,27 @@ class AdminService {
               : "Google OAuth no configurado",
           },
           {
-            name: "Open-Meteo (sync)",
+            name: "Open-Meteo",
             status: openMeteoStatus,
-            source: "SystemMetric (API_METEO)",
-            details: latestMetric
-              ? `Última métrica ${latestMetric.tipo} @ ${new Date(latestMetric.createdAt).toISOString()}`
-              : "Sin métricas registradas",
+            statusLabel: openMeteoStatusLabel,
+            source: "cache_meteo.current.ultima_actualizacion",
+            details: latestWeatherUpdateAt
+              ? `Última actualización local ${latestWeatherUpdateAgeLabel || "hace poco"}`
+              : latestMetric
+                ? latestMetric.tipo === "ERROR"
+                  ? `La última sincronización falló ${latestMetricAgeLabel || "hace poco"}`
+                  : `Última sincronización ${latestMetricAgeLabel || "hace poco"}`
+                : "Aún no se ha sincronizado",
           },
           {
             name: "AEMET Alerts",
             status: aemetStatus,
+            statusLabel: aemetStatusLabel,
             source: "AEMET_API_KEY + última alerta persistida",
             details: !aemetConfigured
-              ? "AEMET_API_KEY no configurada"
+              ? "Falta configurar AEMET_API_KEY"
               : aemetLatestAlert
-                ? `Última alerta actualizada @ ${new Date(aemetLatestAlert.updatedAt).toISOString()}`
+                ? `Última alerta ${latestAlertAgeLabel || "hace poco"}`
                 : "Sin alertas persistidas aún",
           },
         ],
