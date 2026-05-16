@@ -18,6 +18,14 @@ const router = Router();
  *     summary: Obtener todas las alertas meteorológicas activas
  *     description: Retorna un array de alertas de AEMET con ubicación geográfica
  *     tags: [AEMET Alerts]
+ *     parameters:
+ *       - in: query
+ *         name: forceRefresh
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Fuerza ignorar la caché y consultar AEMET directamente
  *     responses:
  *       200:
  *         description: Alertas obtenidas correctamente
@@ -62,67 +70,6 @@ const router = Router();
  */
 router.get("/", aemetAlertsController.getAlerts.bind(aemetAlertsController));
 
-/**
- * @swagger
- * /api/aemet-alerts/zone/{zoneId}:
- *   get:
- *     summary: Obtener alertas para una zona específica
- *     description: Retorna alertas que afectan a una zona determinada
- *     tags: [AEMET Alerts]
- *     parameters:
- *       - in: path
- *         name: zoneId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID de la zona en MongoDB
- *     responses:
- *       200:
- *         description: Alertas por zona obtenidas
- *       500:
- *         description: Error al obtener alertas
- */
-router.get(
-  "/zone/:zoneId",
-  aemetAlertsController.getAlertsByZone.bind(aemetAlertsController)
-);
-
-// /**
-//  * @swagger
-//  * /api/aemet-alerts/area:
-//  *   post:
-//  *     summary: Obtener alertas en un área geográfica
-//  *     description: Retorna alertas dentro de un radio especificado
-//  *     tags: [AEMET Alerts]
-//  *     requestBody:
-//  *       required: true
-//  *       content:
-//  *         application/json:
-//  *           schema:
-//  *             type: object
-//  *             properties:
-//  *               latitude:
-//  *                 type: number
-//  *                 example: 43.2
-//  *               longitude:
-//  *                 type: number
-//  *                 example: -4.85
-//  *               radiusKm:
-//  *                 type: number
-//  *                 example: 50
-//  *             required: [latitude, longitude]
-//  *     responses:
-//  *       200:
-//  *         description: Alertas por área obtenidas
-//  *       400:
-//  *         description: Parámetros faltantes
-//  *       500:
-//  *         description: Error al obtener alertas
-//  */
-// router.post(
-//   "/area",
-//   aemetAlertsController.getAlertsByArea.bind(aemetAlertsController)
-// );
 
 logger.debug("AEMET Alerts routes loaded");
 

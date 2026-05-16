@@ -59,7 +59,7 @@ class WeatherService {
   }
 
   /**
-   * Obtener predicción de temperatura para las próximas 6 horas
+   * Obtener predicción de temperatura para las próximas 12 horas
    * @param {number} latitude - Latitud
    * @param {number} longitude - Longitud
    * @returns {Promise<Array>} Array con predicción horaria
@@ -177,7 +177,7 @@ class WeatherService {
           await zones[i].save();
           success++;
 
-          logger.debug(`Zona "${zones[i].nombre}" actualizada correctamente (current + forecast)`);
+          
         } catch (zoneErr) {
           failed++;
           const errorMsg = `Error actualizando zona ${zones[i].nombre}: ${zoneErr.message}`;
@@ -251,7 +251,7 @@ class WeatherService {
 
       // Timeout de 15 segundos para petición batch
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await fetch(url.toString(), {
         signal: controller.signal,

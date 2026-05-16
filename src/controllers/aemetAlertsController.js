@@ -16,35 +16,26 @@ class AemetAlertsController {
    * Obtiene todas las alertas activas desde la AEMET
    * @async
    * @param {Object} req - Objeto de solicitud HTTP
-   * @param {boolean} req.query.refresh - Fuerza actualización de datos (default: false)
+   * @param {boolean} req.query.forceRefresh - Fuerza actualización de datos (default: false)
    * @param {boolean} req.query.withPolygons - Incluye polígonos GeoJSON en respuesta (default: false)
    * @param {Object} res - Objeto de respuesta HTTP
    * @returns {Object} Array de alertas con metadatos
    */
   async getAlerts(req, res) {
     try {
-      // Leer el parámetro 'refresh' de la query string
-      const forceRefresh = req.query.refresh === 'true';
-      // Control opcional para incluir polígonos en la respuesta
-      const withPolygons = req.query.withPolygons === 'true';
+      // Estandarizar forceRefresh y mantener compatibilidad temporal con refresh.
+      const forceRefresh = req.query.forceRefresh === 'true' || req.query.refresh === 'true';
+
       logger.debug("AemetAlertsController.getAlerts - Solicitando alertas AEMET");
 
       const alerts = await aemetAlertsService.fetchAlerts(forceRefresh);
-
-      // Si el cliente no pide polígonos, los eliminamos para ahorrar payload
-      const responseAlerts = withPolygons ? alerts : alerts.map(a => {
-        const copy = { ...a };
-        delete copy.poligono_geojson;
-        delete copy.poligono_raw;
-        return copy;
-      });
 
       logger.info(`Alertas AEMET obtenidas: ${alerts.length} alertas activas`);
 
       res.status(200).json({
         status: "success",
-        data: responseAlerts,
-        total: responseAlerts.length,
+        data: alerts,
+        total: alerts.length,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

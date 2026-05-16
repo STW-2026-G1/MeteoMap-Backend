@@ -3,6 +3,7 @@ const tar = require("tar");
 const { Readable } = require("stream");
 const xml2js = require("xml2js");
 const AemetAlert = require("../models/AemetAlert");
+const { editComment } = require("./commentService");
 
 /**
  * Servicio para obtener alertas meteorológicas de AEMET
@@ -30,41 +31,43 @@ class aemetAlertsService {
     const startedAt = Date.now();
 
     try {
+      // Recargar caché desde BD solo cuando esté vacía o caducada.
+      let preCacheValid = this._isCacheValid();
+      if (!preCacheValid) {
+        logger.debug('[AEMET] Cache inválida o vacía, recargando desde BD...');
+        await this._refreshCacheFromDatabase();
+      }
+      let cacheValid = this._isCacheValid();
       logger.debug(
-        `AEMET fetchAlerts iniciado. forceRefresh=${forceRefresh}, cacheValida=${this._isCacheValid()}`
+        `[AEMET] fetchAlerts iniciado. forceRefresh=${forceRefresh}, PrecacheValid=${preCacheValid}, cacheValid=${cacheValid}`
       );
 
       // Verificar caché válido. Filtrar la caché para no devolver alertas ya caducadas
-      if (this._isCacheValid() && !forceRefresh) {
-        logger.info(`Usando alertas en caché (edad: ${this._getCacheAge()}ms)`);
-        const now = new Date();
-        const filteredCache = Array.isArray(this.cache)
-          ? this.cache.filter(a => {
-              try {
-                return new Date(a.validez_fin) >= now;
-              } catch (e) {
-                return false;
-              }
-            })
-          : [];
+      if (cacheValid && !forceRefresh) { 
+        const edadCache = Date.now() - this.cacheTimestamp;
+        const edadSegundos = Math.round(edadCache / 1000);
+        const alertCount = this.cache ? this.cache.length : 0;
+        logger.info(
+          `[AEMET] Usando alertas en caché: ${alertCount} alertas, ` +
+          `edad=${edadSegundos}s, TTL=1800s (caché fresca)`
+        );
+        return this.cache;
+      }
 
-        if (filteredCache.length !== (this.cache ? this.cache.length : 0)) {
-          logger.info(`Caché: eliminadas ${ (this.cache ? this.cache.length - filteredCache.length : 0) } alertas expiradas`);
-          this.cache = filteredCache;
-          this.cacheTimestamp = Date.now();
-        }
-
-        return filteredCache;
+      if (forceRefresh) {
+        logger.info(`[AEMET] forceRefresh=true, ignorando caché. Refreshing desde AEMET API...`);
+      } else {
+        logger.info(`[AEMET] Cache expirada. Refreshing desde AEMET API...`);
       }
 
       if (!this.AEMET_API_KEY) {
         logger.warn(
-          "AEMET_API_KEY no configurada. Usando datos de demo para alertas."
+          "[AEMET] AEMET_API_KEY no configurada. Usando alertas desde BD/caché."
         );
-        return [];
+        return this.cache || [];
       }
 
-      logger.debug(`[AEMET API] Iniciando petición a: ${this.AEMET_ALERTS_URL}`);
+      logger.debug(`[AEMET] Iniciando petición a: ${this.AEMET_ALERTS_URL}`);
       const fetchStart = Date.now();
       
       let response;
@@ -86,11 +89,11 @@ class aemetAlertsService {
           (causeCode ? ` | cause.code=${causeCode}` : "") +
           (causeMessage ? ` | cause.message=${causeMessage}` : "")
         );
-        throw networkError; // Lanzamos el error para que tu 'catch' principal use el fallback de caché
+        throw networkError; // Lanzamos el error para 'catch' principal use el fallback de caché
       }
 
       const fetchDuration = Date.now() - fetchStart;
-      logger.debug(`[AEMET API] Respuesta recibida en ${fetchDuration}ms con status=${response.status} (${response.statusText})`);
+      logger.info(`[AEMET API] Respuesta recibida en ${fetchDuration}ms (status=${response.status})`);
 
       if (!response.ok) {
         // 1. Intentar leer el cuerpo de la respuesta por si AEMET envía JSON con detalles
@@ -107,14 +110,14 @@ class aemetAlertsService {
 
         // 2. Loggear el error completo con los detalles
         if (response.status === 429) {
-          logger.info(`[AEMET API] 429 Too Many Requests: Límite de peticiones alcanzado.${errorDetails}`);
+          logger.warn(`[AEMET API] 429 Too Many Requests: Límite de peticiones alcanzado.${errorDetails}`);
         } else {
           logger.error(`[AEMET API] Error HTTP ${response.status} ${response.statusText}${errorDetails}`);
         }
 
-        // --- Inicio de tu código actual de Fallback ---
-        if (this.cache) {
-          logger.warn('Usando caché obsoleto por error en API');
+        // Fallback a caché
+        if (Array.isArray(this.cache) && this.cache.length > 0) {
+          logger.warn('[AEMET] Fallback: usando caché existente por error en API');
           const now = new Date();
           const filteredCache = Array.isArray(this.cache)
             ? this.cache.filter(a => {
@@ -123,75 +126,148 @@ class aemetAlertsService {
             : [];
           this.cache = filteredCache;
           this.cacheTimestamp = Date.now();
+          logger.info(`[AEMET] Devolviendo ${filteredCache.length} alertas desde caché de respaldo`);
           return filteredCache;
         }
 
         try {
-          const activeAlertsFromDb = await AemetAlert.find({ validez_fin: { $gte: new Date() } }).lean();
-          const formattedAlerts = activeAlertsFromDb.map(doc => ({
-            ...doc,
-            id: doc.aemet_id,
-            _id: doc._id.toString(),
-          }));
-          this.cache = formattedAlerts;
-          this.cacheTimestamp = Date.now();
-          return formattedAlerts;
+          logger.info('[AEMET] Intentando recuperar desde BD...');
+          const dbAlerts = await this._refreshCacheFromDatabase();
+          logger.info(`[AEMET] Recuperadas ${dbAlerts.length} alertas desde BD`);
+          return dbAlerts;
         } catch (dbErr) {
-          logger.error(`Error recuperando alertas desde BD tras fallo AEMET: ${dbErr.message}`);
+          logger.error(`[AEMET] Fallo total: No se pudo recuperar desde BD tras error API: ${dbErr.message}`);
           return [];
         }
-        // --- Fin de tu código de Fallback ---
+    
       }
 
       const data = await response.json();
       logger.debug(
-        `Datos recibidos de AEMET: ${data.datos}`
+        `[AEMET] Datos recibidos: URL de descarga en campo datos`
       );
 
       // Procesar y transformar alertas
+      logger.debug(`[AEMET] Iniciando procesamiento de alertas...`);
       const alerts = await this._processAlerts(data);
-      logger.info(`alertas procesadas: ${alerts.length}`);
+      logger.info(`[AEMET] Alertas procesadas: ${alerts.length}`);
+      
       // Filtrar alertas ya procesadas anteriormente
       const newAlerts = await this._filterNewAlerts(alerts);
-      logger.info(`alertas filtradas: ${newAlerts.length}`);
+      logger.info(`[AEMET] Nuevas alertas después de dedup: ${newAlerts.length}`);
+      
       // Guardar en BD las nuevas alertas
       if (newAlerts.length > 0) {
         await this._saveAlertsToDatabase(newAlerts);
-         logger.info(`alertas guardadas`);
+        logger.info(`[AEMET] ${newAlerts.length} alertas guardadas en BD`);
+      } else {
+        logger.info(`[AEMET] Sin alertas nuevas para guardar (ya estaban en BD)`);
       }
       
       // Consultar TODAS las alertas activas de la Base de Datos
       // Filtramos por fecha de validez_fin para no enviar alertas caducadas
+      logger.debug(`[AEMET] Reloadquerying todos los datos activos desde BD...`);
+      const formattedAlerts = await this._refreshCacheFromDatabase();
+
+      logger.info(`[AEMET] Servicio finalizado: devolviendo ${formattedAlerts.length} alertas activas desde BD`);
+      logger.debug(`[AEMET] fetchAlerts completado en ${Date.now() - startedAt}ms`);
+      return formattedAlerts;
+    } catch (err) {
+      const elapsed = Date.now() - startedAt;
+      logger.error(
+        `[AEMET] Error crítico en fetchAlerts: ${err.name} - ${err.message} (${elapsed}ms)`
+      );
+      logger.debug(`[AEMET] Stack trace: ${err.stack}`);
+
+      // Retornar caché si está disponible como último recurso
+      if (Array.isArray(this.cache) && this.cache.length > 0) {
+        logger.warn(
+          `[AEMET] Fallback a caché de emergencia: devolviendo ${this.cache.length} alertas`
+        );
+        return this.cache;
+      }
+      
+      logger.error(`[AEMET] No hay caché disponible. Devolviendo array vacío.`);
+      throw err;
+    }
+  }
+
+  /**
+   * Recarga la caché desde la base de datos con alertas activas.
+   * Usa el timestamp más reciente del campo updatedAt de los documentos como referencia de validez.
+   * @private
+   */
+  async _refreshCacheFromDatabase() {
+    const startRefresh = Date.now();
+
+    try {
+      logger.debug('[Cache] Iniciando recarga desde BD...');
+      
       const activeAlertsFromDb = await AemetAlert.find({
         validez_fin: { $gte: new Date() }
       }).lean();
 
-      // 3. Importante: Mapear 'aemet_id' de vuelta a 'id' para que el frontend no rompa
+      logger.debug(`[Cache] Consulta a BD completada: encontrados ${activeAlertsFromDb.length} documentos activos`);
+
       const formattedAlerts = activeAlertsFromDb.map(doc => ({
         ...doc,
-        id: doc.aemet_id,             // Id de la aemet
-        _id: doc._id.toString(),      // Mantenemos el ID de Mongo
+        id: doc.aemet_id,
+        _id: doc._id.toString(),
       }));
 
-      // 4. Actualizar caché con los datos reales de la BD
       this.cache = formattedAlerts;
-      this.cacheTimestamp = Date.now();
 
-      logger.info(`Servicio: Devolviendo ${formattedAlerts.length} alertas desde la Base de Datos.`);
-      logger.debug(`AEMET fetchAlerts completado en ${Date.now() - startedAt}ms`);
+      // Extraer timestamp del documento más reciente
+      if (activeAlertsFromDb.length > 0) {
+        try {
+          // Intentamos usar updatedAt primero (más confiable), luego createdAt
+          const timestamps = activeAlertsFromDb.map(doc => {
+            const timestamp = doc.updatedAt || doc.createdAt || doc.fecha_procesamiento;
+            if (!timestamp) {
+              return null;
+            }
+            const ts = new Date(timestamp).getTime();
+            return ts;
+          }).filter(ts => ts !== null);
+
+          if (timestamps.length > 0) {
+            this.cacheTimestamp = Math.max(...timestamps);
+            const age = Date.now() - this.cacheTimestamp;
+            logger.info(
+              `[Cache] Recargada desde BD: ${activeAlertsFromDb.length} alertas, ` +
+              `timestamp más reciente: ${new Date(this.cacheTimestamp).toISOString()} ` +
+              `(edad de datos: ${age}ms, ${Math.round(age / 1000)}s)`
+            );
+            logger.debug(`[Cache] Recarga completada en ${Date.now() - startRefresh}ms`);
+          } else {
+            // Ningún documento tiene timestamp válido
+            logger.warn('[Cache] Alertas encontradas pero ninguna tiene timestamp válido (updatedAt, createdAt, fecha_procesamiento)');
+            this.cacheTimestamp = null; // Marcar como invalida
+            logger.info(`[Cache] Usando timestamp fallback: ${new Date(this.cacheTimestamp).toISOString()}`);
+          }
+        } catch (timestampError) {
+          logger.error(`[Cache] Error extrayendo timestamps: ${timestampError.message}`);
+          logger.debug(`[Cache] Stack: ${timestampError.stack}`);
+          // Fallback: usar Date.now()
+          this.cacheTimestamp = null;
+          logger.warn(`[Cache] Usando timestamp fallback por error: ${new Date(this.cacheTimestamp).toISOString()}`);
+        }
+      } else {
+        // No hay alertas activas en BD
+        logger.warn('[Cache] No hay alertas activas en BD (validez_fin >= ahora)');
+        this.cacheTimestamp = null;
+        logger.info('[Cache] Caché vacía - requiere refresh desde AEMET API');
+      }
+
       return formattedAlerts;
     } catch (err) {
-      logger.error(`Error obteniendo alertas de AEMET: ${err.name} - ${err.message}`);
-      logger.error(
-        `AEMET fetchAlerts fallback after ${Date.now() - startedAt}ms`
-      );
-      logger.debug(`Stack trace: ${err.stack}`);
-
-      // Retornar caché si está disponible
-      if (this.cache) {
-        logger.warn('Usando caché por error en obtención');
-        return this.cache;
-      }
+      logger.error(`[Cache] Error crítico recargando desde BD: ${err.name} - ${err.message}`);
+      logger.debug(`[Cache] Stack trace: ${err.stack}`);
+      
+      // En caso de error, mantener caché actual pero marcar como no válida
+      this.cacheTimestamp = null;
+      logger.warn('[Cache] Caché marcada como no válida por error en BD. Se forzará refresh desde AEMET API.');
+      
       throw err;
     }
   }
@@ -201,17 +277,31 @@ class aemetAlertsService {
    * @private
    */
   _isCacheValid() {
-    if (!this.cache || !this.cacheTimestamp) return false;
-    return (Date.now() - this.cacheTimestamp) < this.CACHE_TTL_MS;
-  }
+    // Validaciones básicas
+    if (!Array.isArray(this.cache) || this.cache.length === 0) {
+      logger.debug('[Cache] Cache inválido: no hay datos en caché o no es array');
+      return false;
+    }
+    
+    if (!this.cacheTimestamp) {
+      logger.debug('[Cache] Cache inválido: cacheTimestamp es null/undefined');
+      return false;
+    }
 
-  /**
-   * Obtiene la antigüedad de la caché en milisegundos
-   * @private
-   */
-  _getCacheAge() {
-    if (!this.cacheTimestamp) return -1;
-    return Date.now() - this.cacheTimestamp;
+    // Verificar TTL
+    const age = Date.now() - this.cacheTimestamp;
+    const isValid = age < this.CACHE_TTL_MS;
+
+    if (!isValid) {
+      const ageSeconds = Math.round(age / 1000);
+      const ttlSeconds = Math.round(this.CACHE_TTL_MS / 1000);
+      logger.debug(
+        `[Cache] Cache EXPIRADA: edad=${ageSeconds}s > TTL=${ttlSeconds}s ` +
+        `(${this.cache.length} alertas)`
+      );
+    }
+
+    return isValid;
   }
 
   /**
@@ -245,7 +335,7 @@ class aemetAlertsService {
 
   /**
    * Descarga el archivo binario (.tar)
-   * Adaptado de la función 'download' de tu script IMDb
+   * Adaptado de la función 'download' de script IMDb
    */
   async _downloadTar(url) {
     logger.debug(`Descargando archivo comprimido desde: ${url}`);
@@ -464,9 +554,7 @@ _normalizeAlerts(rawAlerts) {
           poligono_geojson,
         };
 
-        logger.debug(
-          `Alerta normalizada: ${normalizedAlert.zona} - ${normalizedAlert.tipo} (${normalizedAlert.nivel})`
-        );
+
         normalizedAlerts.push(normalizedAlert);
       } catch (error) {
         logger.error(
@@ -490,16 +578,13 @@ _normalizeAlerts(rawAlerts) {
     const fallbackCoords = { latitud: null, longitud: null };
 
     if (!polygonData) {
-      logger.debug(`No hay datos de polígono. ID:${id} Nivel:${nivel} Usando coordenadas por defecto.`);
+    
       return fallbackCoords;
     }
 
     // 2. Normalizar la entrada a un único String
     let polygonStr = '';
     if (Array.isArray(polygonData)) {
-      if (polygonData.length > 1) {
-        logger.debug(`Se recibieron ${polygonData.length} polígonos para ID:${id}. Usando el primero.`);
-      }
       // Si hay múltiples polígonos, cogemos el primero para tener una aproximación
       polygonStr = polygonData[0]; 
     } else if (typeof polygonData === 'string') {
@@ -524,10 +609,6 @@ _normalizeAlerts(rawAlerts) {
         validPoints.push({ lat, lon });
       }
     }
-
-    logger.debug(
-      `Polígono ID:${id} Nivel:${nivel} -> puntos válidos ${validPoints.length}/${points.length}`
-    );
 
     // 4. Calcular centroide simple (punto medio estimado)
     const centroid = this._calculatePolygonCentroid(validPoints);
@@ -734,7 +815,7 @@ _normalizeAlerts(rawAlerts) {
           `(${alerts.length - newAlerts.length} ya procesadas)`
         );
       } else {
-        logger.info(`ℹ️  Todas las alertas ya han sido procesadas anteriormente`);
+        logger.info(`Todas las alertas ya han sido procesadas anteriormente`);
       }
       
       return newAlerts;
@@ -787,7 +868,7 @@ _normalizeAlerts(rawAlerts) {
       }));
 
       const result = await AemetAlert.insertMany(alertsForDb, { ordered: false });
-      logger.info(`✅ ${result.length} alertas guardadas en BD`);
+      logger.info(`${alerts.length} alertas totales. ${result.length} alertas guardadas en BD`);
     } catch (error) {
       // Si algunos documentos duplicados existen, ignorar ese error
       if (error.code === 11000) {
