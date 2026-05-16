@@ -64,21 +64,55 @@ class aemetAlertsService {
         return [];
       }
 
-      logger.debug(`Obteniendo alertas de AEMET desde: ${this.AEMET_ALERTS_URL}`);
+      logger.debug(`[AEMET API] Iniciando petición a: ${this.AEMET_ALERTS_URL}`);
+      const fetchStart = Date.now();
+      
+      let response;
+      try {
+        // Envolvemos el fetch en un try-catch para capturar errores de red puros 
+        // (ej. DNS caídos, no hay internet, timeout de conexión)
+        response = await fetch(`${this.AEMET_ALERTS_URL}`, {
+          headers: {
+            "api_key": this.AEMET_API_KEY,
+            "Accept": "application/json" // Buena práctica
+          },
+        });
+      } catch (networkError) {
+        // Si falla aquí, la petición ni siquiera llegó a la AEMET
+        const causeCode = networkError?.cause?.code;
+        const causeMessage = networkError?.cause?.message;
+        logger.error(
+          `[AEMET API] Error crítico de red intentando contactar a AEMET: ${networkError.message}` +
+          (causeCode ? ` | cause.code=${causeCode}` : "") +
+          (causeMessage ? ` | cause.message=${causeMessage}` : "")
+        );
+        throw networkError; // Lanzamos el error para que tu 'catch' principal use el fallback de caché
+      }
 
-      const response = await fetch(`${this.AEMET_ALERTS_URL}`, {
-        headers: {
-          "api_key": this.AEMET_API_KEY,
-        },
-      });
-
-      logger.debug(`AEMET response status=${response.status}`);
+      const fetchDuration = Date.now() - fetchStart;
+      logger.debug(`[AEMET API] Respuesta recibida en ${fetchDuration}ms con status=${response.status} (${response.statusText})`);
 
       if (!response.ok) {
-        logger.error(
-          `AEMET API error: ${response.status} ${response.statusText}`
-        );
-        // Si hay caché en memoria, devolverla (filtrada por validez)
+        // 1. Intentar leer el cuerpo de la respuesta por si AEMET envía JSON con detalles
+        let errorDetails = "";
+        try {
+          const rawText = await response.text();
+          // Solo lo añadimos si hay texto
+          if (rawText) {
+            errorDetails = ` - Detalles API: ${rawText.substring(0, 500)}`; // Limitamos a 500 chars por si es un HTML gigante
+          }
+        } catch (e) {
+          logger.debug(`[AEMET API] No se pudo leer el cuerpo del error: ${e.message}`);
+        }
+
+        // 2. Loggear el error completo con los detalles
+        if (response.status === 429) {
+          logger.info(`[AEMET API] 429 Too Many Requests: Límite de peticiones alcanzado.${errorDetails}`);
+        } else {
+          logger.error(`[AEMET API] Error HTTP ${response.status} ${response.statusText}${errorDetails}`);
+        }
+
+        // --- Inicio de tu código actual de Fallback ---
         if (this.cache) {
           logger.warn('Usando caché obsoleto por error en API');
           const now = new Date();
@@ -92,7 +126,6 @@ class aemetAlertsService {
           return filteredCache;
         }
 
-        // Si no hay caché, recuperar alertas activas directamente desde la BD
         try {
           const activeAlertsFromDb = await AemetAlert.find({ validez_fin: { $gte: new Date() } }).lean();
           const formattedAlerts = activeAlertsFromDb.map(doc => ({
@@ -100,7 +133,6 @@ class aemetAlertsService {
             id: doc.aemet_id,
             _id: doc._id.toString(),
           }));
-          // Actualizar caché con los datos de la BD
           this.cache = formattedAlerts;
           this.cacheTimestamp = Date.now();
           return formattedAlerts;
@@ -108,6 +140,7 @@ class aemetAlertsService {
           logger.error(`Error recuperando alertas desde BD tras fallo AEMET: ${dbErr.message}`);
           return [];
         }
+        // --- Fin de tu código de Fallback ---
       }
 
       const data = await response.json();
