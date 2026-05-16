@@ -23,6 +23,8 @@ const reportSchema = new mongoose.Schema(
       usuarios_confirmaron: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
       usuarios_desmintieron: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
+    // Lista de administradores que han visualizado este reporte en su panel para limpiar la notificación
+    visto_por_admins: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     // NOTE: reports activos por defecto
     estado: { type: String, enum: ["SOSPECHOSO", "LEGITIMO"], default: "SOSPECHOSO" },
   },

@@ -7,6 +7,7 @@
 
 const adminService = require("../services/adminService");
 const reportService = require("../services/reportService");
+const logger = require("../config/logger");
 
 class AdminController {
   /**
@@ -22,6 +23,7 @@ class AdminController {
       const result = await adminService.getUsers();
       res.json(result);
     } catch (err) {
+      logger.error("Error al obtener usuarios:", err);
       next(err);
     }
   }
@@ -115,6 +117,46 @@ class AdminController {
     try {
       const result = await adminService.getDashboard();
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Obtiene el recuento de reportes no visualizados por el administrador actual
+   * @async
+   */
+  async getUnreadReportsCount(req, res, next) {
+    try {
+      const adminId = req.user.userId;
+      logger.debug(`AdminController.getUnreadReportsCount para admin: ${adminId}`);
+      // Contamos aquellos reportes donde el ID de este admin NO esté en la lista `visto_por_admins`
+      const Report = require("../models/Report");
+      const count = await Report.countDocuments({ visto_por_admins: { $ne: adminId } });
+      res.json({ count });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Marca los reportes no leídos como leídos para el administrador actual
+   * @async
+   */
+  async markReportsAsSeen(req, res, next) {
+    try {
+      const adminId = req.user.userId;
+
+      const Report = require("../models/Report");
+      logger.debug(`AdminController.markReportsAsSeen para admin: ${JSON.stringify(req.user)}`);
+      
+      // Agregar el ID de este admin al array visto_por_admins de todos los reportes donde aún no esté
+      await Report.updateMany(
+        { visto_por_admins: { $ne: adminId } },
+        { $addToSet: { visto_por_admins: adminId } }
+      );
+      
+      res.json({ message: "Reportes marcados como vistos por el admin", success: true });
     } catch (err) {
       next(err);
     }

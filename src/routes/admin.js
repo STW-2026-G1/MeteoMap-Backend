@@ -182,5 +182,12 @@ router.delete(
 /**
  * Dashboard de administración con datos agregados reales
  */
-router.get("/dashboard", (req, res, next) => adminController.getDashboard(req, res, next));
+router.get("/dashboard", validate, (req, res, next) => adminController.getDashboard(req, res, next));
+
+/**
+ * Conteo y marca de reportes leídos por administrador
+ */
+router.get("/reports/unread-count", validate, (req, res, next) => adminController.getUnreadReportsCount(req, res, next));
+router.post("/reports/mark-seen", validate, (req, res, next) => adminController.markReportsAsSeen(req, res, next));
+
 module.exports = router;

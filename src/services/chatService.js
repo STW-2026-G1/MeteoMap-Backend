@@ -225,9 +225,9 @@ class ChatService {
         
         Temas RELEVANTES:
         - Clima, temperaturas, viento, nieve en CUALQUIER lugar (ciudades, montañas, playas, etc.).
-        - Seguridad, avisos de peligro, senderismo, naturaleza y medio ambiente.
+        - Seguridad, alertas o avisos de peligro (por ejemplo, alertas de AEMET), senderismo, naturaleza y medio ambiente.
         - Información sobre picos, valles, parques naturales o geografía en general.
-        - Uso de la propia aplicación MeteoMap.
+        - Uso de la propia aplicación MeteoMap (reportes, comentarios, favoritos, información de perfil, etc).
         - Saludos y cortesía básica.
 
         Temas IRRELEVANTES:
