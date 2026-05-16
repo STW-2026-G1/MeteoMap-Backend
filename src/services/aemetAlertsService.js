@@ -800,45 +800,48 @@ _normalizeAlerts(rawAlerts) {
    */
   async _filterNewAlerts(alerts) {
     try {
-      const alertIds = alerts.map(a => a.id);
+      const now = new Date();
+
+      // 1. Primero descartar caducadas (barato, sin BD)
+      const activeAlerts = alerts.filter(a => {
+        try {
+          return new Date(a.validez_fin) >= now;
+        } catch (e) {
+          return false;
+        }
+      });
+
+      if (activeAlerts.length < alerts.length) {
+        logger.info(
+          `[AEMET] Descartadas ${alerts.length - activeAlerts.length} alertas caducadas`
+        );
+      }
+
+      if (activeAlerts.length === 0) return [];
+
+      // 2. Luego consultar BD solo con las activas (más eficiente)
+      const alertIds = activeAlerts.map(a => a.id);
       const existingAlerts = await AemetAlert.find(
         { aemet_id: { $in: alertIds } },
         { aemet_id: 1 }
       );
-      
+
       const existingIds = new Set(existingAlerts.map(a => a.aemet_id));
-      const newAlerts = alerts.filter(a => !existingIds.has(a.id));
-      
+      const newAlerts = activeAlerts.filter(a => !existingIds.has(a.id));
+
       if (newAlerts.length > 0) {
         logger.info(
-          `Alertas nuevas: ${newAlerts.length}/${alerts.length} ` +
-          `(${alerts.length - newAlerts.length} ya procesadas)`
+          `[AEMET] Alertas nuevas: ${newAlerts.length}/${alerts.length} ` +
+          `(${alerts.length - activeAlerts.length} caducadas, ` +
+          `${activeAlerts.length - newAlerts.length} ya en BD)`
         );
-        const now = new Date();
-
-        // Descartar alertas ya caducadas antes de ir a BD
-        const activeAlerts = alerts.filter(a => {
-          try {
-            return new Date(a.validez_fin) >= now;
-          } catch (e) {
-            return false;
-          }
-        });
-
-        if (activeAlerts.length < alerts.length) {
-          logger.info(
-            `[AEMET] Descartadas ${alerts.length - activeAlerts.length} alertas ` +
-            `ya caducadas antes de comprobar BD`
-          );
-        }
       } else {
-        logger.info(`Todas las alertas ya han sido procesadas anteriormente`);
+        logger.info(`[AEMET] Todas las alertas activas ya estaban en BD`);
       }
-      
-      return newAlerts;
+
+      return newAlerts; // ← ahora sí devuelve solo activas y nuevas
     } catch (error) {
       logger.error(`Error filtrando alertas nuevas: ${error.message}`);
-      // Si hay error en BD, procesar todas las alertas
       return alerts;
     }
   }
