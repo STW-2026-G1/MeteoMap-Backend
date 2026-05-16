@@ -4,7 +4,7 @@
  * @description Maneja las solicitudes HTTP de alertas meteorológicas de la AEMET (Agencia Estatal de Meteorología).
  * Gestiona obtención de alertas globales, filtrado por zona y por área geográfica con cálculo de distancias.
  */
-
+ 
 const logger = require("../config/logger");
 const aemetAlertsService = require("../services/aemetAlertsService");
 
