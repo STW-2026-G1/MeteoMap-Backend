@@ -14,5 +14,8 @@
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "scripts": {
+    "vercel-ignore": "exit 0"
   }
 }
