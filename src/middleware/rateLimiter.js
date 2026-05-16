@@ -36,7 +36,7 @@ const globalLimiter = rateLimit({
 const authLimiter = rateLimit({
   store: new MongoStore(storeConfig),
   windowMs: 60 * 60 * 1000, // 1 hora
-  max: 20, // Máximo 20 intentos por IP cada hora
+  max: 5, // Máximo 100 intentos por IP cada hora
   standardHeaders: true,
   legacyHeaders: false,
   message: {

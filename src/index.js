@@ -45,6 +45,10 @@ fs.mkdirSync(path.join(process.cwd(), "logs"), { recursive: true });
 // ---------------------------------------------------------------------------
 const app = express();
 
+// IMPORTANTE: Requerido de cara a Rate Limiting al estar detrás de servidores (Nginx, Render, etc)
+// Asegura que req.ip leerá la IP real reenviada por los cabezales X-Forwarded-For
+app.set("trust proxy", 1);
+
 // Security & parsing
 app.use(helmet({ contentSecurityPolicy: false })); // CSP off so Swagger UI loads
 app.use(cors());
@@ -56,6 +60,9 @@ app.use(httpLogger.errorLogger);
 
 // HTTP request logging (Morgan)
 app.use(httpLogger);
+
+// Aplicar Rate Limit global a todas las peticiones
+app.use(globalLimiter);
 
 // ---------------------------------------------------------------------------
 // Health check (before API prefix so load balancers can hit it easily)
