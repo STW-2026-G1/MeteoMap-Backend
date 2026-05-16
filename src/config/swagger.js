@@ -344,7 +344,6 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
     },
 
     tags: [
-      { name: "System", description: "Health and status endpoints" },
       { name: "Auth", description: "Authentication endpoints" },
       { name: "User", description: "User management endpoints" },
       { name: "Zones", description: "Zone management and weather" },
@@ -352,7 +351,7 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
       { name: "Comments", description: "Forum comments" },
       { name: "Chat", description: "AI chat assistant" },
       { name: "Admin", description: "Administration panel" },
-      { name: "AEMET Alerts", descripcion: "Alertas de la aemet" }
+      { name: "AEMET Alerts", description: "Alertas de la AEMET" }
     ],
   },
 
