@@ -811,9 +811,26 @@ _normalizeAlerts(rawAlerts) {
       
       if (newAlerts.length > 0) {
         logger.info(
-          `🆕 Alertas nuevas: ${newAlerts.length}/${alerts.length} ` +
+          `Alertas nuevas: ${newAlerts.length}/${alerts.length} ` +
           `(${alerts.length - newAlerts.length} ya procesadas)`
         );
+        const now = new Date();
+
+        // Descartar alertas ya caducadas antes de ir a BD
+        const activeAlerts = alerts.filter(a => {
+          try {
+            return new Date(a.validez_fin) >= now;
+          } catch (e) {
+            return false;
+          }
+        });
+
+        if (activeAlerts.length < alerts.length) {
+          logger.info(
+            `[AEMET] Descartadas ${alerts.length - activeAlerts.length} alertas ` +
+            `ya caducadas antes de comprobar BD`
+          );
+        }
       } else {
         logger.info(`Todas las alertas ya han sido procesadas anteriormente`);
       }
