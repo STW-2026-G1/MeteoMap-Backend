@@ -6,6 +6,7 @@
       "maxDuration": 60
     }
   },
+  
   "routes": [
     {
       "src": "/(.*)",
@@ -15,7 +16,10 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "scripts": {
-    "vercel-ignore": "exit 0"
+  "git": {
+    "deploymentEnabled": {
+      "my-branch-name": false
+    }
   }
 }
+
