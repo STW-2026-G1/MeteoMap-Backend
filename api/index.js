@@ -19,6 +19,7 @@ const httpLogger = require("../src/middleware/httpLogger");
 const { notFound, errorHandler } = require("../src/middleware/errorHandler");
 const isAuth = require("../src/middleware/auth");
 const requireAdmin = require("../src/middleware/requireAdmin");
+const { globalLimiter } = require("../src/middleware/rateLimiter");
 
 // Import routers
 const authRouter = require("../src/routes/auth");
@@ -34,6 +35,10 @@ const aemetAlertsRouter = require("../src/routes/aemet-alerts");
 // App setup
 const app = express();
 
+// IMPORTANTE: Requerido de cara a Rate Limiting al estar detrás de servidores (Vercel, render, Nginx, etc)
+// Asegura que req.ip leerá la IP real reenviada por los cabezales X-Forwarded-For
+app.set("trust proxy", 1);
+
 // Security & parsing
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
@@ -45,6 +50,9 @@ app.use(httpLogger.errorLogger);
 
 // HTTP request logging
 app.use(httpLogger);
+
+// Aplicar Rate Limit global a todas las peticiones (excluyendo estáticos)
+app.use(globalLimiter);
 
 // Health check
 app.get("/health", (req, res) => {

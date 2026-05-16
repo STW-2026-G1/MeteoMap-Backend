@@ -22,6 +22,7 @@ const httpLogger = require("./middleware/httpLogger");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const isAuth = require("./middleware/auth");
 const requireAdmin = require("./middleware/requireAdmin");
+const { globalLimiter } = require("./middleware/rateLimiter");
 
 // Import new routers
 const authRouter = require("./routes/auth");

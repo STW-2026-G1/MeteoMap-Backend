@@ -75,6 +75,7 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
               type: "object",
               properties: {
                 email: { type: "string", example: "user@example.com" },
+                provider: { type: "string", enum: ["local", "google", "github"], default: "local" },
                 rol: { type: "string", enum: ["USER", "ADMIN"], default: "USER" },
               },
             },
@@ -82,17 +83,29 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
               type: "object",
               properties: {
                 nombre: { type: "string", example: "Juan Pérez" },
-                avatar_url: { type: "string" },
+                avatar_seed: { type: "string" },
+                avatar_style: { type: "string", example: "avataaars" },
                 biografia: { type: "string" },
                 ubicacion: { type: "string" },
+                avatar_url: { type: "string", description: "Generado virtualmente con DiceBear" },
               },
             },
-            estado: { type: "string", enum: ["ACTIVO", "BLOQUEADO", "ELIMINADO"], default: "ACTIVO" },
             preferencias: {
               type: "array",
               items: { type: "string" },
               description: "Array of Zone ObjectIds",
             },
+            limites_ia: {
+              type: "object",
+              properties: {
+                peticiones_hoy: { type: "number", default: 0 },
+                ultimo_reset: { type: "string", format: "date-time" },
+              },
+            },
+            estado: { type: "string", enum: ["ACTIVO", "ELIMINADO"], default: "ACTIVO" },
+            fechaEliminacion: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
 
@@ -118,11 +131,25 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             cache_meteo: {
               type: "object",
               properties: {
-                datos_crudos: { type: "object" },
-                ultima_actualizacion: { type: "string", format: "date-time" },
+                current: {
+                  type: "object",
+                  properties: {
+                    datos_crudos: { type: "object" },
+                    ultima_actualizacion: { type: "string", format: "date-time" },
+                  },
+                },
+                forecast: {
+                  type: "object",
+                  properties: {
+                    datos_crudos: { type: "object" },
+                    ultima_actualizacion: { type: "string", format: "date-time" },
+                  },
+                },
               },
             },
             estado: { type: "string", enum: ["ACTIVA", "INACTIVA"], default: "ACTIVA" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
 
@@ -134,14 +161,12 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             usuario_id: { type: "string", description: "User ObjectId" },
             zona_id: { type: "string", description: "Zone ObjectId" },
             categoria_id: { type: "string", description: "Category ObjectId" },
-            tipo: { type: "string", example: "Avalancha" },
             contenido: {
               type: "object",
               properties: {
                 descripcion: { type: "string", example: "Avalancha vista en cara norte" },
               },
             },
-
             validaciones: {
               type: "object",
               properties: {
@@ -159,10 +184,11 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             },
             estado: {
               type: "string",
-              enum: ["PENDIENTE", "ACTIVO", "OCULTO", "SPAM"],
-              default: "PENDIENTE",
+              enum: ["SOSPECHOSO", "LEGITIMO"],
+              default: "SOSPECHOSO",
             },
             createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
 
@@ -175,74 +201,61 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             zona_id: { type: "string", description: "Zone ObjectId" },
             reporte_id: { type: "string", nullable: true, description: "Report ObjectId (optional)" },
             contenido: { type: "string", example: "Excelente información sobre la zona" },
-            etiqueta: { type: "string", example: "Observación" },
-            estado: { type: "string", enum: ["ACTIVO", "SPAM", "ELIMINADO"], default: "ACTIVO" },
+            parent_id: { type: "string", nullable: true, description: "Comment ObjectId para respuestas anidadas" },
+            likes: {
+              type: "array",
+              items: { type: "string" },
+              description: "Array de User ObjectIds que han dado like",
+            },
             createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
+        
         // ─── Alerts Schema ───
-       AemetAlert: {
+        AemetAlert: {
           type: "object",
           properties: {
-            id: { 
-              type: "string", 
-              description: "Identificador único de la alerta (procedente de AEMET)" 
-            },
-            zona: { 
-              type: "string", 
-              example: "Picos de Europa",
-              description: "Nombre de la zona afectada" 
-            },
-            tipo: { 
-              type: "string", 
-              example: "Nevadas",
-              description: "Fenómeno meteorológico (Viento, Lluvia, Nieve, etc.)" 
-            },
-            nivel: { 
-              type: "string", 
-              enum: ["Amarillo", "Naranja", "Rojo", "Sin riesgo"],
-              example: "Naranja" 
-            },
-            nivelNumerico: { 
-              type: "number", 
-              example: 2,
-              description: "Representación numérica para lógica de colores (1: Amarillo, 2: Naranja, 3: Rojo)" 
-            },
+            _id: { type: "string", description: "MongoDB ObjectId" },
+            aemet_id: { type: "string", description: "Identificador único de la alerta de AEMET" },
+            zona: { type: "string", example: "Picos de Europa", description: "Nombre de la zona afectada" },
+            tipo: { type: "string", example: "Nevadas", description: "Fenómeno meteorológico" },
+            nivel: { type: "string", example: "Naranja" },
+            nivelNumerico: { type: "number", example: 2 },
+            descripcion: { type: "string" },
+            instrucciones: { type: "string" },
+            probabilidad: { type: "string" },
+            certidumbre: { type: "string" },
+            urgencia: { type: "string" },
+            enlace: { type: "string" },
             coordenadas: {
               type: "object",
               properties: {
                 latitud: { type: "number", example: 43.15 },
                 longitud: { type: "number", example: -4.82 }
               },
-              description: "Ubicación central del aviso para posicionar en el mapa"
             },
-            descripcion: { 
-              type: "string", 
-              example: "Acumulación de nieve en 24 horas: 20 cm.",
-              description: "Detalle completo del aviso"
+            poligono_raw: { type: "string", nullable: true },
+            poligono_geojson: {
+              type: "object",
+              properties: {
+                type: { type: "string" },
+                coordinates: {
+                  type: "array",
+                  items: { type: "array" }
+                }
+              }
             },
-            icono: { 
-              type: "string", 
-              example: "wi-snow",
-              description: "Clase de icono o URL para mostrar en el mapa" 
-            },
-            color: { 
-              type: "string", 
-              example: "#ff9900",
-              description: "Código hexadecimal del color de la alerta" 
-            },
-            validez_inicio: { 
-              type: "string", 
-              format: "date-time",
-              description: "Fecha y hora de inicio de la alerta" 
-            },
-            validez_fin: { 
-              type: "string", 
-              format: "date-time",
-              description: "Fecha y hora de finalización" 
-            }
+            color: { type: "string", example: "#ff9900", description: "Código hexadecimal del color de la alerta" },
+            emision: { type: "string", format: "date-time" },
+            validez_inicio: { type: "string", format: "date-time" },
+            validez_fin: { type: "string", format: "date-time" },
+            fecha_procesamiento: { type: "string", format: "date-time" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           }
         },
+
         // ─── Category Schema ───
         ReportCategory: {
           type: "object",
@@ -250,7 +263,23 @@ La mayoría de los puntos finales requieren un ID de usuario en el cuerpo de la 
             _id: { type: "string", description: "MongoDB ObjectId" },
             nombre: { type: "string", example: "Avalancha" },
             descripcion: { type: "string", example: "Avalanchas activas o potenciales" },
-            icono_marcador: { type: "string", example: "icon_avalanche" },
+            icono_marcador: { type: "string", example: "snowflake" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        
+        // ─── System Metric Schema ───
+        SystemMetric: {
+          type: "object",
+          properties: {
+            _id: { type: "string", description: "MongoDB ObjectId" },
+            origen: { type: "string", enum: ["CHATBOT", "API_METEO", "AUTH", "SISTEMA"] },
+            tipo: { type: "string", enum: ["ERROR", "LATENCIA", "USO_TOKEN", "NUEVO_REPORTE"] },
+            valor: { type: "number" },
+            detalles: { type: "object", description: "Log details (Mixed object)" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
           },
         },
 

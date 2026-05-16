@@ -9,6 +9,7 @@ const { Router } = require("express");
 const { validateRequest, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } = require("../utils/validation");
 const authController = require("../controllers/authController");
 const isAuth = require("../middleware/auth");
+const { authLimiter } = require("../middleware/rateLimiter");
 
 const router = Router();
 
@@ -39,6 +40,7 @@ const router = Router();
  */
 router.post(
   "/register",
+  authLimiter,
   validateRequest(registerSchema),
   authController.register
 );
@@ -79,6 +81,7 @@ router.post(
  */
 router.post(
   "/login",
+  authLimiter,
   validateRequest(loginSchema),
   authController.login
 );
@@ -126,7 +129,7 @@ router.post("/logout", isAuth, authController.logout);
  *       500:
  *         description: Error en servidor
  */
-router.post("/login-google", authController.loginGoogle);
+router.post("/login-google", authLimiter, authController.loginGoogle);
 
 /**
  * @swagger
@@ -158,7 +161,7 @@ router.post("/login-google", authController.loginGoogle);
  *       500:
  *         description: Error en servidor
  */
-router.post("/login-github", authController.loginGithub);
+router.post("/login-github", authLimiter, authController.loginGithub);
 
 /**
  * @swagger
@@ -182,6 +185,7 @@ router.post("/login-github", authController.loginGithub);
  */
 router.post(
   "/forgot-password",
+  authLimiter,
   validateRequest(forgotPasswordSchema),
   authController.forgotPassword
 );
@@ -208,6 +212,7 @@ router.post(
  *         description: Token inválido/expirado o contraseña no cumple requisitos
  */
 router.post(
+  authLimiter,
   "/reset-password",
   validateRequest(resetPasswordSchema),
   authController.resetPassword
