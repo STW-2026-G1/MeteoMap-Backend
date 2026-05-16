@@ -74,6 +74,7 @@ class aemetAlertsService {
 
       logger.debug(`AEMET response status=${response.status}`);
 
+
       if (!response.ok) {
         logger.error(
           `AEMET API error: ${response.status} ${response.statusText}`
@@ -91,23 +92,10 @@ class aemetAlertsService {
           this.cacheTimestamp = Date.now();
           return filteredCache;
         }
-
-        // Si no hay caché, recuperar alertas activas directamente desde la BD
-        try {
-          const activeAlertsFromDb = await AemetAlert.find({ validez_fin: { $gte: new Date() } }).lean();
-          const formattedAlerts = activeAlertsFromDb.map(doc => ({
-            ...doc,
-            id: doc.aemet_id,
-            _id: doc._id.toString(),
-          }));
-          // Actualizar caché con los datos de la BD
-          this.cache = formattedAlerts;
-          this.cacheTimestamp = Date.now();
-          return formattedAlerts;
-        } catch (dbErr) {
-          logger.error(`Error recuperando alertas desde BD tras fallo AEMET: ${dbErr.message}`);
-          return [];
-        }
+        
+        const err = new Error(`AEMET error ${response.status}: ${response.statusText}`);
+        err.status = response.status;
+        throw err;
       }
 
       const data = await response.json();
@@ -159,7 +147,7 @@ class aemetAlertsService {
         logger.warn('Usando caché por error en obtención');
         return this.cache;
       }
-      return [];
+      throw err;
     }
   }
 
