@@ -40,6 +40,7 @@ class UserService {
           ubicacion: user.perfil.ubicacion,
           avatar_style: user.perfil.avatar_style,
           avatar_seed: user.perfil.avatar_seed,
+          rol: user.datos_acceso.rol,
           createdAt: user.createdAt,
         },
         perfil: user.perfil,
@@ -202,6 +203,7 @@ class UserService {
           ubicacion: user.perfil.ubicacion,
           avatar_style: user.perfil.avatar_style,
           avatar_seed: user.perfil.avatar_seed,
+          rol: user.datos_acceso.rol,
           createdAt: user.createdAt,
         },
       };
