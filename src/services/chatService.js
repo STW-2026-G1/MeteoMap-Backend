@@ -35,7 +35,7 @@ class ChatService {
     this.MAX_HISTORY = 10;
 
     // Configuración del modelo (Mistral Small es excelente para herramientas)
-    this.modelName = "mistral-small-latest";
+    this.modelName = "mistral-small-2506";
     this.temperature = 0.7;
     this.maxTokens = 1024;
   }
@@ -299,8 +299,19 @@ class ChatService {
     // Agregar pregunta actual
     messages.push({ role: "user", content: pregunta });
 
+    let lastRequestTime = 0;
+
     // Bucle para manejar llamadas a funciones
     for (let i = 0; i < 10; i++) {
+      if (i > 0) {
+        const elapsed = Date.now() - lastRequestTime;
+        if (elapsed < 250) {
+          const waitTime = 250 - elapsed;
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+
+      lastRequestTime = Date.now();
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: messages,
