@@ -112,8 +112,16 @@ class AuthService {
         userId: newUser._id,
       });
 
+      // Generar token de acceso para inicio de sesión automático
+      const accessToken = tokenService.generateSingleJWT({
+        userId: newUser._id.toString(),
+        email: newUser.datos_acceso.email,
+        rol: newUser.datos_acceso.rol,
+      });
+
       return {
         message: "Usuario registrado exitosamente",
+        accessToken,
         user: {
           id: newUser._id.toString(),
           email: newUser.datos_acceso.email,
